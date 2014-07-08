@@ -1,5 +1,5 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "The ORM as our great brother.",
    "author" : [
       "karupanerura <karupa@cpan.org>"
    ],
@@ -42,7 +42,7 @@
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.008001"
+            "perl" : "5.014002"
          }
       },
       "test" : {
@@ -52,6 +52,17 @@
       }
    },
    "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/karupanerura/Aniki/issues"
+      },
+      "homepage" : "https://github.com/karupanerura/Aniki",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/karupanerura/Aniki.git",
+         "web" : "https://github.com/karupanerura/Aniki"
+      }
+   },
    "version" : "0.01",
    "x_authority" : "cpan:KARUPA"
 }
