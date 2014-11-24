@@ -4,7 +4,7 @@
       "karupanerura <karupa@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v2.1.1, CPAN::Meta::Converter version 2.141520",
+   "generated_by" : "Minilla/v2.2.0, CPAN::Meta::Converter version 2.142690",
    "license" : [
       "perl_5"
    ],
@@ -42,6 +42,19 @@
       },
       "runtime" : {
          "requires" : {
+            "DBIx::Handler" : "0",
+            "DBIx::Sunny" : "0",
+            "Module::Load" : "0",
+            "Moo" : "0",
+            "SQL::Maker" : "0",
+            "SQL::Maker::SQLType" : "0",
+            "Scalar::Util" : "0",
+            "String::CamelCase" : "0",
+            "Teng" : "0",
+            "Try::Tiny" : "0",
+            "Type::Tiny" : "0",
+            "namespace::sweep" : "0",
+            "parent" : "0",
             "perl" : "5.014002"
          }
       },

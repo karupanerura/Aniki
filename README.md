@@ -25,17 +25,53 @@ Aniki - The ORM as our great brother.
         };
     };
 
+    package MyProj::DB::Filter {
+        use Aniki::Filter::Declare;
+        use Scalar::Util qw/blessed/;
+        use Time::Moment;
+
+        # define inflate/deflate filters in table context.
+        table author => sub {
+            inflate name => sub {
+                my $name = shift;
+                return uc $name;
+            };
+
+            deflate author => name => sub {
+                my $name = shift;
+                return lc $name;
+            };
+        };
+
+        inflate qr/_at$/ => sub {
+            my $datetime = shift;
+            $datetime =~ tr/ /T/;
+            $datetime .= 'Z';
+            return Time::Moment->from_string($datetime);
+        };
+
+        deflate qr/_at$/ => sub {
+            my $datetime = shift;
+            return $datetime->at_utc->strftime('%F %T') if blessed $datetime and $datetime->isa('Time::Moment');
+            return $datetime;
+        };
+    };
+
     package MyProj::DB {
-        use parent qw/Aniki/;
-        __PACKAGE__->load_schema('MyProj::DB::Schema');
+        use Moo;
+        extends qw/Aniki/;
+
+        __PACKAGE__->setup(
+            schema => 'MyProj::DB::Schema',
+            filter => 'MyProj::DB::Filter',
+        );
     };
 
     package main {
         my $db = MyProj::DB->new(...);
         $db->schema->add_table(name => $_) for $db->schema->get_tables;
-        $db->insert(author => { name => 'SONGMU' });
+        my $author_id = $db->insert_and_fetch_id(author => { name => 'songmu' });
 
-        my $author_id = $db->last_insert_id;
         $db->insert(module => {
             name      => 'DBIx::Schema::DSL',
             author_id => $author_id,
@@ -45,9 +81,8 @@ Aniki - The ORM as our great brother.
             author_id => $author_id,
         });
 
-        my $module_id = $db->last_insert_id;
         my ($module) = $db->select(module => {
-            id => $module_id,
+            name => 'Riji',
         }, {
             limit => 1,
         });
@@ -55,7 +90,7 @@ Aniki - The ORM as our great brother.
         $module->author->name; ## SONGMU
 
         my ($author) = $db->select(author => {
-            name => 'SONGMU',
+            name => 'songmu',
         }, {
             limit => 1,
             relay => [qw/module/],
