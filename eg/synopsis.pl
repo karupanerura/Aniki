@@ -4,8 +4,8 @@ use File::Spec;
 use lib File::Spec->catdir(dirname(__FILE__), 'lib');
 use MyProj::DB;
 
-my $db = MyProj::DB->new(...);
-$db->schema->add_table(name => $_) for $db->schema->get_tables;
+my $db = MyProj::DB->new("dbi:SQLite:dbname=:memory:", "", "");
+$db->execute("CREATE TABLE $_") for $db->schema->get_tables;
 my $author_id = $db->insert_and_fetch_id(author => { name => 'songmu' });
 
 $db->insert(module => {

@@ -3,35 +3,23 @@ package Aniki 0.01 {
     use namespace::sweep;
     use Moo;
     use Aniki::Row;
+    use Aniki::Schema;
     use Aniki::Types;
+    use Aniki::QueryBuilder;
 
     use Module::Load ();
-    use Aniki::QueryBuilder;
     use SQL::Maker::SQLType;
     use DBIx::Sunny;
     use DBIx::Handler;
     use Carp qw/croak/;
     use Try::Tiny;
-    use Teng;
     use Module::Load ();
     use String::CamelCase qw/camelize/;
-
-    our $SUPPRESS_ROW_OBJECTS = 0;
 
     has connect_info => (
         is       => 'ro',
         isa      => Aniki::Types->type('ConnectInfo'),
         required => 1,
-    );
-
-    has dbi_class => (
-        is      => 'ro',
-        default => sub { 'DBIx::Sunny' },
-    );
-
-    has row_class => (
-        is      => 'ro',
-        default => sub { 'Aniki::Row' },
     );
 
     has on_connect_do => (
@@ -48,7 +36,7 @@ package Aniki 0.01 {
             my $self = shift;
             my ($dsn, $user, $pass, $attr) = @{ $self->connect_info };
             return DBIx::Handler->new($dsn, $user, $pass, $attr, {
-                dbi_class        => $self->dbi_class,
+                dbi_class        => 'DBIx::Sunny',
                 on_connect_do    => $self->on_connect_do,
                 on_disconnect_do => $self->on_disconnect_do,
             });
@@ -60,17 +48,27 @@ package Aniki 0.01 {
         default => sub { 'NAME_lc' },
     );
 
+    has suppress_row_objects => (
+        is      => 'rw',
+        default => sub { 0 },
+    );
+
     sub _database2driver {
         my ($class, $database) = @_;
-
-        return +{
+        state $map = {
             MySQL      => 'mysql',
             PostgreSQL => 'Pg',
             SQLite     => 'SQLite',
             Oracle     => 'Oracle',
             DB2        => 'DB2',
-        }->{$database};
+        };
+        return $map->{$database};
     }
+
+    sub schema        { croak 'This is abstract method.' }
+    sub query_builder { croak 'This is abstract method.' }
+    sub filter        { croak 'This is abstract method.' }
+    sub row_class     { croak 'This is abstract method.' }
 
     sub setup {
         my ($class, %args) = @_;
@@ -78,7 +76,7 @@ package Aniki 0.01 {
         if (my $schema_class = $args{schema}) {
             Module::Load::load($schema_class);
 
-            my $schema        = $schema_class->context->schema;
+            my $schema        = Aniki::Schema->new(context => $schema_class->context);
             my $driver        = $class->_database2driver($schema->database);
             my $query_builder = Aniki::QueryBuilder->new(driver => $driver);
 
@@ -87,8 +85,17 @@ package Aniki 0.01 {
         }
         if (my $filter_class = $args{filter}) {
             Module::Load::load($filter_class);
-            $class->meta->add_method(filter => sub { $filter_class });
+
+            my $filter = $filter_class->instance();
+            $class->meta->add_method(filter => sub { $filter });
         }
+
+        my $row_class = 'Aniki::Row';
+        if ($args{row}) {
+            Module::Load::load($args{row});
+            $row_class = $args{row};
+        }
+        $class->meta->add_method(row_class => sub { $row_class });
     }
 
     sub dbh { shift->handler->dbh }
@@ -100,48 +107,70 @@ package Aniki 0.01 {
         $row = $self->filter->deflate_row($table_name, $row);
 
         my ($sql, @bind) = $self->query_builder->insert($table_name, $row, $opt);
-        return $self->execute($sql, @bind)->rows;
+        my $sth  = $self->execute($sql, @bind);
+        my $rows = $sth->rows;
+        $sth->finish;
+        return $rows;
     }
 
     sub update {
         my ($self, $table_name, $row, $where, $opt) = @_;
+        $row = $self->filter->deflate_row($table_name, $row);
+
         my $table = $self->schema->get_table($table_name);
         if ($table) {
             $row   = $self->_bind_sql_type_to_args($table, $row);
             $where = $self->_bind_sql_type_to_args($table, $where);
         }
-        $row = $self->filter->deflate_row($table_name, $row);
 
         my ($sql, @bind) = $self->query_builder->update($table_name, $row, $where, $opt);
-        return $self->execute($sql, @bind)->rows;
+        my $sth  = $self->execute($sql, @bind);
+        my $rows = $sth->rows;
+        $sth->finish;
+        return $rows;
     }
 
     sub insert_and_fetch_id {
         my $self = shift;
-        $self->insert(@_);
-        return $self->dbh->last_insert_id;
+        if ($self->insert(@_)) {
+            return unless defined wantarray;
+            return $self->dbh->last_insert_id;
+        }
+        else {
+            return undef; ## no critic
+        }
     }
 
     sub insert_and_fetch_row {
         my $self       = shift;
         my $table_name = shift;
-        my $row        = shift;
+        my $row_data   = shift;
 
         my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
-        $self->insert($table_name, $row, @_);
+        $self->insert($table_name, $row_data, @_);
+        return unless defined wantarray;
+
+        my ($row) = $self->select($table_name, $self->_where_row_cond($table, $row_data), { limit => 1 });
+        return $row;
+    }
+
+    sub _where_row_cond {
+        my ($self, $table, $row_data) = @_;
 
         # fetch by primary key
         my %where;
         for my $pk ($table->primary_key->fields) {
-            $where{$pk->name} = $pk->is_auto_increment ? $self->dbh->last_insert_id : $row->{$pk->name};
+            $where{$pk->name} = $pk->is_auto_increment ? $self->dbh->last_insert_id : $row_data->{$pk->name};
         }
-        my ($row) = $self->select($table_name, \%where, { limit => 1 });
-        return $row;
+
+        return \%where;
     }
 
     sub select :method {
         my ($self, $table_name, $where, $opt) = @_;
         $opt //= {};
+
+        local $self->{suppress_row_objects} = 1 if $opt->{suppress_row_objects};
 
         my @columns = ('*');
         my $table = $self->schema->get_table($table_name);
@@ -150,8 +179,50 @@ package Aniki 0.01 {
             @columns = map { $_->name } $table->get_fields();
         }
 
+        my $relay_enabled_fg = exists $opt->{relay}
+            && ref $opt->{relay}
+            && ref $opt->{relay} eq 'ARRAY'
+            && @{ $opt->{relay} }
+            && !$self->suppress_row_objects;
+
+        my $txn;
+           $txn = $self->txn_scope if $relay_enabled_fg && !$self->in_txn;
+
         my ($sql, @bind) = $self->query_builder->select($table_name, \@columns, $where, $opt);
-        return $self->select_by_sql($sql, \@bind, $table_name);
+        my @rows = $self->select_by_sql($sql, \@bind, $table_name);
+        $self->attach_relay_data($table_name, $opt->{relay}, \@rows) if $relay_enabled_fg;
+
+        $txn->rollback if $txn; ## for read only
+
+        return @rows;
+    }
+
+    sub attach_relay_data {
+        my ($self, $table_name, $relay_names, $rows) = @_;
+        return unless @$rows;
+
+        my @rows = @$rows;
+        my $relations = $self->schema->get_relations($table_name);
+        for my $relay_rule (map { $relations->get_relation($_) } @$relay_names) {
+            my $name         = $relay_rule->{name};
+            my $table_name   = $relay_rule->{table_name};
+            my @src_columns  = $relay_rule->{src};
+            my @dest_columns = $relay_rule->{dest};
+            if (@src_columns == 1 and @dest_columns == 1) {
+                my $src_column  = $src_columns[0];
+                my $dest_column = $dest_columns[0];
+
+                my %related_row_map = map { $_->get_column($dest_column) => $_ }
+                    $self->select($table_name => {
+                        $dest_column => [map { $_->get_column($src_column) } @rows]
+                    });
+
+                for my $row (@rows) {
+                    my $related_row = $related_row_map{$row->get_column($src_column)};
+                    $row->relay_data->{$name} = $related_row;
+                }
+            }
+        }
     }
 
     sub select_by_sql {
@@ -161,16 +232,14 @@ package Aniki 0.01 {
         my $sth = $self->execute($sql, @$bind);
 
         # fetch
-        my $columns = $sth->{$self->aniki->fields_case};
-        my $rows    = $sth->rows;
         my $results = $sth->fetchall_arrayref({
-            FetchHashKeyName => $self->aniki->fields_case,
+            FetchHashKeyName => $self->fields_case,
             Slice            => {},
         });
 
         $sth->finish;
 
-        return (@$results) if $SUPPRESS_ROW_OBJECTS;
+        return (@$results) if $self->suppress_row_objects;
 
         my $row_class = $self->guess_row_class($table_name);
         return map {
@@ -178,6 +247,7 @@ package Aniki 0.01 {
                 table_name => $table_name,
                 schema     => $self->schema,
                 filter     => $self->filter,
+                handler    => $self,
                 row_data   => $_,
             )
         } @$results;
@@ -230,7 +300,7 @@ package Aniki 0.01 {
 
     sub _guess_table_name {
         my ($self, $sql) = @_;
-        return $1 if $sql =~ /\sfrom\s+["`]?([\w]+)["`]?\s*/sio;
+        return $2 if $sql =~ /\sfrom\s+(["`]?)([\w]+)\1\s*/sio;
         return;
     }
 
@@ -243,7 +313,19 @@ package Aniki 0.01 {
     sub txn_rollback { shift->handler->txn_rollback(@_) }
     sub txn_commit   { shift->handler->txn_commit(@_)   }
 
-        our $EXCEPTION_TEMPLATE   = <<'__TRACE__';
+    # --------------------------------------------------
+    # error handling
+    sub handle_error {
+        my ($self, $sql, $bind, $e) = @_;
+        require Data::Dumper;
+
+        local $Data::Dumper::Maxdepth = 2;
+        $sql =~ s/\n/\n          /gm;
+        croak sprintf $self->exception_template, $e, $sql, Data::Dumper::Dumper($bind);
+    }
+
+    sub exception_template {
+        return <<'__TRACE__';
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@ Aniki 's Exception @@@@@
 Reason  : %s
@@ -251,14 +333,6 @@ SQL     : %s
 BIND    : %s
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 __TRACE__
-
-    sub handle_error {
-        my ($self, $sql, $bind, $e) = @_;
-        require Data::Dumper;
-
-        local $Data::Dumper::Maxdepth = 2;
-        $sql =~ s/\n/\n          /gm;
-        croak sprintf $EXCEPTION_TEMPLATE, $e, $sql, Data::Dumper::Dumper($bind);
     }
 }
 
@@ -333,12 +407,12 @@ Aniki - The ORM as our great brother.
         __PACKAGE__->setup(
             schema => 'MyProj::DB::Schema',
             filter => 'MyProj::DB::Filter',
+            row    => 'MyProj::DB::Row',
         );
     };
 
     package main {
         my $db = MyProj::DB->new(...);
-        $db->schema->add_table(name => $_) for $db->schema->get_tables;
         my $author_id = $db->insert_and_fetch_id(author => { name => 'songmu' });
 
         $db->insert(module => {

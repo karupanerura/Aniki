@@ -6,7 +6,6 @@ package Aniki::Types {
     use Type::Tiny;
     use Scalar::Util qw/reftype blessed/;
 
-    my $NAMESPACE = __PACKAGE__;
     my %STASH;
 
     sub type { _type($_[1]) }
@@ -20,7 +19,7 @@ package Aniki::Types {
     sub _deftype {
         my ($name, $args) = @_;
         $STASH{$name} = Type::Tiny->new(
-            name => "${NAMESPACE}::$name",
+            name => $name,
             %$args,
         );
     }

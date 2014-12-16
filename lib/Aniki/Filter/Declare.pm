@@ -13,9 +13,10 @@ package Aniki::Filter::Declare {
         my $filter = Aniki::Filter->new;
 
         no strict qw/refs/; ## no critic
-        *{"${caller}::table"}   = \&_table;
-        *{"${caller}::inflate"} = _inflate($filter);
-        *{"${caller}::deflate"} = _deflate($filter);
+        *{"${caller}::table"}    = \&_table;
+        *{"${caller}::inflate"}  = _inflate($filter);
+        *{"${caller}::deflate"}  = _deflate($filter);
+        *{"${caller}::instance"} = _instance($filter);
     }
 
     our $TARGET_TABLE;
@@ -50,6 +51,11 @@ package Aniki::Filter::Declare {
                 $filter->add_global_deflator($column, $code);
             }
         };
+    }
+
+    sub _instance {
+        my $filter = shift;
+        return sub { $filter };
     }
 }
 

@@ -26,9 +26,20 @@ package Aniki::Row {
         required => 1,
     );
 
+    has handler => (
+        is       => 'ro',
+        required => 1,
+        weak_ref => 1,
+    );
+
     has row_data => (
         is       => 'ro',
         required => 1,
+    );
+
+    has relay_data => (
+        is      => 'ro',
+        default => sub { +{} },
     );
 
     sub get {
@@ -37,6 +48,28 @@ package Aniki::Row {
 
         my $data = $self->get_column($column);
         return $self->{__instance_cache}{get}{$column} = $self->filter->inflate_column($self->table_name, $column, $data);
+    }
+
+    sub relay {
+        my ($self, $key) = @_;
+        return $self->relay_data->{$key} if exists $self->relay_data->{$key};
+
+        my $row = $self->relay_fetch($key);
+        return $self->relay_data->{$key} = $row;
+    }
+
+    sub relay_fetch {
+        my ($self, $key) = @_;
+        my $relation = $self->schema->get_relations($self->table_name)->get_relation($key);
+        return unless $relation;
+
+        my ($related_row) = $self->select($relation->{table_name} => {
+            map {
+                $relation->{dest}->[$_] => $self->get_column($relation->{src}->[$_])
+            } keys @{ $relation->{dest} }
+        });
+
+        return $related_row
     }
 
     sub get_column {
@@ -61,6 +94,9 @@ package Aniki::Row {
         my $column = $AUTOLOAD =~ s/^.+://r;
         if (exists $self->row_data->{$column}) {
             return $self->get($column);
+        }
+        elsif (exists $self->relay_data->{$column}) {## FIXME
+            return $self->relay($column);
         }
         else {
             my $msg = sprintf q{Can't locate object method "%s" via package "%s"}, $column, ref $self;
