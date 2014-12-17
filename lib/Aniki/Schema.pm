@@ -16,7 +16,7 @@ package Aniki::Schema {
 
         # create cache
         for my $table ($self->context->schema->get_tables) {
-            $self->schema->get_relations($table->name);
+            $self->get_relations($table->name);
         }
     }
 
@@ -68,7 +68,7 @@ package Aniki::Schema {
     sub AUTOLOAD {
         my $self = shift;
         my $method = $AUTOLOAD =~ s/^.*://r;
-        if (can { $self->context->schema } $method) {
+        if ($self->context->schema->can($method)) {
             return $self->context->schema->$method(@_);
         }
         else {

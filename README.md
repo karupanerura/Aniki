@@ -64,12 +64,12 @@ Aniki - The ORM as our great brother.
         __PACKAGE__->setup(
             schema => 'MyProj::DB::Schema',
             filter => 'MyProj::DB::Filter',
+            row    => 'MyProj::DB::Row',
         );
     };
 
     package main {
-        my $db = MyProj::DB->new(...);
-        $db->schema->add_table(name => $_) for $db->schema->get_tables;
+        my $db = MyProj::DB->new(connect_info => [...]);
         my $author_id = $db->insert_and_fetch_id(author => { name => 'songmu' });
 
         $db->insert(module => {

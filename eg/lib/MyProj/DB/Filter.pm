@@ -10,7 +10,7 @@ package MyProj::DB::Filter {
             return uc $name;
         };
 
-        deflate author => name => sub {
+        deflate name => sub {
             my $name = shift;
             return lc $name;
         };

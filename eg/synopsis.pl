@@ -3,9 +3,10 @@ use File::Basename qw/dirname/;
 use File::Spec;
 use lib File::Spec->catdir(dirname(__FILE__), 'lib');
 use MyProj::DB;
+use MyProj::DB::Schema;
 
-my $db = MyProj::DB->new("dbi:SQLite:dbname=:memory:", "", "");
-$db->execute("CREATE TABLE $_") for $db->schema->get_tables;
+my $db = MyProj::DB->new(connect_info => ["dbi:SQLite:dbname=:memory:", "", ""]);
+$db->execute(MyProj::DB::Schema->output);
 my $author_id = $db->insert_and_fetch_id(author => { name => 'songmu' });
 
 $db->insert(module => {

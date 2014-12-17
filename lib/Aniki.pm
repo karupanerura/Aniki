@@ -8,12 +8,13 @@ package Aniki 0.01 {
     use Aniki::QueryBuilder;
 
     use Module::Load ();
-    use SQL::Maker::SQLType;
+    use SQL::Maker::SQLType qw/sql_type/;
     use DBIx::Sunny;
     use DBIx::Handler;
     use Carp qw/croak/;
     use Try::Tiny;
     use Module::Load ();
+    use Scalar::Util qw/blessed/;
     use String::CamelCase qw/camelize/;
 
     has connect_info => (
@@ -412,7 +413,7 @@ Aniki - The ORM as our great brother.
     };
 
     package main {
-        my $db = MyProj::DB->new(...);
+        my $db = MyProj::DB->new(connect_info => [...]);
         my $author_id = $db->insert_and_fetch_id(author => { name => 'songmu' });
 
         $db->insert(module => {
