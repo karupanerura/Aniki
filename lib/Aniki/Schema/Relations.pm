@@ -1,7 +1,7 @@
 use 5.014002;
 package Aniki::Schema::Relations {
     use namespace::sweep;
-    use Moo;
+    use Mouse;
     use Lingua::EN::Inflect qw/PL/;
     use SQL::Translator::Schema::Constants;
 

@@ -1,7 +1,7 @@
 use 5.014002;
 package Aniki::Filter {
     use namespace::sweep;
-    use Moo;
+    use Mouse;
 
     has global_inflators => (
         is      => 'ro',

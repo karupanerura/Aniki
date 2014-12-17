@@ -1,10 +1,9 @@
 use 5.014002;
 package Aniki 0.01 {
     use namespace::sweep;
-    use Moo;
+    use Mouse;
     use Aniki::Row;
     use Aniki::Schema;
-    use Aniki::Types;
     use Aniki::QueryBuilder;
 
     use Module::Load ();
@@ -19,7 +18,7 @@ package Aniki 0.01 {
 
     has connect_info => (
         is       => 'ro',
-        isa      => Aniki::Types->type('ConnectInfo'),
+        isa      => 'ArrayRef',
         required => 1,
     );
 
@@ -402,7 +401,7 @@ Aniki - The ORM as our great brother.
     };
 
     package MyProj::DB {
-        use Moo;
+        use Mouse;
         extends qw/Aniki/;
 
         __PACKAGE__->setup(

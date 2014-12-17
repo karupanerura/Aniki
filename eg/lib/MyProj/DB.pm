@@ -1,6 +1,6 @@
 use 5.014002;
 package MyProj::DB {
-    use Moo;
+    use Mouse;
     extends qw/Aniki/;
 
     __PACKAGE__->setup(

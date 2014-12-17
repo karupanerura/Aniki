@@ -58,7 +58,7 @@ Aniki - The ORM as our great brother.
     };
 
     package MyProj::DB {
-        use Moo;
+        use Mouse;
         extends qw/Aniki/;
 
         __PACKAGE__->setup(

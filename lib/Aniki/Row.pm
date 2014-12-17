@@ -1,6 +1,6 @@
 package Aniki::Row {
     use namespace::sweep;
-    use Moo;
+    use Mouse;
     use Carp qw/croak/;
 
     has table_name => (
