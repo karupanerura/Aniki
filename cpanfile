@@ -1,5 +1,6 @@
 requires 'DBIx::Handler';
 requires 'DBIx::Sunny';
+requires 'DBIx::Schema::DSL';
 requires 'Lingua::EN::Inflect';
 requires 'Module::Load';
 requires 'Moo';
