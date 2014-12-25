@@ -5,8 +5,9 @@ use lib File::Spec->catdir(dirname(__FILE__), 'lib');
 use MyProj::DB;
 use MyProj::DB::Schema;
 
-my $db = MyProj::DB->new(connect_info => ["dbi:SQLite:dbname=:memory:", "", ""]);
+my $db = MyProj::DB->new(connect_info => ["dbi:mysql:database=test", "root", "", { mysql_multi_statements => 1 } ]);
 $db->execute(MyProj::DB::Schema->output);
+
 my $author_id = $db->insert_and_fetch_id(author => { name => 'songmu' });
 
 $db->insert(module => {
@@ -30,7 +31,7 @@ my ($author) = $db->select(author => {
     name => 'songmu',
 }, {
     limit => 1,
-    relay => [qw/module/],
+    relay => [qw/modules/],
 });
 
 $author->name;                 ## SONGMU

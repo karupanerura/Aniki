@@ -8,14 +8,6 @@ package Aniki::Row {
         required => 1,
     );
 
-    has table => (
-        is       => 'ro',
-        default  => sub {
-            my $self = shift;
-            return $self->schema->get_table($self->table_name);
-        },
-    );
-
     has schema => (
         is       => 'ro',
         required => 1,
@@ -35,6 +27,22 @@ package Aniki::Row {
     has row_data => (
         is       => 'ro',
         required => 1,
+    );
+
+    has table => (
+        is       => 'ro',
+        default  => sub {
+            my $self = shift;
+            return $self->schema->get_table($self->table_name);
+        },
+    );
+
+    has relation => (
+        is      => 'ro',
+        default => sub {
+            my $self = shift;
+            $self->schema->get_relations($self->table_name);
+        },
     );
 
     has relay_data => (
@@ -95,7 +103,7 @@ package Aniki::Row {
         if (exists $self->row_data->{$column}) {
             return $self->get($column);
         }
-        elsif (exists $self->relay_data->{$column}) {## FIXME
+        elsif ($self->relation && $self->relation->get_relation($column)) {
             return $self->relay($column);
         }
         else {

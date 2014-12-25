@@ -232,10 +232,7 @@ package Aniki 0.01 {
         my $sth = $self->execute($sql, @$bind);
 
         # fetch
-        my $results = $sth->fetchall_arrayref({
-            FetchHashKeyName => $self->fields_case,
-            Slice            => {},
-        });
+        my $results = $sth->fetchall_arrayref({});
 
         $sth->finish;
 
