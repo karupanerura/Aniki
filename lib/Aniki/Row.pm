@@ -37,7 +37,7 @@ package Aniki::Row {
         },
     );
 
-    has relation => (
+    has relations => (
         is      => 'ro',
         default => sub {
             my $self = shift;
@@ -60,24 +60,22 @@ package Aniki::Row {
 
     sub relay {
         my ($self, $key) = @_;
-        return $self->relay_data->{$key} if exists $self->relay_data->{$key};
+        return unless $self->relations->get_relation($key);
 
-        my $row = $self->relay_fetch($key);
-        return $self->relay_data->{$key} = $row;
+        unless (exists $self->relay_data->{$key}) {
+            $self->relay_data->{$key} = $self->relay_fetch($key);
+        }
+
+        my $relay_data = $self->relay_data->{$key};
+        return if not defined $relay_data;
+        return wantarray ? @$relay_data : $relay_data if ref $relay_data eq 'ARRAY';
+        return $relay_data;
     }
 
     sub relay_fetch {
         my ($self, $key) = @_;
-        my $relation = $self->schema->get_relations($self->table_name)->get_relation($key);
-        return unless $relation;
-
-        my ($related_row) = $self->select($relation->{table_name} => {
-            map {
-                $relation->{dest}->[$_] => $self->get_column($relation->{src}->[$_])
-            } keys @{ $relation->{dest} }
-        });
-
-        return $related_row
+        $self->handler->attach_relay_data($self->table_name, [$key], [$self]);
+        return $self->relay_data->{$key};
     }
 
     sub get_column {
@@ -103,7 +101,7 @@ package Aniki::Row {
         if (exists $self->row_data->{$column}) {
             return $self->get($column);
         }
-        elsif ($self->relation && $self->relation->get_relation($column)) {
+        elsif ($self->relations && $self->relations->get_relation($column)) {
             return $self->relay($column);
         }
         else {

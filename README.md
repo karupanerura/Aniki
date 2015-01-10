@@ -37,7 +37,7 @@ Aniki - The ORM as our great brother.
                 return uc $name;
             };
 
-            deflate author => name => sub {
+            deflate name => sub {
                 my $name = shift;
                 return lc $name;
             };

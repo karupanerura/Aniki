@@ -4,6 +4,7 @@ use File::Spec;
 use lib File::Spec->catdir(dirname(__FILE__), 'lib');
 use MyProj::DB;
 use MyProj::DB::Schema;
+# use DBIx::QueryLog;
 
 my $db = MyProj::DB->new(connect_info => ["dbi:mysql:database=test", "root", "", { mysql_multi_statements => 1 } ]);
 $db->execute(MyProj::DB::Schema->output);
@@ -24,15 +25,15 @@ my ($module) = $db->select(module => {
 }, {
     limit => 1,
 });
-$module->name;         ## Riji
-$module->author->name; ## SONGMU
+say '$module->name:         ', $module->name;         ## Riji
+say '$module->author->name: ', $module->author->name; ## SONGMU
 
 my ($author) = $db->select(author => {
-    name => 'songmu',
+    name => 'SONGMU',
 }, {
     limit => 1,
     relay => [qw/modules/],
 });
 
-$author->name;                 ## SONGMU
-$_->name for $author->modules; ## DBIx::Schema::DSL, Riji
+say '$author->name:   ', $author->name;                 ## SONGMU
+say 'modules[]->name: ', $_->name for $author->modules; ## DBIx::Schema::DSL, Riji

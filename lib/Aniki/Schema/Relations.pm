@@ -4,6 +4,7 @@ package Aniki::Schema::Relations {
     use Mouse;
     use Lingua::EN::Inflect qw/PL/;
     use SQL::Translator::Schema::Constants;
+    use Aniki::Schema::Relation;
 
     has schema => (
         is       => 'ro',
@@ -30,8 +31,8 @@ package Aniki::Schema::Relations {
 
         my $name = $rule{name};
         exists $self->rule->{$name}
-            or die "already exists $name in rule. (table:@{[ $self->table->name ]})";
-        $self->rule->{$name} = \%rule;
+            and die "already exists $name in rule. (table:@{[ $self->table->name ]})";
+        $self->rule->{$name} = Aniki::Schema::Relation->new(%rule);
     }
 
     sub add_by_constraint {

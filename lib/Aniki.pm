@@ -15,6 +15,8 @@ package Aniki 0.01 {
     use Module::Load ();
     use Scalar::Util qw/blessed/;
     use String::CamelCase qw/camelize/;
+    use List::MoreUtils qw/pairwise/;
+    use List::UtilsBy qw/partition_by/;
 
     has connect_info => (
         is       => 'ro',
@@ -102,9 +104,10 @@ package Aniki 0.01 {
 
     sub insert {
         my ($self, $table_name, $row, $opt) = @_;
+        $row = $self->filter->deflate_row($table_name, $row);
+
         my $table = $self->schema->get_table($table_name);
         $row = $self->_bind_sql_type_to_args($table, $row) if $table;
-        $row = $self->filter->deflate_row($table_name, $row);
 
         my ($sql, @bind) = $self->query_builder->insert($table_name, $row, $opt);
         my $sth  = $self->execute($sql, @bind);
@@ -203,23 +206,35 @@ package Aniki 0.01 {
 
         my @rows = @$rows;
         my $relations = $self->schema->get_relations($table_name);
-        for my $relay_rule (map { $relations->get_relation($_) } @$relay_names) {
-            my $name         = $relay_rule->{name};
-            my $table_name   = $relay_rule->{table_name};
-            my @src_columns  = $relay_rule->{src};
-            my @dest_columns = $relay_rule->{dest};
+        for my $relation (map { $relations->get_relation($_) } @$relay_names) {
+            my $name         = $relation->name;
+            my $table_name   = $relation->table_name;
+            my $has_many     = $relation->has_many;
+            my @src_columns  = @{ $relation->src  };
+            my @dest_columns = @{ $relation->dest };
             if (@src_columns == 1 and @dest_columns == 1) {
                 my $src_column  = $src_columns[0];
                 my $dest_column = $dest_columns[0];
 
-                my %related_row_map = map { $_->get_column($dest_column) => $_ }
-                    $self->select($table_name => {
-                        $dest_column => [map { $_->get_column($src_column) } @rows]
-                    });
+                my %related_rows_map = partition_by {
+                    $_->get_column($dest_column)
+                } $self->select($table_name => {
+                    $dest_column => [map { $_->get_column($src_column) } @rows]
+                });
 
                 for my $row (@rows) {
-                    my $related_row = $related_row_map{$row->get_column($src_column)};
-                    $row->relay_data->{$name} = $related_row;
+                    my $related_rows = $related_rows_map{$row->get_column($src_column)};
+                    $row->relay_data->{$name} = $has_many ? $related_rows : $related_rows->[0];
+                }
+            }
+            else {
+                # follow slow case...
+                # TODO: show warning
+                for my $row (@rows) {
+                    my @related_rows = $self->select($table_name => {
+                        pairwise { $a => $row->get_column($b) } @dest_columns, @src_columns
+                    });
+                    $row->relay_data->{$name} = $has_many ? \@related_rows : $related_rows[0];
                 }
             }
         }
@@ -377,7 +392,7 @@ Aniki - The ORM as our great brother.
                 return uc $name;
             };
 
-            deflate author => name => sub {
+            deflate name => sub {
                 my $name = shift;
                 return lc $name;
             };

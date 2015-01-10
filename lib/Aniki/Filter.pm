@@ -52,7 +52,7 @@ package Aniki::Filter {
     sub inflate_column {
         my ($self, $table_name, $column, $data) = @_;
         for my $code ($self->get_inflate_callbacks($table_name, $column)) {
-            $data = $code->($code);
+            $data = $code->($data);
         }
         return $data;
     }
@@ -60,7 +60,7 @@ package Aniki::Filter {
     sub deflate_column {
         my ($self, $table_name, $column, $data) = @_;
         for my $code ($self->get_deflate_callbacks($table_name, $column)) {
-            $data = $code->($code);
+            $data = $code->($data);
         }
         return $data;
     }

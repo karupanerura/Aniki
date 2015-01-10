@@ -23,21 +23,21 @@ package Aniki::Schema {
     sub has_many {
         my ($self, $table_name, $fields) = @_;
         my $table = $self->context->schema->get_table($table_name);
-        return !!0 unless defined $table;
+        return !!1 unless defined $table;
 
         my %field = map { $_ => 1 } @$fields;
         for my $unique (grep { $_->type eq UNIQUE || $_->type eq PRIMARY_KEY } $table->get_constraints) {
-            my @field_names    = $unique->fileld_names;
+            my @field_names    = $unique->field_names;
             my @related_fields = grep { $field{$_} } @field_names;
-            return !!1 if @field_names == @related_fields;
+            return !!0 if @field_names == @related_fields;
         }
-        return !!0;
+        return !!1;
     }
 
     sub get_relations {
         my ($self, $table_name) = @_;
         exists $self->{__instance_cache}{relations}{$table_name}
-            or return $self->{__instance_cache}{relations}{$table_name};
+           and return $self->{__instance_cache}{relations}{$table_name};
 
         my $relations = $self->_get_relations($table_name);
         return $self->{__instance_cache}{relations}{$table_name} = $relations;
