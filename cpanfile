@@ -2,6 +2,8 @@ requires 'DBIx::Handler';
 requires 'DBIx::Sunny';
 requires 'DBIx::Schema::DSL';
 requires 'Lingua::EN::Inflect';
+requires 'List::MoreUtils';
+requires 'List::UtilsBy';
 requires 'Module::Load';
 requires 'Mouse';
 requires 'SQL::Maker';
