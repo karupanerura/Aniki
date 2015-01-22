@@ -114,7 +114,7 @@ package Aniki 0.01 {
 
     sub insert {
         my ($self, $table_name, $row, $opt) = @_;
-        $row = $self->filter->deflate_row($table_name, $row);
+        $row = $self->filter_on_insert($table_name, $row);
 
         my $table = $self->schema->get_table($table_name);
         $row = $self->_bind_sql_type_to_args($table, $row) if $table;
@@ -126,9 +126,14 @@ package Aniki 0.01 {
         return $rows;
     }
 
+    sub filter_on_insert {
+        my ($self, $table_name, $row) = @_;
+        return $self->filter->deflate_row($table_name, $row);
+    }
+
     sub update {
         my ($self, $table_name, $row, $where, $opt) = @_;
-        $row = $self->filter->deflate_row($table_name, $row);
+        $row = $self->filter_on_update($table_name, $row);
 
         my $table = $self->schema->get_table($table_name);
         if ($table) {
@@ -141,6 +146,11 @@ package Aniki 0.01 {
         my $rows = $sth->rows;
         $sth->finish;
         return $rows;
+    }
+
+    sub filter_on_update {
+        my ($self, $table_name, $row) = @_;
+        return $self->filter->deflate_row($table_name, $row);
     }
 
     sub insert_and_fetch_id {
@@ -162,9 +172,49 @@ package Aniki 0.01 {
         my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
         $self->insert($table_name, $row_data, @_);
         return unless defined wantarray;
+        return $self->select($table_name, $self->_where_row_cond($table, $row_data), { limit => 1 })->first;
+    }
 
-        my ($row) = $self->select($table_name, $self->_where_row_cond($table, $row_data), { limit => 1 });
-        return $row;
+    sub insert_on_duplicate {
+        my ($self, $table_name, $insert, $update) = @_;
+        $insert = $self->filter_on_insert($table_name, $insert);
+        $update = $self->filter_on_update($table_name, $update);
+
+        my $table = $self->schema->get_table($table_name);
+        if ($table) {
+            $insert = $self->_bind_sql_type_to_args($table, $insert);
+            $update = $self->_bind_sql_type_to_args($table, $update);
+        }
+
+        my ($sql, @bind) = $self->query_builder->insert_on_duplicate($table_name, $insert, $update);
+        my $sth  = $self->execute($sql, @bind);
+        my $rows = $sth->rows;
+        $sth->finish;
+        return $rows;
+    }
+
+    sub insert_multi {
+        my ($self, $table_name, $values, $opts) = @_;
+        $opts = defined $opts ? {%$opts} : {};
+
+        my @values = map { $self->filter_on_insert($table_name, $_) } @$values;
+        if (exists $opts->{update}) {
+            $opts->{update} = $self->filter_on_update($table_name, $opts->{update});
+        }
+
+        my $table = $self->schema->get_table($table_name);
+        if ($table) {
+            $_ = $self->_bind_sql_type_to_args($table, $_) for @values;
+            if (exists $opts->{update}) {
+                $opts->{update} = $self->_bind_sql_type_to_args($table, $opts->{update});
+            }
+        }
+
+        my ($sql, @bind) = $self->query_builder->insert_multi($table_name, $values, $opts);
+        my $sth  = $self->execute($sql, @bind);
+        my $rows = $sth->rows;
+        $sth->finish;
+        return $rows;
     }
 
     sub _where_row_cond {
@@ -173,7 +223,10 @@ package Aniki 0.01 {
         # fetch by primary key
         my %where;
         for my $pk ($table->primary_key->fields) {
-            $where{$pk->name} = $pk->is_auto_increment ? $self->dbh->last_insert_id : $row_data->{$pk->name};
+            $where{$pk->name} = exists $row_data->{$pk->name} ? $row_data->{$pk->name}
+                              : $pk->is_auto_increment        ? $self->dbh->last_insert_id
+                              : undef
+                              ;
         }
 
         return \%where;
