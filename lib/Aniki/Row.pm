@@ -2,7 +2,7 @@ package Aniki::Row {
     use namespace::sweep;
     use Mouse;
     use Carp qw/croak/;
-    $Carp::Internal{+__PACKAGE__}++;
+    # $Carp::Internal{+__PACKAGE__}++;
 
     has table_name => (
         is       => 'ro',

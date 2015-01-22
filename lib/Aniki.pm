@@ -259,13 +259,13 @@ package Aniki 0.01 {
         my ($self, $table_name, $relay, $rows) = @_;
         return unless @$rows;
 
-        my $relations = $self->handler->schema->get_relations($table_name);
+        my $relations = $self->schema->get_relations($table_name);
         for my $key (@$relay) {
             my $relation = $relations->get_relation($key);
             unless ($relation) {
                 croak "'$key' is not defined in relation rules. (maybe possible typo?)";
             }
-            $relation->fetcher($self->handler)->execute($rows);
+            $relation->fetcher($self)->execute($rows);
         }
     }
 
@@ -281,7 +281,7 @@ package Aniki 0.01 {
             my $txn; $txn = $self->txn_scope unless $self->in_txn;
 
             my $sth = $self->execute($sql, @$bind);
-            my $result = $self->_fetch_by_sth($sth);
+            my $result = $self->_fetch_by_sth($sth, $table_name);
             $self->attach_relay_data($table_name, $relay, $result->rows);
 
             $txn->rollback if defined $txn; ## for read only
@@ -289,7 +289,7 @@ package Aniki 0.01 {
         }
         else {
             my $sth = $self->execute($sql, @$bind);
-            return $self->_fetch_by_sth($sth);
+            return $self->_fetch_by_sth($sth, $table_name);
         }
     }
 

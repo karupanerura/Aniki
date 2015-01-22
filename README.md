@@ -81,20 +81,20 @@ Aniki - The ORM as our great brother.
             author_id => $author_id,
         });
 
-        my ($module) = $db->select(module => {
+        my $module = $db->select(module => {
             name => 'Riji',
         }, {
             limit => 1,
-        });
+        })->first;
         $module->name;         ## Riji
         $module->author->name; ## SONGMU
 
-        my ($author) = $db->select(author => {
+        my $author = $db->select(author => {
             name => 'songmu',
         }, {
             limit => 1,
             relay => [qw/module/],
-        });
+        })->first;
         $author->name;                 ## SONGMU
         $_->name for $author->modules; ## DBIx::Schema::DSL, Riji
     };
