@@ -72,6 +72,7 @@ package Aniki {
     sub query_builder { croak 'This is abstract method.' }
     sub filter        { croak 'This is abstract method.' }
     sub row_class     { croak 'This is abstract method.' }
+    sub result_class  { croak 'This is abstract method.' }
 
     sub setup {
         my ($class, %args) = @_;
