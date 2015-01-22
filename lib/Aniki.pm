@@ -259,7 +259,7 @@ package Aniki 0.01 {
         my ($self, $table_name, $relay, $rows) = @_;
         return unless @$rows;
 
-        my $relations = $self->handler->schema->get_relations($self->table_name);
+        my $relations = $self->handler->schema->get_relations($table_name);
         for my $key (@$relay) {
             my $relation = $relations->get_relation($key);
             unless ($relation) {
