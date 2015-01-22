@@ -101,9 +101,15 @@ Aniki - The ORM as our great brother.
 
     1;
 
+# WARNING
+
+IT'S STILL IN DEVELOPMENT PHASE.
+I haven't written document and test script yet.
+
 # DESCRIPTION
 
-Aniki is ...
+Aniki is ORM.
+Lite, but powerful.
 
 # LICENSE
 
