@@ -46,6 +46,8 @@
             "DBIx::Schema::DSL" : "0",
             "DBIx::Sunny" : "0",
             "Lingua::EN::Inflect" : "0",
+            "List::MoreUtils" : "0",
+            "List::UtilsBy" : "0",
             "Module::Load" : "0",
             "Mouse" : "0",
             "SQL::Maker" : "0",
@@ -77,6 +79,6 @@
          "web" : "https://github.com/karupanerura/Aniki"
       }
    },
-   "version" : "0.01",
+   "version" : "0.01_01",
    "x_authority" : "cpan:KARUPA"
 }

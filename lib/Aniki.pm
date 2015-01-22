@@ -1,11 +1,13 @@
 use 5.014002;
-package Aniki 0.01 {
+package Aniki {
     use namespace::sweep;
     use Mouse;
     use Aniki::Row;
     use Aniki::Collection;
     use Aniki::Schema;
     use Aniki::QueryBuilder;
+
+    our $VERSION = '0.01_01';
 
     use Module::Load ();
     use SQL::Maker::SQLType qw/sql_type/;
