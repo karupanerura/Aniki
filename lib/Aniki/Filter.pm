@@ -51,18 +51,16 @@ package Aniki::Filter {
 
     sub inflate_column {
         my ($self, $table_name, $column, $data) = @_;
-        for my $code ($self->get_inflate_callbacks($table_name, $column)) {
-            $data = $code->($data);
-        }
-        return $data;
+        my $code = $self->get_inflate_callback($table_name, $column);
+        return $data unless defined $code;
+        return $code->($data);
     }
 
     sub deflate_column {
         my ($self, $table_name, $column, $data) = @_;
-        for my $code ($self->get_deflate_callbacks($table_name, $column)) {
-            $data = $code->($data);
-        }
-        return $data;
+        my $code = $self->get_deflate_callback($table_name, $column);
+        return $data unless defined $code;
+        return $code->($data);
     }
 
     sub inflate_row {
@@ -83,38 +81,38 @@ package Aniki::Filter {
         return \%row;
     }
 
-    sub get_inflate_callbacks {
+    sub get_inflate_callback {
         my ($self, $table_name, $column) = @_;
         unless (exists $self->{__inflate_callbacks_cache}->{$table_name}->{$column}) {
-            my @code;
+            my $callback;
             for my $pair (@{ $self->global_inflators }) {
                 my ($rx, $code) = @$pair;
-                push @code => $code if $column =~ $rx;
+                $callback = $code if $column =~ $rx;
             }
             for my $pair (@{ $self->table_inflators->{$table_name} }) {
                 my ($rx, $code) = @$pair;
-                push @code => $code if $column =~ $rx;
+                $callback = $code if $column =~ $rx;
             }
-            $self->{__inflate_callbacks_cache}->{$table_name}->{$column} = \@code;
+            $self->{__inflate_callbacks_cache}->{$table_name}->{$column} = $callback;
         }
-        return @{ $self->{__inflate_callbacks_cache}->{$table_name}->{$column} };
+        return $self->{__inflate_callbacks_cache}->{$table_name}->{$column};
     }
 
-    sub get_deflate_callbacks {
+    sub get_deflate_callback {
         my ($self, $table_name, $column) = @_;
         unless (exists $self->{__deflate_callbacks_cache}->{$table_name}->{$column}) {
-            my @code;
+            my $callback;
             for my $pair (@{ $self->global_deflators }) {
                 my ($rx, $code) = @$pair;
-                unshift @code => $code if $column =~ $rx;
+                $callback = $code if $column =~ $rx;
             }
             for my $pair (@{ $self->table_deflators->{$table_name} }) {
                 my ($rx, $code) = @$pair;
-                unshift @code => $code if $column =~ $rx;
+                $callback = $code if $column =~ $rx;
             }
-            $self->{__deflate_callbacks_cache}->{$table_name}->{$column} = \@code;
+            $self->{__deflate_callbacks_cache}->{$table_name}->{$column} = $callback;
         }
-        return @{ $self->{__deflate_callbacks_cache}->{$table_name}->{$column} };
+        return $self->{__deflate_callbacks_cache}->{$table_name}->{$column};
     }
 };
 
