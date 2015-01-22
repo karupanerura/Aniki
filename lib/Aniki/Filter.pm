@@ -23,7 +23,7 @@ package Aniki::Filter {
         default => sub { +{} },
     );
 
-    sub _normalize_column2rx { ref $_[0] eq 'Regexp' ? $_[0] : qr/\A\Q$_[0]\E\z/mo }
+    sub _normalize_column2rx { ref $_[0] eq 'Regexp' ? $_[0] : qr/\A\Q$_[0]\E\z/m }
 
     sub add_global_inflator {
         my ($self, $column, $code) = @_;
