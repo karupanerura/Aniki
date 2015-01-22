@@ -16,7 +16,6 @@ package Aniki 0.01 {
     use Module::Load ();
     use Scalar::Util qw/blessed/;
     use String::CamelCase qw/camelize/;
-    $Carp::Internal{+__PACKAGE__}++;
 
     has connect_info => (
         is       => 'ro',
