@@ -2,18 +2,9 @@ package Aniki::Row {
     use namespace::sweep;
     use Mouse;
     use Carp qw/croak/;
+    $Carp::Internal{+__PACKAGE__}++;
 
     has table_name => (
-        is       => 'ro',
-        required => 1,
-    );
-
-    has schema => (
-        is       => 'ro',
-        required => 1,
-    );
-
-    has filter => (
         is       => 'ro',
         required => 1,
     );
@@ -22,6 +13,16 @@ package Aniki::Row {
         is       => 'ro',
         required => 1,
         weak_ref => 1,
+    );
+
+    has schema => (
+        is      => 'ro',
+        default => sub { shift->handler->schema },
+    );
+
+    has filter => (
+        is      => 'ro',
+        default => sub { shift->handler->filter },
     );
 
     has row_data => (
@@ -60,8 +61,6 @@ package Aniki::Row {
 
     sub relay {
         my ($self, $key) = @_;
-        return unless $self->relations->get_relation($key);
-
         unless (exists $self->relay_data->{$key}) {
             $self->relay_data->{$key} = $self->relay_fetch($key);
         }

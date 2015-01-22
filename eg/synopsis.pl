@@ -20,20 +20,20 @@ $db->insert(module => {
     author_id => $author_id,
 });
 
-my ($module) = $db->select(module => {
+my $module = $db->select(module => {
     name => 'Riji',
 }, {
     limit => 1,
-});
+})->first;
 say '$module->name:         ', $module->name;         ## Riji
 say '$module->author->name: ', $module->author->name; ## SONGMU
 
-my ($author) = $db->select(author => {
+my $author = $db->select(author => {
     name => 'SONGMU',
 }, {
     limit => 1,
     relay => [qw/modules/],
-});
+})->first;
 
 say '$author->name:   ', $author->name;                 ## SONGMU
 say 'modules[]->name: ', $_->name for $author->modules; ## DBIx::Schema::DSL, Riji

@@ -3,6 +3,7 @@ package Aniki 0.01 {
     use namespace::sweep;
     use Mouse;
     use Aniki::Row;
+    use Aniki::Collection;
     use Aniki::Schema;
     use Aniki::QueryBuilder;
 
@@ -15,8 +16,7 @@ package Aniki 0.01 {
     use Module::Load ();
     use Scalar::Util qw/blessed/;
     use String::CamelCase qw/camelize/;
-    use List::MoreUtils qw/pairwise/;
-    use List::UtilsBy qw/partition_by/;
+    $Carp::Internal{+__PACKAGE__}++;
 
     has connect_info => (
         is       => 'ro',
@@ -92,12 +92,22 @@ package Aniki 0.01 {
             $class->meta->add_method(filter => sub { $filter });
         }
 
-        my $row_class = 'Aniki::Row';
-        if ($args{row}) {
-            Module::Load::load($args{row});
-            $row_class = $args{row};
+        {
+            my $row_class = 'Aniki::Row';
+            if ($args{row}) {
+                Module::Load::load($args{row});
+                $row_class = $args{row};
+            }
+            $class->meta->add_method(row_class => sub { $row_class });
         }
-        $class->meta->add_method(row_class => sub { $row_class });
+        {
+            my $result_class = 'Aniki::Collection';
+            if ($args{result}) {
+                Module::Load::load($args{result});
+                $result_class = $args{result};
+            }
+            $class->meta->add_method(result_class => sub { $result_class });
+        }
     }
 
     sub dbh { shift->handler->dbh }
@@ -182,87 +192,69 @@ package Aniki 0.01 {
             @columns = map { $_->name } $table->get_fields();
         }
 
-        my $relay_enabled_fg = exists $opt->{relay}
-            && ref $opt->{relay}
-            && ref $opt->{relay} eq 'ARRAY'
-            && @{ $opt->{relay} }
-            && !$self->suppress_row_objects;
-
-        my $txn;
-           $txn = $self->txn_scope if $relay_enabled_fg && !$self->in_txn;
-
+        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
         my ($sql, @bind) = $self->query_builder->select($table_name, \@columns, $where, $opt);
-        my @rows = $self->select_by_sql($sql, \@bind, $table_name);
-        $self->attach_relay_data($table_name, $opt->{relay}, \@rows) if $relay_enabled_fg;
-
-        $txn->rollback if $txn; ## for read only
-
-        return @rows;
+        return $self->select_by_sql($sql, \@bind, {
+            table_name => $table_name,
+            exists $opt->{relay} ? (
+                relay => $opt->{relay},
+            ) : (),
+        });
     }
 
     sub attach_relay_data {
-        my ($self, $table_name, $relay_names, $rows) = @_;
+        my ($self, $table_name, $relay, $rows) = @_;
         return unless @$rows;
 
-        my @rows = @$rows;
-        my $relations = $self->schema->get_relations($table_name);
-        for my $relation (map { $relations->get_relation($_) } @$relay_names) {
-            my $name         = $relation->name;
-            my $table_name   = $relation->table_name;
-            my $has_many     = $relation->has_many;
-            my @src_columns  = @{ $relation->src  };
-            my @dest_columns = @{ $relation->dest };
-            if (@src_columns == 1 and @dest_columns == 1) {
-                my $src_column  = $src_columns[0];
-                my $dest_column = $dest_columns[0];
-
-                my %related_rows_map = partition_by {
-                    $_->get_column($dest_column)
-                } $self->select($table_name => {
-                    $dest_column => [map { $_->get_column($src_column) } @rows]
-                });
-
-                for my $row (@rows) {
-                    my $related_rows = $related_rows_map{$row->get_column($src_column)};
-                    $row->relay_data->{$name} = $has_many ? $related_rows : $related_rows->[0];
-                }
+        my $relations = $self->handler->schema->get_relations($self->table_name);
+        for my $key (@$relay) {
+            my $relation = $relations->get_relation($key);
+            unless ($relation) {
+                croak "'$key' is not defined in relation rules. (maybe possible typo?)";
             }
-            else {
-                # follow slow case...
-                # TODO: show warning
-                for my $row (@rows) {
-                    my @related_rows = $self->select($table_name => {
-                        pairwise { $a => $row->get_column($b) } @dest_columns, @src_columns
-                    });
-                    $row->relay_data->{$name} = $has_many ? \@related_rows : $related_rows[0];
-                }
-            }
+            $relation->fetcher($self->handler)->execute($rows);
         }
     }
 
     sub select_by_sql {
-        my ($self, $sql, $bind, $table_name) = @_;
-        $table_name //= $self->_guess_table_name($sql);
+        my ($self, $sql, $bind, $opt) = @_;
+        $opt //= {};
 
-        my $sth = $self->execute($sql, @$bind);
+        my $table_name = exists $opt->{table_name}  ? $opt->{table_name} : $self->_guess_table_name($sql);
+        my $relay      = exists $opt->{relay}       ? $opt->{relay}      : [];
 
-        # fetch
-        my $results = $sth->fetchall_arrayref({});
+        my $relay_enabled_fg = @$relay && !$self->suppress_row_objects;
+        if ($relay_enabled_fg) {
+            my $txn; $txn = $self->txn_scope unless $self->in_txn;
 
+            my $sth = $self->execute($sql, @$bind);
+            my $result = $self->_fetch_by_sth($sth);
+            $self->attach_relay_data($table_name, $relay, $result->rows);
+
+            $txn->rollback if defined $txn; ## for read only
+            return $result;
+        }
+        else {
+            my $sth = $self->execute($sql, @$bind);
+            return $self->_fetch_by_sth($sth);
+        }
+    }
+
+    sub _fetch_by_sth {
+        my ($self, $sth, $table_name) = @_;
+        my @rows;
+
+        my %row;
+        my @columns = @{ $sth->{$self->fields_case} };
+        $sth->bind_columns(\@row{@columns});
+        push @rows => {%row} while $sth->fetch;
         $sth->finish;
 
-        return (@$results) if $self->suppress_row_objects;
-
-        my $row_class = $self->guess_row_class($table_name);
-        return map {
-            $row_class->new(
-                table_name => $table_name,
-                schema     => $self->schema,
-                filter     => $self->filter,
-                handler    => $self,
-                row_data   => $_,
-            )
-        } @$results;
+        return $self->result_class->new(
+            table_name => $table_name,
+            handler    => $self,
+            row_datas  => \@rows,
+        );
     }
 
     sub execute {
@@ -436,20 +428,20 @@ Aniki - The ORM as our great brother.
             author_id => $author_id,
         });
 
-        my ($module) = $db->select(module => {
+        my $module = $db->select(module => {
             name => 'Riji',
         }, {
             limit => 1,
-        });
+        })->first;
         $module->name;         ## Riji
         $module->author->name; ## SONGMU
 
-        my ($author) = $db->select(author => {
+        my $author = $db->select(author => {
             name => 'songmu',
         }, {
             limit => 1,
             relay => [qw/module/],
-        });
+        })->first;
         $author->name;                 ## SONGMU
         $_->name for $author->modules; ## DBIx::Schema::DSL, Riji
     };
