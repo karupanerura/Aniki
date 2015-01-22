@@ -502,9 +502,15 @@ Aniki - The ORM as our great brother.
 
     1;
 
+=head1 WARNING
+
+IT'S STILL IN DEVELOPMENT PHASE.
+I haven't written document and test script yet.
+
 =head1 DESCRIPTION
 
-Aniki is ...
+Aniki is ORM.
+Lite, but powerful.
 
 =head1 LICENSE
 
