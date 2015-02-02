@@ -99,7 +99,7 @@ package Aniki::Row {
         if (exists $self->row_data->{$column}) {
             return $self->get($column);
         }
-        elsif ($self->relationships->get_relationship($column)) {
+        elsif ($self->relationships && $self->relationships->get_relationship($column)) {
             return $self->relay($column);
         }
         else {

@@ -2,7 +2,6 @@ use 5.014002;
 package Aniki::Schema::Relationships {
     use namespace::sweep;
     use Mouse;
-    use Lingua::EN::Inflect qw/PL/;
     use SQL::Translator::Schema::Constants;
     use Aniki::Schema::Relationship;
 
@@ -23,16 +22,13 @@ package Aniki::Schema::Relationships {
     );
 
     sub add {
-        my ($self, %rule) = @_;
-        exists $rule{has_many}
-            or $rule{has_many} = $self->schema->has_many($rule{table_name}, $rule{dest});
-        exists $rule{name}
-            or $rule{name} = $rule{has_many} ? PL($rule{table_name}) : $rule{table_name};
+        my $self = shift;
+        my $relationship = Aniki::Schema::Relationship->new(schema => $self->schema, @_);
 
-        my $name = $rule{name};
+        my $name = $relationship->name;
         exists $self->rule->{$name}
             and die "already exists $name in rule. (table:@{[ $self->table->name ]})";
-        $self->rule->{$name} = Aniki::Schema::Relationship->new(%rule);
+        $self->rule->{$name} = $relationship;
     }
 
     sub add_by_constraint {
@@ -41,7 +37,6 @@ package Aniki::Schema::Relationships {
 
         if ($constraint->table->name eq $self->table->name) {
             $self->add(
-                name       => $constraint->name,
                 table_name => $constraint->reference_table,
                 src        => [$constraint->field_names],
                 dest       => [$constraint->reference_fields],

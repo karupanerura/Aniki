@@ -16,7 +16,7 @@ package MyProj::DB::Schema {
 
         add_index 'author_id_idx' => ['author_id'];
 
-        belongs_to 'author', name => 'author';
+        belongs_to 'author';
     };
 };
 
