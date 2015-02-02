@@ -9,9 +9,9 @@ use_ok $_ for qw(
     Aniki::QueryBuilder
     Aniki::Row
     Aniki::Schema
-    Aniki::Schema::Relation
-    Aniki::Schema::Relation::Fetcher
-    Aniki::Schema::Relations
+    Aniki::Schema::Relationship
+    Aniki::Schema::Relationship::Fetcher
+    Aniki::Schema::Relationships
 );
 
 done_testing;
