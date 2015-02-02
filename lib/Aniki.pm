@@ -7,7 +7,7 @@ package Aniki {
     use Aniki::Schema;
     use Aniki::QueryBuilder;
 
-    our $VERSION = '0.01_01';
+    our $VERSION = '0.01_02';
 
     use Module::Load ();
     use SQL::Maker::SQLType qw/sql_type/;

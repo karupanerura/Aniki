@@ -2,6 +2,11 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.01_02 2015-02-02T09:51:41Z
+
+    - Fixed guessing relationship name algorithm.
+    - Fixed dependencies
+
 0.01_01 2015-01-22T10:30:31Z
 
     - original version
