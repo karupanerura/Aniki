@@ -1,10 +1,10 @@
 use 5.014002;
-package Aniki::Schema::Relations {
+package Aniki::Schema::Relationships {
     use namespace::sweep;
     use Mouse;
     use Lingua::EN::Inflect qw/PL/;
     use SQL::Translator::Schema::Constants;
-    use Aniki::Schema::Relation;
+    use Aniki::Schema::Relationship;
 
     has schema => (
         is       => 'ro',
@@ -32,7 +32,7 @@ package Aniki::Schema::Relations {
         my $name = $rule{name};
         exists $self->rule->{$name}
             and die "already exists $name in rule. (table:@{[ $self->table->name ]})";
-        $self->rule->{$name} = Aniki::Schema::Relation->new(%rule);
+        $self->rule->{$name} = Aniki::Schema::Relationship->new(%rule);
     }
 
     sub add_by_constraint {
@@ -59,17 +59,17 @@ package Aniki::Schema::Relations {
         }
     }
 
-    sub get_relation_names {
+    sub get_relationship_names {
         my $self = shift;
         return keys %{ $self->rules };
     }
 
-    sub get_relations {
+    sub get_relationships {
         my $self = shift;
-        return map { $self->get_relation($_) } $self->get_relation_names;
+        return map { $self->get_relationship($_) } $self->get_relationship_names;
     }
 
-    sub get_relation {
+    sub get_relationship {
         my ($self, $name) = @_;
         return unless exists $self->rule->{$name};
         return $self->rule->{$name};

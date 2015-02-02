@@ -1,5 +1,5 @@
 use 5.014002;
-package Aniki::Schema::Relation::Fetcher {
+package Aniki::Schema::Relationship::Fetcher {
     use namespace::sweep;
     use Mouse;
 
@@ -9,7 +9,7 @@ package Aniki::Schema::Relation::Fetcher {
         required => 1,
     );
 
-    has relation => (
+    has relationship => (
         is       => 'ro',
         weak_ref => 1,
         required => 1,
@@ -22,12 +22,12 @@ package Aniki::Schema::Relation::Fetcher {
         my ($self, $rows) = @_;
         return unless @$rows;
 
-        my $relation     = $self->relation;
-        my $name         = $relation->name;
-        my $table_name   = $relation->table_name;
-        my $has_many     = $relation->has_many;
-        my @src_columns  = @{ $relation->src  };
-        my @dest_columns = @{ $relation->dest };
+        my $relationship = $self->relationship;
+        my $name         = $relationship->name;
+        my $table_name   = $relationship->table_name;
+        my $has_many     = $relationship->has_many;
+        my @src_columns  = @{ $relationship->src  };
+        my @dest_columns = @{ $relationship->dest };
 
         if (@src_columns == 1 and @dest_columns == 1) {
             my $src_column  = $src_columns[0];

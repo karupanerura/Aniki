@@ -261,13 +261,13 @@ package Aniki {
         my ($self, $table_name, $relay, $rows) = @_;
         return unless @$rows;
 
-        my $relations = $self->schema->get_relations($table_name);
+        my $relationships = $self->schema->get_relationships($table_name);
         for my $key (@$relay) {
-            my $relation = $relations->get_relation($key);
-            unless ($relation) {
-                croak "'$key' is not defined in relation rules. (maybe possible typo?)";
+            my $relationship = $relationships->get_relationship($key);
+            unless ($relationship) {
+                croak "'$key' is not defined as relationship. (maybe possible typo?)";
             }
-            $relation->fetcher($self)->execute($rows);
+            $relationship->fetcher($self)->execute($rows);
         }
     }
 

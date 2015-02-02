@@ -2,7 +2,7 @@ use 5.014002;
 package Aniki::Schema {
     use namespace::sweep;
     use Mouse;
-    use Aniki::Schema::Relations;
+    use Aniki::Schema::Relationships;
     use SQL::Translator::Schema::Constants;
     use Carp qw/croak/;
 
@@ -16,7 +16,7 @@ package Aniki::Schema {
 
         # create cache
         for my $table ($self->context->schema->get_tables) {
-            $self->get_relations($table->name);
+            $self->get_relationships($table->name);
         }
     }
 
@@ -34,16 +34,16 @@ package Aniki::Schema {
         return !!1;
     }
 
-    sub get_relations {
+    sub get_relationships {
         my ($self, $table_name) = @_;
-        exists $self->{__instance_cache}{relations}{$table_name}
-           and return $self->{__instance_cache}{relations}{$table_name};
+        exists $self->{__instance_cache}{relationships}{$table_name}
+           and return $self->{__instance_cache}{relationships}{$table_name};
 
-        my $relations = $self->_get_relations($table_name);
-        return $self->{__instance_cache}{relations}{$table_name} = $relations;
+        my $relationships = $self->_get_relationships($table_name);
+        return $self->{__instance_cache}{relationships}{$table_name} = $relationships;
     }
 
-    sub _get_relations {
+    sub _get_relationships {
         my ($self, $table_name) = @_;
         my $table = $self->context->schema->get_table($table_name);
         return unless defined $table;
@@ -57,11 +57,11 @@ package Aniki::Schema {
             }
         }
 
-        my $relations = Aniki::Schema::Relations->new(schema => $self, table => $table);
+        my $relationships = Aniki::Schema::Relationships->new(schema => $self, table => $table);
         for my $constraint (@constraints) {
-            $relations->add_by_constraint($constraint);
+            $relationships->add_by_constraint($constraint);
         }
-        return $relations;
+        return $relationships;
     }
 
     our $AUTOLOAD;

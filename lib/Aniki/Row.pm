@@ -37,11 +37,11 @@ package Aniki::Row {
         },
     );
 
-    has relations => (
+    has relationships => (
         is      => 'ro',
         default => sub {
             my $self = shift;
-            $self->schema->get_relations($self->table_name);
+            $self->schema->get_relationships($self->table_name);
         },
     );
 
@@ -99,7 +99,7 @@ package Aniki::Row {
         if (exists $self->row_data->{$column}) {
             return $self->get($column);
         }
-        elsif ($self->relations && $self->relations->get_relation($column)) {
+        elsif ($self->relationships->get_relationship($column)) {
             return $self->relay($column);
         }
         else {

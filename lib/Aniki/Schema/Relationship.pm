@@ -1,9 +1,9 @@
 use 5.014002;
-package Aniki::Schema::Relation {
+package Aniki::Schema::Relationship {
     use namespace::sweep;
     use Mouse;
     use Hash::Util::FieldHash qw/fieldhash/;
-    use Aniki::Schema::Relation::Fetcher;
+    use Aniki::Schema::Relationship::Fetcher;
 
     has name => (
         is       => 'ro',
@@ -41,7 +41,7 @@ package Aniki::Schema::Relation {
     sub fetcher {
         my ($self, $handler) = @_;
         return $self->_fetcher->{$handler} if exists $self->_fetcher->{$handler};
-        return $self->_fetcher->{$handler} = Aniki::Schema::Relation::Fetcher->new(relation => $self, handler => $handler);
+        return $self->_fetcher->{$handler} = Aniki::Schema::Relationship::Fetcher->new(relationship => $self, handler => $handler);
     }
 }
 
