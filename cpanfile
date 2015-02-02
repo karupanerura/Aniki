@@ -1,6 +1,7 @@
 requires 'DBIx::Handler';
 requires 'DBIx::Sunny';
 requires 'DBIx::Schema::DSL';
+requires 'Hash::Util::FieldHash';
 requires 'Lingua::EN::Inflect';
 requires 'List::MoreUtils';
 requires 'List::UtilsBy';
