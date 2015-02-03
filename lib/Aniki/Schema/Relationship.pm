@@ -52,9 +52,12 @@ package Aniki::Schema::Relationship {
         my $self = shift;
 
         my @src        = @{ $self->src };
+        my @dest       = @{ $self->dest };
         my $table_name = $self->table_name;
 
-        my $prefix = @src == 1 && $src[0] =~ /^(.+)_\Q$table_name/ ? $1.'_' : '';
+        my $prefix = @src  == 1 && $src[0]  =~ /^(.+)_\Q$table_name/ ? $1.'_' :
+                     @dest == 1 && $dest[0] =~ /^(.+)_\Q$table_name/ ? $1.'_' :
+                     '';
         my $name   = $self->has_many ? PL($table_name) : $table_name;
         return $prefix . $name;
     }
