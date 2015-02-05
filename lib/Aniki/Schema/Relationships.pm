@@ -33,24 +33,26 @@ package Aniki::Schema::Relationships {
 
     sub add_by_constraint {
         my ($self, $constraint) = @_;
-        die "Invalid constraint: $constraint" if $constraint->type ne FOREIGN_KEY;
+        die "Invalid constraint: @{[ $constraint->name ]}. (table:@{[ $self->table->name ]})" if $constraint->type ne FOREIGN_KEY;
 
         if ($constraint->table->name eq $self->table->name) {
             $self->add(
-                table_name => $constraint->reference_table,
-                src        => [$constraint->field_names],
-                dest       => [$constraint->reference_fields],
+                src_table_name  => $constraint->table->name,
+                src_columns     => [$constraint->field_names],
+                dest_table_name => $constraint->reference_table,
+                dest_columns    => [$constraint->reference_fields],
             );
         }
         elsif ($constraint->reference_table eq $self->table->name) {
             $self->add(
-                table_name => $constraint->table->name,
-                src        => [$constraint->reference_fields],
-                dest       => [$constraint->field_names],
+                src_table_name  => $constraint->reference_table,
+                src_columns     => [$constraint->reference_fields],
+                dest_table_name => $constraint->table->name,
+                dest_columns    => [$constraint->field_names],
             );
         }
         else {
-            die "Invalid constraint: $constraint";
+            die "Invalid constraint: @{[ $constraint->name ]}. (table:@{[ $self->table->name ]})";
         }
     }
 

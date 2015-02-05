@@ -12,17 +12,22 @@ package Aniki::Schema::Relationship {
         weak_ref => 1,
     );
 
-    has table_name => (
+    has src_table_name => (
         is       => 'ro',
         required => 1,
     );
 
-    has src => (
+    has src_columns => (
         is       => 'ro',
         required => 1,
     );
 
-    has dest => (
+    has dest_table_name => (
+        is       => 'ro',
+        required => 1,
+    );
+
+    has dest_columns => (
         is       => 'ro',
         required => 1,
     );
@@ -31,7 +36,7 @@ package Aniki::Schema::Relationship {
         is      => 'ro',
         default => sub {
             my $self = shift;
-            return $self->schema->has_many($self->table_name, $self->dest);
+            return $self->schema->has_many($self->dest_table_name, $self->dest_columns);
         },
     );
 
@@ -51,14 +56,16 @@ package Aniki::Schema::Relationship {
     sub _guess_name {
         my $self = shift;
 
-        my @src        = @{ $self->src };
-        my @dest       = @{ $self->dest };
-        my $table_name = $self->table_name;
+        my @src_columns     = @{ $self->src_columns };
+        my @dest_columns    = @{ $self->dest_columns };
+        my $src_table_name  = $self->src_table_name;
+        my $dest_table_name = $self->dest_table_name;
 
-        my $prefix = @src  == 1 && $src[0]  =~ /^(.+)_\Q$table_name/ ? $1.'_' :
-                     @dest == 1 && $dest[0] =~ /^(.+)_\Q$table_name/ ? $1.'_' :
+        my $prefix = (@src_columns  == 1 && $src_columns[0]  =~ /^(.+)_\Q$dest_table_name/) ? $1.'_' :
+                     (@dest_columns == 1 && $dest_columns[0] =~ /^(.+)_\Q$src_table_name/)  ? $1.'_' :
                      '';
-        my $name   = $self->has_many ? PL($table_name) : $table_name;
+
+        my $name = $self->has_many ? PL($dest_table_name) : $dest_table_name;
         return $prefix . $name;
     }
 

@@ -24,10 +24,10 @@ package Aniki::Schema::Relationship::Fetcher {
 
         my $relationship = $self->relationship;
         my $name         = $relationship->name;
-        my $table_name   = $relationship->table_name;
+        my $table_name   = $relationship->dest_table_name;
         my $has_many     = $relationship->has_many;
-        my @src_columns  = @{ $relationship->src  };
-        my @dest_columns = @{ $relationship->dest };
+        my @src_columns  = @{ $relationship->src_columns  };
+        my @dest_columns = @{ $relationship->dest_columns };
 
         if (@src_columns == 1 and @dest_columns == 1) {
             my $src_column  = $src_columns[0];
