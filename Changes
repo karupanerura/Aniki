@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.01_03 2015-02-09T00:14:31Z
+
+    - Fixed guessing relationship name algorithm. (when defined multiple foreign key.)
+
 0.01_02 2015-02-02T09:51:41Z
 
     - Fixed guessing relationship name algorithm.
