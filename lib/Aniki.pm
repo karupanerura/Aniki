@@ -2,6 +2,7 @@ use 5.014002;
 package Aniki {
     use namespace::sweep;
     use Mouse;
+    use Mouse::Util qw/load_class/;
     use Aniki::Row;
     use Aniki::Collection;
     use Aniki::Schema;
@@ -9,13 +10,11 @@ package Aniki {
 
     our $VERSION = '0.01_03';
 
-    use Module::Load ();
     use SQL::Maker::SQLType qw/sql_type/;
     use DBIx::Sunny;
     use DBIx::Handler;
     use Carp qw/croak/;
     use Try::Tiny;
-    use Module::Load ();
     use Scalar::Util qw/blessed/;
     use String::CamelCase qw/camelize/;
 
@@ -78,7 +77,7 @@ package Aniki {
         my ($class, %args) = @_;
 
         if (my $schema_class = $args{schema}) {
-            Module::Load::load($schema_class);
+            load_class($schema_class);
 
             my $schema        = Aniki::Schema->new(context => $schema_class->context);
             my $driver        = $class->_database2driver($schema->database);
@@ -88,7 +87,7 @@ package Aniki {
             $class->meta->add_method(query_builder => sub { $query_builder });
         }
         if (my $filter_class = $args{filter}) {
-            Module::Load::load($filter_class);
+            load_class($filter_class);
 
             my $filter = $filter_class->instance();
             $class->meta->add_method(filter => sub { $filter });
@@ -97,7 +96,7 @@ package Aniki {
         {
             my $row_class = 'Aniki::Row';
             if ($args{row}) {
-                Module::Load::load($args{row});
+                load_class($args{row});
                 $row_class = $args{row};
             }
             $class->meta->add_method(row_class => sub { $row_class });
@@ -105,7 +104,7 @@ package Aniki {
         {
             my $result_class = 'Aniki::Collection';
             if ($args{result}) {
-                Module::Load::load($args{result});
+                load_class($args{result});
                 $result_class = $args{result};
             }
             $class->meta->add_method(result_class => sub { $result_class });
@@ -353,7 +352,7 @@ package Aniki {
     sub guess_row_class {
         my ($self, $table_name) = @_;
         my $row_class = sprintf '%s::%s', $self->row_class, camelize($table_name);
-        my $success   = try { Module::Load::load($row_class); 1 };
+        my $success   = try { load_class($row_class); 1 };
         return $success ? $row_class : $self->row_class;
     }
 
