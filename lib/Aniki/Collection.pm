@@ -58,6 +58,8 @@ package Aniki::Collection {
         return $self->suppress_row_objects ? $self->row_datas : $self->inflated_rows;
     }
 
+    sub count { scalar @{ shift->rows } }
+
     sub first        { shift->rows->[0]  }
     sub last :method { shift->rows->[-1] }
     sub all          { @{ shift->rows }  }
