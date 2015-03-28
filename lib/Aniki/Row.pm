@@ -29,6 +29,11 @@ package Aniki::Row {
         required => 1,
     );
 
+    has is_new => (
+        is      => 'rw',
+        default => sub { 0 },
+    );
+
     has table => (
         is       => 'ro',
         default  => sub {

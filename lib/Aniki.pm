@@ -133,20 +133,47 @@ package Aniki {
     }
 
     sub update {
-        my ($self, $table_name, $row, $where, $opt) = @_;
-        $row = $self->filter_on_update($table_name, $row);
-
-        my $table = $self->schema->get_table($table_name);
-        if ($table) {
-            $row   = $self->_bind_sql_type_to_args($table, $row);
-            $where = $self->_bind_sql_type_to_args($table, $where);
+        my $self = shift;
+        if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
+            return $self->update($_[0]->table_name, $_[1], $self->_where_row_cond($_[0]->table, $_[0]->row_data), @_);
         }
+        else {
+            my ($table_name, $row, $where, $opt) = @_;
+            $row = $self->filter_on_update($table_name, $row);
 
-        my ($sql, @bind) = $self->query_builder->update($table_name, $row, $where, $opt);
-        my $sth  = $self->execute($sql, @bind);
-        my $rows = $sth->rows;
-        $sth->finish;
-        return $rows;
+            my $table = $self->schema->get_table($table_name);
+            if ($table) {
+                $row   = $self->_bind_sql_type_to_args($table, $row);
+                $where = $self->_bind_sql_type_to_args($table, $where);
+            }
+
+            my ($sql, @bind) = $self->query_builder->update($table_name, $row, $where, $opt);
+            my $sth  = $self->execute($sql, @bind);
+            my $rows = $sth->rows;
+            $sth->finish;
+            return $rows;
+        }
+    }
+
+    sub delete :method {
+        my $self = shift;
+        if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
+            return $self->delete($_[0]->table_name, $self->_where_row_cond($_[0]->table, $_[0]->row_data), @_);
+        }
+        else {
+            my ($table_name, $where, $opt) = @_;
+
+            my $table = $self->schema->get_table($table_name);
+            if ($table) {
+                $where = $self->_bind_sql_type_to_args($table, $where);
+            }
+
+            my ($sql, @bind) = $self->query_builder->delete($table_name, $where, $opt);
+            my $sth  = $self->execute($sql, @bind);
+            my $rows = $sth->rows;
+            $sth->finish;
+            return $rows;
+        }
     }
 
     sub filter_on_update {
@@ -173,7 +200,10 @@ package Aniki {
         my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
         $self->insert($table_name, $row_data, @_);
         return unless defined wantarray;
-        return $self->select($table_name, $self->_where_row_cond($table, $row_data), { limit => 1 })->first;
+
+        my $row = $self->select($table_name, $self->_where_row_cond($table, $row_data), { limit => 1 })->first;
+        $row->is_new(1);
+        return $row;
     }
 
     sub insert_on_duplicate {
