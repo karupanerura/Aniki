@@ -79,7 +79,7 @@ package Aniki {
         if (my $schema_class = $args{schema}) {
             load_class($schema_class);
 
-            my $schema        = Aniki::Schema->new(context => $schema_class->context);
+            my $schema        = Aniki::Schema->new(schema_class => $schema_class);
             my $driver        = $class->_database2driver($schema->database);
             my $query_builder = Aniki::QueryBuilder->new(driver => $driver);
 
@@ -500,7 +500,9 @@ Aniki - The ORM as our great brother.
     };
 
     package main {
-        my $db = MyProj::DB->new(connect_info => [...]);
+        my $db = MyProj::DB->new(connect_info => ["dbi:SQLite:dbname=:memory:", "", ""]);
+        $db->execute($_) for split /;/, MyProj::DB::Schema->output;
+
         my $author_id = $db->insert_and_fetch_id(author => { name => 'songmu' });
 
         $db->insert(module => {
@@ -517,17 +519,18 @@ Aniki - The ORM as our great brother.
         }, {
             limit => 1,
         })->first;
-        $module->name;         ## Riji
-        $module->author->name; ## SONGMU
+        say '$module->name:         ', $module->name;         ## Riji
+        say '$module->author->name: ', $module->author->name; ## SONGMU
 
         my $author = $db->select(author => {
             name => 'songmu',
         }, {
             limit => 1,
-            relay => [qw/module/],
+            relay => [qw/modules/],
         })->first;
-        $author->name;                 ## SONGMU
-        $_->name for $author->modules; ## DBIx::Schema::DSL, Riji
+
+        say '$author->name:   ', $author->name;                 ## SONGMU
+        say 'modules[]->name: ', $_->name for $author->modules; ## DBIx::Schema::DSL, Riji
     };
 
     1;

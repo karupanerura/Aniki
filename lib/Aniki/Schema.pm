@@ -6,9 +6,14 @@ package Aniki::Schema {
     use SQL::Translator::Schema::Constants;
     use Carp qw/croak/;
 
-    has context => (
+    has schema_class => (
         is       => 'ro',
         required => 1,
+    );
+
+    has context => (
+        is      => 'ro',
+        default => sub { shift->schema_class->context }
     );
 
     sub BUILD {
@@ -61,6 +66,15 @@ package Aniki::Schema {
         for my $constraint (@constraints) {
             $relationships->add_by_constraint($constraint);
         }
+
+        if ($self->schema_class->can('relationship_rules')) {
+            my $rules = $self->schema_class->relationship_rules;
+            for my $rule (@$rules) {
+                next if $rule->{src_table_name} ne $table_name;
+                $relationships->add(%$rule);
+            }
+        }
+
         return $relationships;
     }
 

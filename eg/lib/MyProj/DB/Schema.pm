@@ -1,12 +1,14 @@
 use 5.014002;
 package MyProj::DB::Schema {
     use DBIx::Schema::DSL;
+    use Aniki::Schema::Relationship::Declare;
 
-    database 'MySQL';
+    database 'SQLite';
 
     create_table 'author' => columns {
         integer 'id', primary_key, auto_increment;
         varchar 'name', unique;
+        relay_by 'module', has_many => 1;
     };
 
     create_table 'module' => columns {
@@ -16,7 +18,7 @@ package MyProj::DB::Schema {
 
         add_index 'author_id_idx' => ['author_id'];
 
-        belongs_to 'author';
+        relay_to 'author';
     };
 };
 

@@ -69,7 +69,9 @@ Aniki - The ORM as our great brother.
     };
 
     package main {
-        my $db = MyProj::DB->new(connect_info => [...]);
+        my $db = MyProj::DB->new(connect_info => ["dbi:SQLite:dbname=:memory:", "", ""]);
+        $db->execute($_) for split /;/, MyProj::DB::Schema->output;
+
         my $author_id = $db->insert_and_fetch_id(author => { name => 'songmu' });
 
         $db->insert(module => {
@@ -86,17 +88,18 @@ Aniki - The ORM as our great brother.
         }, {
             limit => 1,
         })->first;
-        $module->name;         ## Riji
-        $module->author->name; ## SONGMU
+        say '$module->name:         ', $module->name;         ## Riji
+        say '$module->author->name: ', $module->author->name; ## SONGMU
 
         my $author = $db->select(author => {
             name => 'songmu',
         }, {
             limit => 1,
-            relay => [qw/module/],
+            relay => [qw/modules/],
         })->first;
-        $author->name;                 ## SONGMU
-        $_->name for $author->modules; ## DBIx::Schema::DSL, Riji
+
+        say '$author->name:   ', $author->name;                 ## SONGMU
+        say 'modules[]->name: ', $_->name for $author->modules; ## DBIx::Schema::DSL, Riji
     };
 
     1;
