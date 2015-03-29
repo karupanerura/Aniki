@@ -58,7 +58,7 @@ package Aniki::Schema::Relationships {
 
     sub get_relationship_names {
         my $self = shift;
-        return keys %{ $self->rules };
+        return keys %{ $self->rule };
     }
 
     sub get_relationships {
