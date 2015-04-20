@@ -2,6 +2,19 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.02_01 2015-04-20T23:43:26Z
+
+    - Use strict query builder mode by default.
+    - Added support a named placeholder.
+    - Added support to declaring relationship.
+    - Added `count` to Collection.
+    - Added `is_new` flag to Row class.
+    - Added `refetch` method to Row class.
+    - Added shortcut to `txn_manger`.
+    - Added plugin for paging.
+    - Added plugin for `SELECT COUNT(...)`.
+    - Added some tests.
+
 0.01_03 2015-02-09T00:14:31Z
 
     - Fixed guessing relationship name algorithm. (when defined multiple foreign key.)
