@@ -403,6 +403,7 @@ package Aniki {
 
     # --------------------------------------------------
     # for transaction
+    sub txn_manager  { shift->handler->txn_manager }
     sub txn          { shift->handler->txn(@_)          }
     sub in_txn       { shift->handler->in_txn(@_)       }
     sub txn_scope    { shift->handler->txn_scope(@_)    }
