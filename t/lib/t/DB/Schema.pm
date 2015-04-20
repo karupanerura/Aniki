@@ -15,7 +15,7 @@ create_table 'author' => columns {
 
 create_table 'module' => columns {
     integer 'id', primary_key, auto_increment;
-    varchar 'name';
+    varchar 'name', unique;
     integer 'author_id';
 
     add_index 'author_id_idx' => ['author_id'];
