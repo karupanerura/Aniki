@@ -17,6 +17,7 @@ package Aniki::Schema::Relationship::Fetcher {
 
     use List::MoreUtils qw/pairwise/;
     use List::UtilsBy qw/partition_by/;
+    use SQL::QueryMaker;
 
     sub execute {
         my ($self, $rows) = @_;
@@ -36,7 +37,7 @@ package Aniki::Schema::Relationship::Fetcher {
             my %related_rows_map = partition_by {
                 $_->get_column($dest_column)
             } $self->handler->select($table_name => {
-                $dest_column => [map { $_->get_column($src_column) } @$rows]
+                $dest_column => sql_in([map { $_->get_column($src_column) } @$rows])
             })->all;
 
             for my $row (@$rows) {
