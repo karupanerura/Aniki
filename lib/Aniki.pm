@@ -17,6 +17,7 @@ package Aniki {
     use Try::Tiny;
     use Scalar::Util qw/blessed/;
     use String::CamelCase qw/camelize/;
+    use SQL::NamedPlaceholder qw/bind_named/;
 
     has connect_info => (
         is       => 'ro',
@@ -301,6 +302,11 @@ package Aniki {
             }
             $relationship->fetcher($self)->execute($rows);
         }
+    }
+
+    sub select_named {
+        my ($self, $sql, $bind, $opt) = @_;
+        return $self->select_by_sql(bind_named($sql, $bind), $opt);
     }
 
     sub select_by_sql {
