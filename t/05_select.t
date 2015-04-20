@@ -16,7 +16,7 @@ my $rows = $db->select(author => {});
 isa_ok $rows, 'Aniki::Collection';
 is $rows->count, 1;
 
-my $rows = $db->select(author => {
+$rows = $db->select(author => {
     name => 'OBAKE'
 });
 isa_ok $rows, 'Aniki::Collection';
