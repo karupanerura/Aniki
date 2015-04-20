@@ -3,6 +3,7 @@ package Aniki::QueryBuilder {
     use warnings;
     use utf8;
 
+    use SQL::Maker 1.19;
     use parent qw/SQL::Maker/;
 
     __PACKAGE__->load_plugin('InsertMulti');

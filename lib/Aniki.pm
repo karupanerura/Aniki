@@ -73,6 +73,9 @@ package Aniki {
     sub row_class     { croak 'This is abstract method.' }
     sub result_class  { croak 'This is abstract method.' }
 
+    # You can override this method on your application.
+    sub use_strict_query_builder { 1 }
+
     sub setup {
         my ($class, %args) = @_;
 
@@ -81,7 +84,7 @@ package Aniki {
 
             my $schema        = Aniki::Schema->new(schema_class => $schema_class);
             my $driver        = $class->_database2driver($schema->database);
-            my $query_builder = Aniki::QueryBuilder->new(driver => $driver);
+            my $query_builder = Aniki::QueryBuilder->new(driver => $driver, strict => $class->use_strict_query_builder);
 
             $class->meta->add_method(schema        => sub { $schema        });
             $class->meta->add_method(query_builder => sub { $query_builder });
