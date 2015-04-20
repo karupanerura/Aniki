@@ -42,17 +42,23 @@
       },
       "runtime" : {
          "requires" : {
+            "B::Hooks::EndOfScope" : "0",
             "DBIx::Handler" : "0",
             "DBIx::Schema::DSL" : "0",
             "DBIx::Sunny" : "0",
+            "Data::Page::NoTotalEntries" : "0",
             "Hash::Util::FieldHash" : "0",
             "Lingua::EN::Inflect" : "0",
             "List::MoreUtils" : "0",
             "List::UtilsBy" : "0",
             "Module::Load" : "0",
             "Mouse" : "0",
-            "SQL::Maker" : "0",
+            "Mouse::Role" : "0",
+            "Mouse::Util::TypeConstraints" : "0",
+            "SQL::Maker" : "1.19",
             "SQL::Maker::SQLType" : "0",
+            "SQL::NamedPlaceholder" : "0",
+            "SQL::QueryMaker" : "0",
             "SQL::Translator::Schema::Constants" : "0",
             "Scalar::Util" : "0",
             "String::CamelCase" : "0",
@@ -64,7 +70,9 @@
       },
       "test" : {
          "requires" : {
-            "Test::More" : "0.98"
+            "Test::Builder::Module" : "0",
+            "Test::More" : "0.98",
+            "feature" : "0"
          }
       }
    },

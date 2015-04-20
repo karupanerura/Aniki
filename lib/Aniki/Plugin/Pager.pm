@@ -1,6 +1,5 @@
 use 5.014002;
 
-use Teng::Plugin::Pager;
 package Aniki::Plugin::Pager {
     use namespace::sweep;
     use Mouse::Role;

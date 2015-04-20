@@ -1,14 +1,20 @@
+requires 'B::Hooks::EndOfScope';
 requires 'DBIx::Handler';
-requires 'DBIx::Sunny';
 requires 'DBIx::Schema::DSL';
+requires 'DBIx::Sunny';
+requires 'Data::Page::NoTotalEntries';
 requires 'Hash::Util::FieldHash';
 requires 'Lingua::EN::Inflect';
 requires 'List::MoreUtils';
 requires 'List::UtilsBy';
 requires 'Module::Load';
 requires 'Mouse';
-requires 'SQL::Maker';
+requires 'Mouse::Role';
+requires 'Mouse::Util::TypeConstraints';
+requires 'SQL::Maker', '1.19';
 requires 'SQL::Maker::SQLType';
+requires 'SQL::NamedPlaceholder';
+requires 'SQL::QueryMaker';
 requires 'SQL::Translator::Schema::Constants';
 requires 'Scalar::Util';
 requires 'String::CamelCase';
@@ -22,5 +28,7 @@ on configure => sub {
 };
 
 on test => sub {
+    requires 'Test::Builder::Module';
     requires 'Test::More', '0.98';
+    requires 'feature';
 };
