@@ -22,7 +22,7 @@ my $row = $rows->first;
 $db->update($row => { name => 'MOZNION' });
 is $row->name, 'MOZNION2', 'old value';
 
-$row = $db->select(author => {})->first;
+$row = $row->refetch;
 is $row->name, 'MOZNION', 'new value';
 
 done_testing();

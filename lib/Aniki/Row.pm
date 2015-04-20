@@ -97,6 +97,15 @@ package Aniki::Row {
         return \%row;
     }
 
+    sub refetch {
+        my ($self, $opts) = @_;
+        $opts //= +{};
+        $opts->{limit} = 1;
+
+        my $where = $self->handler->_where_row_cond($self->table, $self->row_data);
+        return $self->handler->select($self->table_name => $where, $opts)->first;
+    }
+
     our $AUTOLOAD;
     sub AUTOLOAD {
         my $self   = shift;
