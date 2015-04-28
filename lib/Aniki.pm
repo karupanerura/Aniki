@@ -391,8 +391,13 @@ package Aniki {
     sub guess_row_class {
         my ($self, $table_name) = @_;
         my $row_class = sprintf '%s::%s', $self->row_class, camelize($table_name);
-        my $success   = try { Module::Load::load($row_class); 1 };
-        return $success ? $row_class : $self->row_class;
+        return try {
+            Module::Load::load($row_class);
+            return $row_class;
+        } catch {
+            die $_ unless /\A\QCan't locate/imo;
+            return $self->row_class;
+        };
     }
 
     sub _guess_table_name {
