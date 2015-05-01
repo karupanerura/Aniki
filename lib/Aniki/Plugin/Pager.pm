@@ -23,9 +23,11 @@ package Aniki::Plugin::Pager {
         my $has_next = $rows < $result->count ? 1 : 0;
         if ($has_next) {
             $result = $self->result_class->new(
-                table_name => $table_name,
-                handler    => $self,
-                row_datas  => [$result->rows->[0..$result->count-2]],
+                table_name           => $table_name,
+                handler              => $self,
+                row_datas            => [$result->row_datas->[0..$result->count-2]],
+                suppress_row_objects => $result->suppress_row_objects,
+                row_class            => $result->row_class,
             );
         }
 
