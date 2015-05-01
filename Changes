@@ -2,6 +2,11 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.02_02 2015-05-01T09:44:45Z
+
+    - Added testing for `Aniki::Plugin::Pager`.
+    - Something fixes.
+
 0.02_01 2015-04-20T23:43:26Z
 
     - Use strict query builder mode by default.
