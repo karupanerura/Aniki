@@ -25,7 +25,7 @@ package Aniki::Plugin::Pager {
             $result = $self->result_class->new(
                 table_name           => $table_name,
                 handler              => $self,
-                row_datas            => [$result->row_datas->[0..$result->count-2]],
+                row_datas            => [@{$result->row_datas}[0..$result->count-2]],
                 suppress_row_objects => $result->suppress_row_objects,
                 row_class            => $result->row_class,
             );
