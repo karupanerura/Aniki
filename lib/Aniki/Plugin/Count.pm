@@ -14,7 +14,6 @@ package Aniki::Plugin::Count {
             Carp::croak('Do not pass HashRef/ArrayRef to second argument. Usage: $db->count($table[, $column[, $where[, $opt]]])');
         }
 
-        $column = $self->dbh->quote_identifier($column);
         my ($sql, @binds) = $self->query_builder->select($table, [\"COUNT($column)"], $where, $opt);
         return $self->dbh->select_one($sql, @binds);
     }
