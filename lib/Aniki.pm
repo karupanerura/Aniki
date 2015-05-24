@@ -370,7 +370,15 @@ package Aniki {
         for my $col (keys %{$args}) {
             # if $args->{$col} is a ref, it is scalar ref or already
             # sql type bined parameter. so ignored.
-            $bind_args{$col} = ref $args->{$col} ? $args->{$col} : sql_type(\$args->{$col}, $table->get_field($col)->sql_data_type);
+            if (ref $args->{$col}) {
+                $bind_args{$col} = $args->{$col};
+            }
+            elsif (my $field = $table->get_field($col)) {
+                $bind_args{$col} = sql_type(\$args->{$col}, $field->sql_data_type);
+            }
+            else {
+                $bind_args{$col} = $args->{$col};
+            }
         }
 
         return \%bind_args;
