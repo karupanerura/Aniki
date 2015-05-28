@@ -245,7 +245,7 @@ package Aniki {
             }
         }
 
-        my ($sql, @bind) = $self->query_builder->insert_multi($table_name, $values, $opts);
+        my ($sql, @bind) = $self->query_builder->insert_multi($table_name, \@values, $opts);
         my $sth  = $self->execute($sql, @bind);
         my $rows = $sth->rows;
         $sth->finish;
