@@ -2,6 +2,11 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.02_04 2015-05-28T02:16:47Z
+
+    - Fixed bulk_insert. (filterd value is not used.)
+    - Improve error message when specified not defined column.
+
 0.02_03 2015-05-22T11:06:35Z
 
     - Added testing for `Aniki::Plugin::Count`.
