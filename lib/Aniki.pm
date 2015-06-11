@@ -254,6 +254,7 @@ package Aniki {
 
     sub _where_row_cond {
         my ($self, $table, $row_data) = @_;
+        die "@{[ $table->name ]} doesn't have primary key." unless $table->primary_key;
 
         # fetch by primary key
         my %where;
