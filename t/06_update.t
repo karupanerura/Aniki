@@ -22,7 +22,8 @@ my $row = $rows->first;
 $db->update($row => { name => 'MOZNION' });
 is $row->name, 'MOZNION2', 'old value';
 
-$row = $row->refetch;
-is $row->name, 'MOZNION', 'new value';
+my $new_row = $row->refetch;
+isnt $new_row, $row;
+is $new_row->name, 'MOZNION', 'new value';
 
 done_testing();
