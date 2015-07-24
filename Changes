@@ -2,6 +2,9 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.02_05 2015-07-24T03:32:03Z
+    - Aniki::Row#can now returns AUTOLOADed methods.
+
 0.02_04 2015-05-28T02:16:47Z
 
     - Fixed bulk_insert. (filterd value is not used.)
