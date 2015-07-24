@@ -106,6 +106,17 @@ package Aniki::Row {
         return $self->handler->select($self->table_name => $where, $opts)->first;
     }
 
+    sub can {
+        my ($self, $method) = @_;
+        my $code = $self->SUPER::can($method);
+        return $code if defined $code;
+
+        my $column = $method;
+        return sub { $self->get($column)   } if exists $self->row_data->{$column};
+        return sub { $self->relay($column) } if $self->relationships && $self->relationships->get_relationship($column);
+        return undef; ## no critic
+    }
+
     our $AUTOLOAD;
     sub AUTOLOAD {
         my $self   = shift;
