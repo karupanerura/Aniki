@@ -2,7 +2,12 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.02_06 2015-07-27T04:45:03Z
+
+    - Added API `new_row_from_hashref` and `new_collection_from_arrayref`.
+
 0.02_05 2015-07-24T03:32:03Z
+
     - Aniki::Row#can now returns AUTOLOADed methods.
 
 0.02_04 2015-05-28T02:16:47Z
