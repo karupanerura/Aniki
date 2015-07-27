@@ -409,6 +409,29 @@ package Aniki {
         };
     }
 
+    sub new_row_from_hashref {
+        my ($self, $table_name, $row_data) = @_;
+        return $row_data if $self->suppress_row_objects;
+
+        my $row_class = $self->guess_row_class($table_name);
+        return $row_class->new(
+            table_name => $table_name,
+            handler    => $self,
+            row_data   => $row_data,
+        );
+    }
+
+    sub new_collection_from_arrayref {
+        my ($self, $table_name, $row_datas) = @_;
+        return $row_datas if $self->suppress_row_objects;
+
+        return $self->result_class->new(
+            table_name => $table_name,
+            handler    => $self,
+            row_datas  => $row_datas,
+        );
+    }
+
     sub _guess_table_name {
         my ($self, $sql) = @_;
         return $2 if $sql =~ /\sfrom\s+(["`]?)([\w]+)\1\s*/sio;
