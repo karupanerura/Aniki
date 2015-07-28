@@ -6,6 +6,8 @@ package Aniki::Schema::Relationship {
     use Aniki::Schema::Relationship::Fetcher;
     use Lingua::EN::Inflect qw/PL/;
 
+    our @WORD_SEPARATORS = ('-', '_', ' ');
+
     has schema => (
         is       => 'ro',
         required => 1,
@@ -65,8 +67,14 @@ package Aniki::Schema::Relationship {
                      (@dest_columns == 1 && $dest_columns[0] =~ /^(.+)_\Q$src_table_name/)  ? $1.'_' :
                      '';
 
-        my $name = $self->has_many ? PL($dest_table_name) : $dest_table_name;
+        my $name = $self->has_many ? _to_plural($dest_table_name) : $dest_table_name;
         return $prefix . $name;
+    }
+
+    sub _to_plural {
+        my $words = shift;
+        my $sep = join '|', map quotemeta, @WORD_SEPARATORS;
+        return $words =~ s/(?<=$sep)(.+?)$/PL($1)/er;
     }
 
     sub fetcher {
