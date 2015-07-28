@@ -74,7 +74,8 @@ package Aniki::Schema::Relationship {
     sub _to_plural {
         my $words = shift;
         my $sep = join '|', map quotemeta, @WORD_SEPARATORS;
-        return $words =~ s/(?<=$sep)(.+?)$/PL($1)/er;
+        return $words =~ s/(?<=$sep)(.+?)$/PL($1)/er if $words =~ /$sep/;
+        return PL($words);
     }
 
     sub fetcher {
