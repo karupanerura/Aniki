@@ -123,18 +123,21 @@ package Aniki::Row {
 
     our $AUTOLOAD;
     sub AUTOLOAD {
-        my $self   = shift;
+        my $invocant = shift;
         my $column = $AUTOLOAD =~ s/^.+://r;
-        if (exists $self->row_data->{$column}) {
-            return $self->get($column);
+
+        if (ref $invocant) {
+            my $self = $invocant;
+            if (exists $self->row_data->{$column}) {
+                return $self->get($column);
+            }
+            elsif ($self->relationships && $self->relationships->get_relationship($column)) {
+                return $self->relay($column);
+            }
         }
-        elsif ($self->relationships && $self->relationships->get_relationship($column)) {
-            return $self->relay($column);
-        }
-        else {
-            my $msg = sprintf q{Can't locate object method "%s" via package "%s"}, $column, ref $self;
-            croak $msg;
-        }
+
+        my $msg = sprintf q{Can't locate object method "%s" via package "%s"}, $column, ref $invocant || $invocant;
+        croak $msg;
     }
 };
 
