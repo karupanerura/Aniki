@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.02_08 2015-07-28T03:42:15Z
+
+    - Fixed Aniki::Row#can. (It's broken when it's called as instance method.)
+
 0.02_07 2015-07-28T02:40:43Z
 
     - Change pluralize logic. (now pluralize last word only. SEE ALSO: https://github.com/karupanerura/Aniki/commit/13998800dc48fbed7ca1ca3bae64935c4aad78f5)
