@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.02_07 2015-07-28T02:40:43Z
+
+    - Change pluralize logic. (now pluralize last word only. SEE ALSO: https://github.com/karupanerura/Aniki/commit/13998800dc48fbed7ca1ca3bae64935c4aad78f5)
+
 0.02_06 2015-07-27T04:45:03Z
 
     - Added API `new_row_from_hashref` and `new_collection_from_arrayref`.

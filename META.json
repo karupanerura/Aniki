@@ -88,7 +88,7 @@
          "web" : "https://github.com/karupanerura/Aniki"
       }
    },
-   "version" : "0.02_06",
+   "version" : "0.02_07",
    "x_authority" : "cpan:KARUPA",
    "x_serialization_backend" : "JSON::PP version 2.27300"
 }
