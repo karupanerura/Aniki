@@ -10,7 +10,7 @@ perl:
 before_install:
   - cpanm --quiet --notest --skip-satisfied Devel::Cover Devel::Cover::Report::Codecov
   - cover -delete
-env:
-  - HARNESS_PERL_SWITCHES="-MDevel::Cover=+ignore,inc"
-after_success:
-  - cover -report codecov
+script:
+  - perl Build.PL
+  - ./Build build
+  - cover -test -report codecov
