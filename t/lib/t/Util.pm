@@ -8,6 +8,7 @@ our @EXPORT = qw/query_count/;
 
 use t::DB;
 use t::DB::Schema;
+use DBD::SQLite;
 
 sub db {
     state $db = create_db();

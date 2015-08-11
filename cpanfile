@@ -28,6 +28,8 @@ on configure => sub {
 };
 
 on test => sub {
+    requires 'DBD::SQLite';
+    requires 'Mouse::Util';
     requires 'Test::Builder::Module';
     requires 'Test::More', '0.98';
     requires 'feature';
