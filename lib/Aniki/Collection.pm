@@ -1,6 +1,6 @@
 package Aniki::Collection {
     use namespace::sweep;
-    use Mouse;
+    use Mouse v2.4.5;
     use overload
         '@{}'    => sub { shift->rows },
         fallback => 1;

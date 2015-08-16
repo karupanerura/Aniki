@@ -8,7 +8,7 @@ requires 'Lingua::EN::Inflect';
 requires 'List::MoreUtils';
 requires 'List::UtilsBy';
 requires 'Module::Load';
-requires 'Mouse';
+requires 'Mouse', 'v2.4.5';
 requires 'Mouse::Role';
 requires 'Mouse::Util::TypeConstraints';
 requires 'SQL::Maker', '1.19';

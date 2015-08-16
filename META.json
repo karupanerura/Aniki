@@ -52,7 +52,7 @@
             "List::MoreUtils" : "0",
             "List::UtilsBy" : "0",
             "Module::Load" : "0",
-            "Mouse" : "0",
+            "Mouse" : "v2.4.5",
             "Mouse::Role" : "0",
             "Mouse::Util::TypeConstraints" : "0",
             "SQL::Maker" : "1.19",
@@ -70,6 +70,8 @@
       },
       "test" : {
          "requires" : {
+            "DBD::SQLite" : "0",
+            "Mouse::Util" : "0",
             "Test::Builder::Module" : "0",
             "Test::More" : "0.98",
             "feature" : "0"

@@ -33,7 +33,7 @@ Aniki::Plugin::Count - Count rows in database.
 =head1 SYNOPSIS
 
     package MyDB;
-    use Mouse;
+    use Mouse v2.4.5;
     extends qw/Aniki/;
     with qw/Aniki::Plugin::Count/;
 

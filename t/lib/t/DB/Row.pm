@@ -1,5 +1,5 @@
 package t::DB::Row;
-use Mouse;
+use Mouse v2.4.5;
 extends qw/Aniki::Row/;
 
 1;

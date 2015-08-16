@@ -1,7 +1,7 @@
 use 5.014002;
 package Aniki {
     use namespace::sweep;
-    use Mouse;
+    use Mouse v2.4.5;
     use Module::Load ();
     use Aniki::Row;
     use Aniki::Collection;
@@ -536,7 +536,7 @@ Aniki - The ORM as our great brother.
     };
 
     package MyProj::DB {
-        use Mouse;
+        use Mouse v2.4.5;
         extends qw/Aniki/;
 
         __PACKAGE__->setup(

@@ -1,7 +1,7 @@
 use 5.014002;
 package Aniki::Schema::Relationships {
     use namespace::sweep;
-    use Mouse;
+    use Mouse v2.4.5;
     use SQL::Translator::Schema::Constants;
     use Aniki::Schema::Relationship;
 

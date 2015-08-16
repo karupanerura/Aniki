@@ -59,7 +59,7 @@ Aniki::Plugin::Pager - SELECT with pager
 =head1 SYNOPSIS
 
     package MyDB;
-    use Mouse;
+    use Mouse v2.4.5;
     extends qw/Aniki/;
     with qw/Aniki::Plugin::Pager/;
 

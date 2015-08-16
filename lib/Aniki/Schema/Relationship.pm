@@ -1,7 +1,7 @@
 use 5.014002;
 package Aniki::Schema::Relationship {
     use namespace::sweep;
-    use Mouse;
+    use Mouse v2.4.5;
     use Hash::Util::FieldHash qw/fieldhash/;
     use Aniki::Schema::Relationship::Fetcher;
     use Lingua::EN::Inflect qw/PL/;
