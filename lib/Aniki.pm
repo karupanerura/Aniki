@@ -295,14 +295,29 @@ package Aniki {
         my ($self, $table_name, $relay, $rows) = @_;
         return unless @$rows;
 
+        $relay = [$relay] if ref $relay eq 'HASH';
+
         my $relationships = $self->schema->get_relationships($table_name);
         for my $key (@$relay) {
-            my $relationship = $relationships->get_relationship($key);
-            unless ($relationship) {
-                croak "'$key' is not defined as relationship. (maybe possible typo?)";
+            if (ref $key && ref $key eq 'HASH') {
+                my %relay = %$key;
+                for my $key (keys %relay) {
+                    $self->_attach_relay_data($relationships, $rows, $key, $relay{$key});
+                }
             }
-            $relationship->fetcher($self)->execute($rows);
+            else {
+                $self->_attach_relay_data($relationships, $rows, $key, []);
+            }
         }
+    }
+
+    sub _attach_relay_data {
+        my ($self, $relationships, $rows, $key, $relay) = @_;
+        my $relationship = $relationships->get_relationship($key);
+        unless ($relationship) {
+            croak "'$key' is not defined as relationship. (maybe possible typo?)";
+        }
+        $relationship->fetcher($self)->execute($rows, $relay);
     }
 
     sub select_named {
@@ -316,6 +331,7 @@ package Aniki {
 
         my $table_name = exists $opt->{table_name}  ? $opt->{table_name} : $self->_guess_table_name($sql);
         my $relay      = exists $opt->{relay}       ? $opt->{relay}      : [];
+           $relay      = [$relay] if ref $relay eq 'HASH';
 
         my $relay_enabled_fg = @$relay && !$self->suppress_row_objects;
         if ($relay_enabled_fg) {

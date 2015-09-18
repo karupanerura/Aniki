@@ -20,7 +20,7 @@ package Aniki::Schema::Relationship::Fetcher {
     use SQL::QueryMaker;
 
     sub execute {
-        my ($self, $rows) = @_;
+        my ($self, $rows, $relay) = @_;
         return unless @$rows;
 
         my $relationship = $self->relationship;
@@ -38,7 +38,7 @@ package Aniki::Schema::Relationship::Fetcher {
                 $_->get_column($dest_column)
             } $self->handler->select($table_name => {
                 $dest_column => sql_in([map { $_->get_column($src_column) } @$rows])
-            })->all;
+            }, { relay => $relay })->all;
 
             for my $row (@$rows) {
                 my $related_rows = $related_rows_map{$row->get_column($src_column)};
@@ -52,7 +52,7 @@ package Aniki::Schema::Relationship::Fetcher {
             for my $row (@$rows) {
                 my @related_rows = $handler->select($table_name => {
                     pairwise { $a => $row->get_column($b) } @dest_columns, @src_columns
-                })->all;
+                }, { relay => $relay })->all;
                 $row->relay_data->{$name} = $has_many ? \@related_rows : $related_rows[0];
             }
         }

@@ -21,6 +21,17 @@ create_table 'module' => columns {
     add_index 'author_id_idx' => ['author_id'];
 
     relay_to 'author';
+    relay_by 'version', has_many => 1;
+};
+
+create_table 'version' => columns {
+    integer 'id', primary_key, auto_increment;
+    varchar 'name';
+    integer 'module_id';
+
+    add_unique_index 'module_name_uniq' => ['module_id', 'name'];
+
+    relay_to 'module';
 };
 
 1;

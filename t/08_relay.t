@@ -11,43 +11,113 @@ use t::Util;
 my $db = t::Util->db;
 
 my $moznion_id = $db->insert_and_fetch_id(author => { name => 'MOZNION' });
-$db->insert(module => { name => 'Perl::Lint',             author_id => $moznion_id });
-$db->insert(module => { name => 'Regexp::Lexer',          author_id => $moznion_id });
-$db->insert(module => { name => 'Test::JsonAPI::Autodoc', author_id => $moznion_id });
+my @moznion_module_ids = (
+    $db->insert_and_fetch_id(module => { name => 'Perl::Lint',             author_id => $moznion_id }),
+    $db->insert_and_fetch_id(module => { name => 'Regexp::Lexer',          author_id => $moznion_id }),
+    $db->insert_and_fetch_id(module => { name => 'Test::JsonAPI::Autodoc', author_id => $moznion_id }),
+);
 
 my $karupa_id = $db->insert_and_fetch_id(author => { name => 'KARUPA' });
-$db->insert(module => { name => 'TOML::Parser',        author_id => $karupa_id });
-$db->insert(module => { name => 'Plack::App::Vhost',   author_id => $karupa_id });
-$db->insert(module => { name => 'Test::SharedObject',  author_id => $karupa_id });
+my @karupa_module_ids = (
+    $db->insert_and_fetch_id(module => { name => 'TOML::Parser',        author_id => $karupa_id }),
+    $db->insert_and_fetch_id(module => { name => 'Plack::App::Vhost',   author_id => $karupa_id }),
+    $db->insert_and_fetch_id(module => { name => 'Test::SharedObject',  author_id => $karupa_id }),
+);
 
-subtest 'prefetch' => sub {
-    my $queries = query_count {
-        my $rows = $db->select(author => {}, { relay => [qw/modules/] });
-        isa_ok $rows, 'Aniki::Collection';
-        is $rows->count, 2;
+$db->insert_multi(version => [map {
+    +{ name => '0.01', module_id => $_ }
+} @moznion_module_ids, @karupa_module_ids]);
 
-        my %modules = map { $_->name => [sort map { $_->name } $_->modules] } $rows->all;
-        is_deeply \%modules, {
-            MOZNION => [qw/Perl::Lint Regexp::Lexer Test::JsonAPI::Autodoc/],
-            KARUPA  => [qw/Plack::App::Vhost TOML::Parser Test::SharedObject/],
+subtest 'shallow' => sub {
+    subtest 'prefetch' => sub {
+        my $queries = query_count {
+            my $rows = $db->select(author => {}, { relay => [qw/modules/] });
+            isa_ok $rows, 'Aniki::Collection';
+            is $rows->count, 2;
+
+            my %modules = map { $_->name => [sort map { $_->name } $_->modules] } $rows->all;
+            is_deeply \%modules, {
+                MOZNION => [qw/Perl::Lint Regexp::Lexer Test::JsonAPI::Autodoc/],
+                KARUPA  => [qw/Plack::App::Vhost TOML::Parser Test::SharedObject/],
+            };
         };
+        is $queries, 2;
     };
-    is $queries, 2;
+
+    subtest 'lazy' => sub {
+        my $queries = query_count {
+            my $rows = $db->select(author => {});
+            isa_ok $rows, 'Aniki::Collection';
+            is $rows->count, 2;
+
+            my %modules = map { $_->name => [sort map { $_->name } $_->modules] } $rows->all;
+            is_deeply \%modules, {
+                MOZNION => [qw/Perl::Lint Regexp::Lexer Test::JsonAPI::Autodoc/],
+                KARUPA  => [qw/Plack::App::Vhost TOML::Parser Test::SharedObject/],
+            };
+        };
+        is $queries, 3;
+    };
 };
 
-subtest 'lazy' => sub {
-    my $queries = query_count {
-        my $rows = $db->select(author => {});
-        isa_ok $rows, 'Aniki::Collection';
-        is $rows->count, 2;
+subtest 'deep' => sub {
+    subtest 'prefetch' => sub {
+        my $queries = query_count {
+            my $rows = $db->select(author => {}, { relay => { modules => [qw/versions/] } });
+            isa_ok $rows, 'Aniki::Collection';
+            is $rows->count, 2;
 
-        my %modules = map { $_->name => [sort map { $_->name } $_->modules] } $rows->all;
-        is_deeply \%modules, {
-            MOZNION => [qw/Perl::Lint Regexp::Lexer Test::JsonAPI::Autodoc/],
-            KARUPA  => [qw/Plack::App::Vhost TOML::Parser Test::SharedObject/],
+            my %modules = map {
+                $_->name => +{
+                    map {
+                        $_->name => [map { $_->name } $_->versions],
+                    } $_->modules
+                }
+            } $rows->all;
+            is_deeply \%modules, {
+                MOZNION => +{
+                    'Perl::Lint'             => ['0.01'],
+                    'Regexp::Lexer'          => ['0.01'],
+                    'Test::JsonAPI::Autodoc' => ['0.01'],
+                },
+                KARUPA  => {
+                    'Plack::App::Vhost'  => ['0.01'],
+                    'TOML::Parser'       => ['0.01'],
+                    'Test::SharedObject' => ['0.01'],
+                },
+            };
         };
+        is $queries, 3;
     };
-    is $queries, 3;
+
+    subtest 'lazy' => sub {
+        my $queries = query_count {
+            my $rows = $db->select(author => {});
+            isa_ok $rows, 'Aniki::Collection';
+            is $rows->count, 2;
+
+            my %modules = map {
+                $_->name => +{
+                    map {
+                        $_->name => [map { $_->name } $_->versions],
+                    } $_->modules
+                }
+            } $rows->all;
+            is_deeply \%modules, {
+                MOZNION => +{
+                    'Perl::Lint'             => ['0.01'],
+                    'Regexp::Lexer'          => ['0.01'],
+                    'Test::JsonAPI::Autodoc' => ['0.01'],
+                },
+                KARUPA  => {
+                    'Plack::App::Vhost'  => ['0.01'],
+                    'TOML::Parser'       => ['0.01'],
+                    'Test::SharedObject' => ['0.01'],
+                },
+            };
+        };
+        is $queries, 9;
+    };
 };
 
 done_testing();
