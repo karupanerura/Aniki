@@ -83,12 +83,8 @@ package Aniki {
         if (my $schema_class = $args{schema}) {
             Module::Load::load($schema_class);
 
-            my $schema        = Aniki::Schema->new(schema_class => $schema_class);
-            my $driver        = $class->_database2driver($schema->database);
-            my $query_builder = Aniki::QueryBuilder->new(driver => $driver, strict => $class->use_strict_query_builder);
-
-            $class->meta->add_method(schema        => sub { $schema        });
-            $class->meta->add_method(query_builder => sub { $query_builder });
+            my $schema = Aniki::Schema->new(schema_class => $schema_class);
+            $class->meta->add_method(schema => sub { $schema });
         }
         if (my $filter_class = $args{filter}) {
             Module::Load::load($filter_class);
@@ -97,6 +93,16 @@ package Aniki {
             $class->meta->add_method(filter => sub { $filter });
         }
 
+        {
+            my $query_builder_class = 'Aniki::QueryBuilder';
+            if ($args{query_builder}) {
+                Module::Load::load($args{query_builder});
+                $query_builder_class = $args{query_builder};
+            }
+            my $driver        = $class->_database2driver($class->schema->database);
+            my $query_builder = $query_builder_class->new(driver => $driver, strict => $class->use_strict_query_builder);
+            $class->meta->add_method(query_builder => sub { $query_builder });
+        }
         {
             my $row_class = 'Aniki::Row';
             if ($args{row}) {

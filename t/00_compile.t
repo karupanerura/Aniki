@@ -17,6 +17,7 @@ Aniki::Filter::Declare
 Aniki::Plugin::Count
 Aniki::Plugin::Pager
 Aniki::QueryBuilder
+Aniki::QueryBuilder::Canonical
 Aniki::Row
 Aniki::Schema
 Aniki::Schema::Relationship
