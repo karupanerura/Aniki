@@ -2,6 +2,11 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.02_09 2015-09-19T05:23:54Z
+
+    - Support the canonicalize of the `SELECT` SQL statement
+    - Support deep prefetch
+
 0.02_08 2015-07-28T03:42:15Z
 
     - Fixed Aniki::Row#can. (It's broken when it's called as instance method.)
