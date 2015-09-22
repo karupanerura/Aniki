@@ -78,6 +78,46 @@ package Aniki::Schema {
         return $relationships;
     }
 
+    sub get_inverse_relationships_by_relationship {
+        my ($self, $src) = @_;
+
+        my @relationships;
+        for my $dest ($self->get_relationships($src->dest_table_name)->get_relationships) {
+            next if $dest->dest_table_name ne $src->src_table_name;
+            next if not _cmp_deeply($dest->dest_columns, $src->src_columns);
+            next if not _cmp_deeply($dest->src_columns,  $src->dest_columns);
+            push @relationships => $dest;
+        }
+
+        return @relationships;
+    }
+
+    sub _cmp_deeply {
+        my ($l, $r) = @_;
+        return $l eq $r if not ref $l or not ref $r;
+        return !!0      if ref $l ne ref $r;
+
+        if (ref $l eq 'HASH') {
+            for my $k (keys %$l) {
+                return !!0 if not exists $r->{$k};
+                return !!0 if not _cmp_deeply($l->{$k}, $r->{$k});
+            }
+            for my $k (keys %$r) {
+                return !!0 if not exists $l->{$k};
+            }
+            return !!1;
+        }
+        elsif (ref $l eq 'ARRAY') {
+            return !!0 if @$l != @$r;
+            for my $i (0..$#{$l}) {
+                return !!0 if not _cmp_deeply($l->[$i], $r->[$i]);
+            }
+            return !!1;
+        }
+
+        die "Unknwon case: $l cmp $r";
+    }
+
     our $AUTOLOAD;
     sub AUTOLOAD {
         my $self = shift;

@@ -83,6 +83,15 @@ package Aniki::Schema::Relationship {
         return $self->_fetcher->{$handler} if exists $self->_fetcher->{$handler};
         return $self->_fetcher->{$handler} = Aniki::Schema::Relationship::Fetcher->new(relationship => $self, handler => $handler);
     }
+
+    sub get_inverse_relationships {
+        my $self = shift;
+        return @{ $self->{__inverse_relationships} } if exists $self->{__inverse_relationships};
+
+        my @inverse_relationships = $self->schema->get_inverse_relationships_by_relationship($self);
+        $self->{__inverse_relationships} = \@inverse_relationships;
+        return @inverse_relationships;
+    }
 }
 
 1;

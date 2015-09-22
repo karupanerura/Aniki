@@ -34,16 +34,17 @@ package Aniki::Schema::Relationship::Fetcher {
             my $src_column  = $src_columns[0];
             my $dest_column = $dest_columns[0];
 
-            my %related_rows_map = partition_by {
-                $_->get_column($dest_column)
-            } $self->handler->select($table_name => {
+            my @related_rows = $self->handler->select($table_name => {
                 $dest_column => sql_in([map { $_->get_column($src_column) } @$rows])
             }, { relay => $relay })->all;
 
+            my %related_rows_map = partition_by { $_->get_column($dest_column) } @related_rows;
             for my $row (@$rows) {
                 my $related_rows = $related_rows_map{$row->get_column($src_column)};
                 $row->relay_data->{$name} = $has_many ? $related_rows : $related_rows->[0];
             }
+
+            $self->_execute_inverse(\@related_rows => $rows);
         }
         else {
             # follow slow case...
@@ -54,6 +55,34 @@ package Aniki::Schema::Relationship::Fetcher {
                     pairwise { $a => $row->get_column($b) } @dest_columns, @src_columns
                 }, { relay => $relay })->all;
                 $row->relay_data->{$name} = $has_many ? \@related_rows : $related_rows[0];
+            }
+        }
+    }
+
+    sub _execute_inverse {
+        my ($self, $src_rows, $dest_rows) = @_;
+        return unless @$src_rows;
+        return unless @$dest_rows;
+
+        for my $relationship ($self->relationship->get_inverse_relationships) {
+            my $name         = $relationship->name;
+            my $has_many     = $relationship->has_many;
+            my @src_columns  = @{ $relationship->src_columns  };
+            my @dest_columns = @{ $relationship->dest_columns };
+
+            my $src_keygen = sub {
+                my $src_row = shift;
+                return join '|', map { quotemeta $src_row->get_column($_) } @src_columns;
+            };
+            my $dest_keygen = sub {
+                my $dest_row = shift;
+                return join '|', map { quotemeta $dest_row->get_column($_) } @dest_columns;
+            };
+
+            my %dest_rows_map = partition_by { $dest_keygen->($_) } @$dest_rows;
+            for my $src_row (@$src_rows) {
+                my $dest_rows = $dest_rows_map{$src_keygen->($src_row)};
+                $src_row->relay_data->{$name} = $has_many ? $dest_rows : $dest_rows->[0];
             }
         }
     }

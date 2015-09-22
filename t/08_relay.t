@@ -120,4 +120,44 @@ subtest 'deep' => sub {
     };
 };
 
+subtest 'inverse' => sub {
+    subtest 'prefetch' => sub {
+        my $queries = query_count {
+            my $rows = $db->select(author => {}, { relay => { modules => [qw/versions/] } });
+            isa_ok $rows, 'Aniki::Collection';
+            is $rows->count, 2;
+
+            my %modules = map { $_->versions->[0]->module->name => [$_->author->name, map { $_->name } @{ $_->versions }] } map { $_->modules } $rows->all;
+            is_deeply \%modules, {
+                'Perl::Lint'             => ['MOZNION', '0.01'],
+                'Regexp::Lexer'          => ['MOZNION', '0.01'],
+                'Test::JsonAPI::Autodoc' => ['MOZNION', '0.01'],
+                'Plack::App::Vhost'      => ['KARUPA',  '0.01'],
+                'TOML::Parser'           => ['KARUPA',  '0.01'],
+                'Test::SharedObject'     => ['KARUPA',  '0.01'],
+            } or diag explain \%modules;
+        };
+        is $queries, 3;
+    };
+
+    subtest 'lazy' => sub {
+        my $queries = query_count {
+            my $rows = $db->select(author => {});
+            isa_ok $rows, 'Aniki::Collection';
+            is $rows->count, 2;
+
+            my %modules = map { $_->versions->[0]->module->name => [$_->author->name, map { $_->name } @{ $_->versions }] } map { $_->modules } $rows->all;
+            is_deeply \%modules, {
+                'Perl::Lint'             => ['MOZNION', '0.01'],
+                'Regexp::Lexer'          => ['MOZNION', '0.01'],
+                'Test::JsonAPI::Autodoc' => ['MOZNION', '0.01'],
+                'Plack::App::Vhost'      => ['KARUPA',  '0.01'],
+                'TOML::Parser'           => ['KARUPA',  '0.01'],
+                'Test::SharedObject'     => ['KARUPA',  '0.01'],
+            } or diag explain \%modules;
+        };
+        is $queries, 9;
+    };
+};
+
 done_testing();
