@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.03_01 2015-09-22T04:58:09Z
+
+    - Support automatic pre-cache the inverse relational rows
+
 0.02_09 2015-09-19T05:23:54Z
 
     - Support the canonicalize of the `SELECT` SQL statement
