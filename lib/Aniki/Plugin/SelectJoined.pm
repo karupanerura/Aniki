@@ -21,18 +21,18 @@ package Aniki::Plugin::SelectJoined {
         my @tables = map { $self->schema->get_table($_) } @table_names;
 
         my $name_sep = $self->query_builder->name_sep;
-        my @fields;
+        my @columns;
         for my $table (@tables) {
             my $table_name = $table->name;
-            push @fields =>
+            push @columns =>
                 map { "$table_name$name_sep$_" }
-                map { $_->name } $table->get_fields();
+                map { $_->name } $table->get_columns();
         }
 
-        my ($sql, @bind) = $self->query_builder->join_select($base_table, $join_conditions, \@fields, $where, $opt);
+        my ($sql, @bind) = $self->query_builder->join_select($base_table, $join_conditions, \@columns, $where, $opt);
         return $self->select_joined_by_sql($sql, \@bind, {
             table_names => \@table_names,
-            fields      => \@fields,
+            columns     => \@columns,
             %$opt,
         });
     }
@@ -42,7 +42,7 @@ package Aniki::Plugin::SelectJoined {
         $opt //= {};
 
         my $table_names = $opt->{table_names} or croak 'table_names is required';
-        my $fields      = $opt->{fields}      or croak 'fields is required';
+        my $columns     = $opt->{columns}     or croak 'columns is required';
         my $relay       = exists $opt->{relay} ? $opt->{relay} : {};
 
         my $relay_enabled_fg = %$relay && !$self->suppress_row_objects;
@@ -50,7 +50,7 @@ package Aniki::Plugin::SelectJoined {
             my $txn; $txn = $self->txn_scope unless $self->txn_manager->in_transaction;
 
             my $sth = $self->execute($sql, @$bind);
-            my $result = $self->_fetch_joined_by_sth($sth, $table_names, $fields);
+            my $result = $self->_fetch_joined_by_sth($sth, $table_names, $columns);
 
             for my $table_name (@$table_names) {
                 my $rows  = $result->rows($table_name);
@@ -64,16 +64,16 @@ package Aniki::Plugin::SelectJoined {
         }
         else {
             my $sth = $self->execute($sql, @$bind);
-            return $self->_fetch_joined_by_sth($sth, $table_names, $fields);
+            return $self->_fetch_joined_by_sth($sth, $table_names, $columns);
         }
     }
 
     sub _fetch_joined_by_sth {
-        my ($self, $sth, $table_names, $fields) = @_;
+        my ($self, $sth, $table_names, $columns) = @_;
         my @rows;
 
         my %row;
-        $sth->bind_columns(\@row{@$fields});
+        $sth->bind_columns(\@row{@$columns});
         push @rows => $self->_seperate_rows(\%row) while $sth->fetch;
         $sth->finish;
 
