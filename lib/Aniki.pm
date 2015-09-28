@@ -367,7 +367,8 @@ package Aniki {
         push @rows => {%row} while $sth->fetch;
         $sth->finish;
 
-        return $self->result_class->new(
+        my $result_class = $self->guess_result_class($table_name);
+        return $result_class->new(
             table_name => $table_name,
             handler    => $self,
             row_datas  => \@rows,
@@ -432,6 +433,18 @@ package Aniki {
         };
     }
 
+    sub guess_result_class {
+        my ($self, $table_name) = @_;
+        my $result_class = sprintf '%s::%s', $self->result_class, camelize($table_name);
+        return try {
+            Module::Load::load($result_class);
+            return $result_class;
+        } catch {
+            die $_ unless /\A\QCan't locate/imo;
+            return $self->result_class;
+        };
+    }
+
     sub new_row_from_hashref {
         my ($self, $table_name, $row_data) = @_;
         return $row_data if $self->suppress_row_objects;
@@ -448,7 +461,8 @@ package Aniki {
         my ($self, $table_name, $row_datas) = @_;
         return $row_datas if $self->suppress_row_objects;
 
-        return $self->result_class->new(
+        my $result_class = $self->guess_result_class($table_name);
+        return $result_class->new(
             table_name => $table_name,
             handler    => $self,
             row_datas  => $row_datas,
