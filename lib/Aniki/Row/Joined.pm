@@ -34,9 +34,6 @@ package Aniki::Row::Joined {
             return $self->{$table_name} if exists $self->{$table_name};
         }
 
-        use Data::Dumper;
-        warn Dumper [keys %$invocant];
-
         my $msg = sprintf q{Can't locate object method "%s" via package "%s"}, $table_name, ref $invocant || $invocant;
         croak $msg;
     }
