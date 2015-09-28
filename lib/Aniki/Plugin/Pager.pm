@@ -26,6 +26,9 @@ package Aniki::Plugin::Pager {
                 table_name           => $table_name,
                 handler              => $self,
                 row_datas            => [@{$result->row_datas}[0..$result->count-2]],
+                !$result->suppress_row_objects ? (
+                    inflated_rows    => [@{$result->inflated_rows}[0..$result->count-2]],
+                ) : (),
                 suppress_row_objects => $result->suppress_row_objects,
                 row_class            => $result->row_class,
             );
