@@ -26,7 +26,7 @@ package Aniki::Plugin::SelectJoined {
             my $table_name = $table->name;
             push @columns =>
                 map { "$table_name$name_sep$_" }
-                map { $_->name } $table->get_columns();
+                map { $_->name } $table->get_fields();
         }
 
         my ($sql, @bind) = $self->query_builder->join_select($base_table, $join_conditions, \@columns, $where, $opt);
