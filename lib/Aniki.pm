@@ -280,12 +280,13 @@ package Aniki {
 
         local $self->{suppress_row_objects} = 1 if $opt->{suppress_row_objects};
 
-        my @columns = ('*');
         my $table = $self->schema->get_table($table_name);
-        if ($table) {
-            $where   = $self->_bind_sql_type_to_args($table, $where);
-            @columns = map { $_->name } $table->get_fields();
-        }
+
+        my @columns = exists $opt->{columns} ? @{ $opt->{columns} }
+                    : defined $table ? map { $_->name } $table->get_fields()
+                    : ('*');
+
+        $where = $self->_bind_sql_type_to_args($table, $where) if defined $table;
 
         local $Carp::CarpLevel = $Carp::CarpLevel + 1;
         my ($sql, @bind) = $self->query_builder->select($table_name, \@columns, $where, $opt);
