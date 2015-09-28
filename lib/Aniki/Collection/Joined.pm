@@ -5,6 +5,7 @@ package Aniki::Collection::Joined {
 
     use Carp qw/croak/;
     use Aniki::Row::Joined;
+    use List::MoreUtils qw/none/;
     use List::UtilsBy qw/uniq_by/;
     use Scalar::Util qw/refaddr/;
 
@@ -72,6 +73,7 @@ package Aniki::Collection::Joined {
 
     sub _uniq_key {
         my ($row_data, $pk) = @_;
+        return if none { defined $row_data->{$_} } @$pk;
         return join '|', map { quotemeta $row_data->{$_} } @$pk;
     }
 
@@ -92,7 +94,7 @@ package Aniki::Collection::Joined {
             for my $table_name (@table_names) {
                 my $row_data = $row->{$table_name};
                 my $uniq_key = _uniq_key($row_data, $pk{$table_name});
-                $rows{$table_name} = $cache{$table_name}{$uniq_key} ||= $row_data;
+                $rows{$table_name} = defined $uniq_key ? ($cache{$table_name}{$uniq_key} ||= $row_data) : $row_data;
             }
 
             push @rows => \%rows;
