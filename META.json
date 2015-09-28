@@ -41,6 +41,9 @@
          }
       },
       "runtime" : {
+         "recommends" : {
+            "SQL::Maker::Plugin::JoinSelect" : "0"
+         },
          "requires" : {
             "B::Hooks::EndOfScope" : "0",
             "DBIx::Handler" : "0",

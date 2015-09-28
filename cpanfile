@@ -23,6 +23,8 @@ requires 'namespace::sweep';
 requires 'parent';
 requires 'perl', '5.014002';
 
+recommends 'SQL::Maker::Plugin::JoinSelect';
+
 on configure => sub {
     requires 'Module::Build::Tiny', '0.035';
 };
