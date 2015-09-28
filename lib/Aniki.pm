@@ -8,7 +8,7 @@ package Aniki {
     use Aniki::Schema;
     use Aniki::QueryBuilder;
 
-    our $VERSION = '0.04_01';
+    our $VERSION = '0.04_02';
 
     use SQL::Maker::SQLType qw/sql_type/;
     use DBIx::Sunny;

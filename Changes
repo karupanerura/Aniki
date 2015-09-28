@@ -2,7 +2,12 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.04_02 2015-09-28T08:26:21Z
+
+    - Plugin::SelectJoined is broken when outer joined.
+
 0.04_01 2015-09-28T07:00:10Z
+
     - Added Plugin::SelectJoined (inspired by Teng::Plugin::SearchJoined)
     - Support to select specified columns by table
 
