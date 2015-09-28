@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.04_01 2015-09-28T07:00:10Z
+    - Added Plugin::SelectJoined (inspired by Teng::Plugin::SearchJoined)
+    - Support to select specified columns by table
+
 0.03_01 2015-09-22T04:58:09Z
 
     - Support automatic pre-cache the inverse relational rows
