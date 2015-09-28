@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/karupanerura/Aniki.svg?branch=master)](https://travis-ci.org/karupanerura/Aniki)
+[![Build Status](https://travis-ci.org/karupanerura/Aniki.svg?branch=master)](https://travis-ci.org/karupanerura/Aniki) [![Coverage Status](http://codecov.io/github/karupanerura/Aniki/coverage.svg?branch=master)](https://codecov.io/github/karupanerura/Aniki?branch=master)
 # NAME
 
 Aniki - The ORM as our great brother.
