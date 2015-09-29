@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.04_03 2015-09-29T00:59:39Z
+
+    - Keep inflated rows to keep relay cache
+
 0.04_02 2015-09-28T08:26:21Z
 
     - Plugin::SelectJoined is broken when outer joined.
