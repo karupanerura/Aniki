@@ -1,4 +1,4 @@
-package Aniki::Collection {
+package Aniki::Result::Collection {
     use namespace::sweep;
     use Mouse v2.4.5;
     use overload
@@ -74,11 +74,11 @@ __END__
 
 =head1 NAME
 
-Aniki::Collection - TODO
+Aniki::Result::Collection - C
 
 =head1 SYNOPSIS
 
-    use Aniki::Collection;
+    use Aniki::Result::Collection;
 
 =head1 DESCRIPTION
 

@@ -1,7 +1,7 @@
-package Aniki::Collection::Joined {
+package Aniki::Result::Collection::Joined {
     use namespace::sweep;
     use Mouse v2.4.5;
-    extends qw/Aniki::Collection/;
+    extends qw/Aniki::Result::Collection/;
 
     use Carp qw/croak/;
     use Aniki::Row::Joined;

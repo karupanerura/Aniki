@@ -18,8 +18,8 @@ $db->insert_multi(author => [map {
 } qw/MOZNION KARUPA PAPIX/]);
 
 my $rows = $db->select_with_pager(author => {}, { rows => 2, page => 1 });
-isa_ok $rows, 'Aniki::Collection';
-ok $rows->meta->does_role('Aniki::Collection::Role::Pager');
+isa_ok $rows, 'Aniki::Result::Collection';
+ok $rows->meta->does_role('Aniki::Result::Role::Pager');
 is $rows->count, 2;
 
 isa_ok $rows->pager, 'Data::Page::NoTotalEntries';
@@ -27,8 +27,8 @@ is $rows->pager->current_page, 1;
 ok $rows->pager->has_next;
 
 $rows = $db->select_with_pager(author => {}, { rows => 2, page => 2 });
-isa_ok $rows, 'Aniki::Collection';
-ok $rows->meta->does_role('Aniki::Collection::Role::Pager');
+isa_ok $rows, 'Aniki::Result::Collection';
+ok $rows->meta->does_role('Aniki::Result::Role::Pager');
 is $rows->count, 1;
 
 isa_ok $rows->pager, 'Data::Page::NoTotalEntries';

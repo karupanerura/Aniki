@@ -32,7 +32,7 @@ subtest 'shallow' => sub {
     subtest 'prefetch' => sub {
         my $queries = query_count {
             my $rows = $db->select(author => {}, { relay => [qw/modules/] });
-            isa_ok $rows, 'Aniki::Collection';
+            isa_ok $rows, 'Aniki::Result::Collection';
             is $rows->count, 2;
 
             my %modules = map { $_->name => [sort map { $_->name } $_->modules] } $rows->all;
@@ -47,7 +47,7 @@ subtest 'shallow' => sub {
     subtest 'lazy' => sub {
         my $queries = query_count {
             my $rows = $db->select(author => {});
-            isa_ok $rows, 'Aniki::Collection';
+            isa_ok $rows, 'Aniki::Result::Collection';
             is $rows->count, 2;
 
             my %modules = map { $_->name => [sort map { $_->name } $_->modules] } $rows->all;
@@ -64,7 +64,7 @@ subtest 'deep' => sub {
     subtest 'prefetch' => sub {
         my $queries = query_count {
             my $rows = $db->select(author => {}, { relay => { modules => [qw/versions/] } });
-            isa_ok $rows, 'Aniki::Collection';
+            isa_ok $rows, 'Aniki::Result::Collection';
             is $rows->count, 2;
 
             my %modules = map {
@@ -93,7 +93,7 @@ subtest 'deep' => sub {
     subtest 'lazy' => sub {
         my $queries = query_count {
             my $rows = $db->select(author => {});
-            isa_ok $rows, 'Aniki::Collection';
+            isa_ok $rows, 'Aniki::Result::Collection';
             is $rows->count, 2;
 
             my %modules = map {
@@ -124,7 +124,7 @@ subtest 'inverse' => sub {
     subtest 'prefetch' => sub {
         my $queries = query_count {
             my $rows = $db->select(author => {}, { relay => { modules => [qw/versions/] } });
-            isa_ok $rows, 'Aniki::Collection';
+            isa_ok $rows, 'Aniki::Result::Collection';
             is $rows->count, 2;
 
             my %modules = map { $_->versions->[0]->module->name => [$_->author->name, map { $_->name } @{ $_->versions }] } map { $_->modules } $rows->all;
@@ -143,7 +143,7 @@ subtest 'inverse' => sub {
     subtest 'lazy' => sub {
         my $queries = query_count {
             my $rows = $db->select(author => {});
-            isa_ok $rows, 'Aniki::Collection';
+            isa_ok $rows, 'Aniki::Result::Collection';
             is $rows->count, 2;
 
             my %modules = map { $_->versions->[0]->module->name => [$_->author->name, map { $_->name } @{ $_->versions }] } map { $_->modules } $rows->all;

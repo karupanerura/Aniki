@@ -14,7 +14,7 @@ $db->insert(author => { name => 'MOZNION' });
 $db->update(author => { name => 'MOZNION2' }, { name => 'MOZNION' });
 
 my $rows = $db->select(author => {});
-isa_ok $rows, 'Aniki::Collection';
+isa_ok $rows, 'Aniki::Result::Collection';
 is $rows->count, 1;
 is $rows->first->name, 'MOZNION2', 'updated';
 

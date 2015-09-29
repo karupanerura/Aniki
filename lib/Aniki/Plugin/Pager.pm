@@ -4,7 +4,7 @@ package Aniki::Plugin::Pager {
     use namespace::sweep;
     use Mouse::Role;
     use Data::Page::NoTotalEntries;
-    use Aniki::Collection::Role::Pager;
+    use Aniki::Result::Role::Pager;
 
     requires qw/select result_class/;
 
@@ -40,8 +40,8 @@ package Aniki::Plugin::Pager {
             has_next             => $has_next,
             entries_on_this_page => $result->count,
         );
-        $result->meta->does_role('Aniki::Collection::Role::Pager')
-            or Mouse::Util::apply_all_roles($result, 'Aniki::Collection::Role::Pager');
+        $result->meta->does_role('Aniki::Result::Role::Pager')
+            or Mouse::Util::apply_all_roles($result, 'Aniki::Result::Role::Pager');
         $result->pager($pager);
 
         return $result;

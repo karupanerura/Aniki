@@ -4,7 +4,7 @@ package Aniki::Plugin::SelectJoined {
     use namespace::sweep;
     use Mouse::Role;
     use Aniki::QueryBuilder;
-    use Aniki::Collection::Joined;
+    use Aniki::Result::Collection::Joined;
     use Carp qw/croak/;
 
     requires qw/schema query_builder suppress_row_objects txn_manager execute/;
@@ -77,7 +77,7 @@ package Aniki::Plugin::SelectJoined {
         push @rows => $self->_seperate_rows(\%row) while $sth->fetch;
         $sth->finish;
 
-        return Aniki::Collection::Joined->new(
+        return Aniki::Result::Collection::Joined->new(
             table_names => $table_names,
             handler     => $self,
             row_datas   => \@rows,

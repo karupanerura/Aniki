@@ -4,7 +4,7 @@ package Aniki {
     use Mouse v2.4.5;
     use Module::Load ();
     use Aniki::Row;
-    use Aniki::Collection;
+    use Aniki::Result::Collection;
     use Aniki::Schema;
     use Aniki::QueryBuilder;
 
@@ -112,7 +112,7 @@ package Aniki {
             $class->meta->add_method(row_class => sub { $row_class });
         }
         {
-            my $result_class = 'Aniki::Collection';
+            my $result_class = 'Aniki::Result::Collection';
             if ($args{result}) {
                 Module::Load::load($args{result});
                 $result_class = $args{result};
