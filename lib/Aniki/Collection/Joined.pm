@@ -31,7 +31,7 @@ package Aniki::Collection::Joined {
         builder => '_compress',
     );
 
-    has _collection_cache => (
+    has _subresult_cache => (
         is      => 'ro',
         default => sub {
             my $self = shift;
@@ -50,17 +50,17 @@ package Aniki::Collection::Joined {
         my $self = shift;
         if (@_ == 1) {
             my $table_name = shift;
-            return $self->collection($table_name)->rows();
+            return $self->subresult($table_name)->rows();
         }
         return $self->SUPER::rows();
     }
 
-    sub collection {
+    sub subresult {
         my ($self, $table_name) = @_;
-        return $self->_collection_cache->{$table_name} if $self->_collection_cache->{$table_name};
+        return $self->_subresult_cache->{$table_name} if $self->_subresult_cache->{$table_name};
 
         my $result_class = $self->handler->guess_result_class($table_name);
-        return $self->_collection_cache->{$table_name} = $result_class->new(
+        return $self->_subresult_cache->{$table_name} = $result_class->new(
             table_name           => $table_name,
             handler              => $self->handler,
             row_datas            => [uniq_by { refaddr $_ } map { $_->{$table_name} } @{ $self->_compact_row_datas() }],
