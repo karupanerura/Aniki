@@ -80,19 +80,30 @@ package Aniki {
     sub setup {
         my ($class, %args) = @_;
 
+        # schema
         if (my $schema_class = $args{schema}) {
             Module::Load::load($schema_class);
 
             my $schema = Aniki::Schema->new(schema_class => $schema_class);
             $class->meta->add_method(schema => sub { $schema });
         }
+        else {
+            croak 'schema option is required.';
+        }
+
+        # filter
         if (my $filter_class = $args{filter}) {
             Module::Load::load($filter_class);
 
             my $filter = $filter_class->instance();
             $class->meta->add_method(filter => sub { $filter });
         }
+        else {
+            my $filter = Aniki::Filter->new;
+            $class->meta->add_method(filter => sub { $filter });
+        }
 
+        # query_builder
         {
             my $query_builder_class = 'Aniki::QueryBuilder';
             if ($args{query_builder}) {
@@ -103,6 +114,8 @@ package Aniki {
             my $query_builder = $query_builder_class->new(driver => $driver, strict => $class->use_strict_query_builder);
             $class->meta->add_method(query_builder => sub { $query_builder });
         }
+
+        # row
         {
             my $row_class = 'Aniki::Row';
             if ($args{row}) {
@@ -111,6 +124,8 @@ package Aniki {
             }
             $class->meta->add_method(row_class => sub { $row_class });
         }
+
+        # result
         {
             my $result_class = 'Aniki::Result::Collection';
             if ($args{result}) {
