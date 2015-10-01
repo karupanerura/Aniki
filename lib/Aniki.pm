@@ -457,6 +457,7 @@ package Aniki {
     sub guess_row_class {
         my ($self, $table_name) = @_;
         return $self->_row_class_cache->{$table_name} if defined $self->_row_class_cache->{$table_name};
+        return $self->_row_class_cache->{$table_name} = 'Aniki::Row' if $self->row_class eq 'Aniki::Row';
 
         my $row_class = sprintf '%s::%s', $self->row_class, camelize($table_name);
         return $self->_row_class_cache->{$table_name} = try {
@@ -471,6 +472,7 @@ package Aniki {
     sub guess_result_class {
         my ($self, $table_name) = @_;
         return $self->_result_class_cache->{$table_name} if defined $self->_result_class_cache->{$table_name};
+        return $self->_row_class_cache->{$table_name} = 'Aniki::Result::Collection' if $self->row_class eq 'Aniki::Result::Collection';
 
         my $result_class = sprintf '%s::%s', $self->result_class, camelize($table_name);
         return $self->_result_class_cache->{$table_name} = try {
