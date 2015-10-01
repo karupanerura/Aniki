@@ -421,10 +421,30 @@ package Aniki {
         }
     }
 
+    has _row_class_cache => (
+        is      => 'rw',
+        default => sub {
+            my $self = shift;
+            my %cache = map { $_->name => undef } $self->schema->get_tables();
+            return \%cache;
+        },
+    );
+
+    has _result_class_cache => (
+        is      => 'rw',
+        default => sub {
+            my $self = shift;
+            my %cache = map { $_->name => undef } $self->schema->get_tables();
+            return \%cache;
+        },
+    );
+
     sub guess_row_class {
         my ($self, $table_name) = @_;
+        return $self->_row_class_cache->{$table_name} if defined $self->_row_class_cache->{$table_name};
+
         my $row_class = sprintf '%s::%s', $self->row_class, camelize($table_name);
-        return try {
+        return $self->_row_class_cache->{$table_name} = try {
             Module::Load::load($row_class);
             return $row_class;
         } catch {
@@ -435,8 +455,10 @@ package Aniki {
 
     sub guess_result_class {
         my ($self, $table_name) = @_;
+        return $self->_result_class_cache->{$table_name} if defined $self->_result_class_cache->{$table_name};
+
         my $result_class = sprintf '%s::%s', $self->result_class, camelize($table_name);
-        return try {
+        return $self->_result_class_cache->{$table_name} = try {
             Module::Load::load($result_class);
             return $result_class;
         } catch {
