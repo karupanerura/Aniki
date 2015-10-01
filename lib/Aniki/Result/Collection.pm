@@ -77,15 +77,31 @@ __END__
 
 =head1 NAME
 
-Aniki::Result::Collection - C
+Aniki::Result::Collection - Rows as a collection
 
 =head1 SYNOPSIS
 
-    use Aniki::Result::Collection;
+    my $result = $db->select(foo => { bar => 1 });
+    for my $row ($result->all) {
+        print $row->id, "\n";
+    }
 
 =head1 DESCRIPTION
 
-TODO
+This is result class of C<SELECT> query.
+
+You can use original result class:
+
+    package MyApp::DB;
+    use Mouse;
+    extends qw/Aniki/;
+
+    __PACKAGE__->setup(
+        schema => 'MyApp::DB::Schema',
+        result => 'MyApp::DB::Collection',
+    );
+
+And it auto detect the collection class by C<MyApp::DB::Collection>.
 
 =head1 SEE ALSO
 
