@@ -1,20 +1,11 @@
 package Aniki::Result::Collection {
     use namespace::sweep;
     use Mouse v2.4.5;
+    extends qw/Aniki::Result/;
+
     use overload
         '@{}'    => sub { shift->rows },
         fallback => 1;
-
-    has table_name => (
-        is       => 'ro',
-        required => 1,
-    );
-
-    has handler => (
-        is       => 'ro',
-        required => 1,
-        weak_ref => 1,
-    );
 
     has row_datas => (
         is       => 'ro',
@@ -25,19 +16,6 @@ package Aniki::Result::Collection {
         is      => 'ro',
         lazy    => 1,
         builder => '_inflate',
-    );
-
-    has suppress_row_objects => (
-        is      => 'rw',
-        default => sub { shift->handler->suppress_row_objects },
-    );
-
-    has row_class => (
-        is      => 'rw',
-        default => sub {
-            my $self = shift;
-            $self->handler->guess_row_class($self->table_name);
-        },
     );
 
     sub _inflate {
