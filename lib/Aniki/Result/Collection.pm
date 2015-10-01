@@ -42,11 +42,14 @@ package Aniki::Result::Collection {
 
     sub _inflate {
         my $self = shift;
+        my $row_class  = $self->row_class;
+        my $table_name = $self->table_name;
+        my $handler    = $self->handler;
         return [
             map {
-                $self->row_class->new(
-                    table_name => $self->table_name,
-                    handler    => $self->handler,
+                $row_class->new(
+                    table_name => $table_name,
+                    handler    => $handler,
                     row_data   => $_
                 )
             } @{ $self->row_datas }
