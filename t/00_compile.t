@@ -12,9 +12,6 @@ __DATA__
 Aniki
 Aniki::Filter
 Aniki::Filter::Declare
-Aniki::Plugin::Count
-Aniki::Plugin::Pager
-Aniki::Plugin::SelectJoined
 Aniki::QueryBuilder
 Aniki::QueryBuilder::Canonical
 Aniki::Result::Collection
