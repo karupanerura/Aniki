@@ -59,6 +59,8 @@ package Aniki::Row {
         my ($self, $column) = @_;
         return $self->{__instance_cache}{get}{$column} if exists $self->{__instance_cache}{get}{$column};
 
+        return undef unless exists $self->row_data->{$column}; ## no critic
+
         my $data = $self->get_column($column);
         return $self->{__instance_cache}{get}{$column} = $self->filter->inflate_column($self->table_name, $column, $data);
     }
@@ -70,7 +72,7 @@ package Aniki::Row {
         }
 
         my $relay_data = $self->relay_data->{$key};
-        return if not defined $relay_data;
+        return unless defined $relay_data;
         return wantarray ? @$relay_data : $relay_data if ref $relay_data eq 'ARRAY';
         return $relay_data;
     }
