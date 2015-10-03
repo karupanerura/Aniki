@@ -8,7 +8,7 @@ package Aniki::Plugin::Count {
 
     sub count {
         my ($self, $table, $column, $where, $opt) = @_;
-        $column ||= '*';
+        $column //= '*';
 
         if (ref $column) {
             Carp::croak('Do not pass HashRef/ArrayRef to second argument. Usage: $db->count($table[, $column[, $where[, $opt]]])');

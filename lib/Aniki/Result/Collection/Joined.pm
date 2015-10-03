@@ -94,7 +94,7 @@ package Aniki::Result::Collection::Joined {
             for my $table_name (@table_names) {
                 my $row_data = $row->{$table_name};
                 my $uniq_key = _uniq_key($row_data, $pk{$table_name});
-                $rows{$table_name} = defined $uniq_key ? ($cache{$table_name}{$uniq_key} ||= $row_data) : $row_data;
+                $rows{$table_name} = defined $uniq_key ? ($cache{$table_name}{$uniq_key} //= $row_data) : $row_data;
             }
 
             push @rows => \%rows;
@@ -118,7 +118,7 @@ package Aniki::Result::Collection::Joined {
             # inflate to row class
             for my $table_name (@table_names) {
                 my $row_data = $row->{$table_name};
-                $rows{$table_name} = $cache{$table_name}{refaddr $row_data} ||= $row_class{$table_name}->new(
+                $rows{$table_name} = $cache{$table_name}{refaddr $row_data} //= $row_class{$table_name}->new(
                     table_name => $table_name,
                     handler    => $handler,
                     row_data   => $row_data,
