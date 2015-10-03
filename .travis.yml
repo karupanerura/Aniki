@@ -9,6 +9,7 @@ perl:
 
 before_install:
   - cpanm --quiet --notest --skip-satisfied Devel::Cover Devel::Cover::Report::Codecov
+  - cpanm --quiet --notest --skip-satisfied --installdeps --with-recommend .
   - cover -delete
 script:
   - perl Build.PL
