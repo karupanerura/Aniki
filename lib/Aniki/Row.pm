@@ -37,6 +37,7 @@ package Aniki::Row {
         my ($class, %args) = @_;
         my $handler = delete $args{handler};
         my $self = $class->$orig(%args);
+        weaken $handler;
         $handler{$self} = $handler;
         return $self;
     };

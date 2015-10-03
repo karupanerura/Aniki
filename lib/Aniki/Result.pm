@@ -1,6 +1,7 @@
 package Aniki::Result {
     use namespace::sweep;
     use Mouse v2.4.5;
+    use Scalar::Util qw/weaken/;
     use Hash::Util qw/fieldhash/;
 
     has table_name => (
@@ -30,6 +31,7 @@ package Aniki::Result {
         my ($class, %args) = @_;
         my $handler = delete $args{handler};
         my $self = $class->$orig(%args);
+        weaken $handler;
         $handler{$self} = $handler;
         return $self;
     };
