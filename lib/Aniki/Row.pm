@@ -2,26 +2,12 @@ package Aniki::Row {
     use namespace::sweep;
     use Mouse v2.4.5;
     use Carp qw/croak/;
+    use Hash::Util qw/fieldhash/;
+    use Scalar::Util qw/weaken/;
 
     has table_name => (
         is       => 'ro',
         required => 1,
-    );
-
-    has handler => (
-        is       => 'ro',
-        required => 1,
-        weak_ref => 1,
-    );
-
-    has schema => (
-        is      => 'ro',
-        default => sub { shift->handler->schema },
-    );
-
-    has filter => (
-        is      => 'ro',
-        default => sub { shift->handler->filter },
     );
 
     has row_data => (
@@ -34,26 +20,40 @@ package Aniki::Row {
         default => sub { 0 },
     );
 
-    has table => (
-        is       => 'ro',
-        default  => sub {
-            my $self = shift;
-            return $self->schema->get_table($self->table_name);
-        },
-    );
-
-    has relationships => (
-        is      => 'ro',
-        default => sub {
-            my $self = shift;
-            $self->schema->get_relationships($self->table_name);
-        },
-    );
-
     has relay_data => (
         is      => 'ro',
         default => sub { +{} },
     );
+
+    has _accessor_method_cache => (
+        is      => 'ro',
+        default => sub { +{} },
+    );
+
+    fieldhash my %handler;
+
+    around new => sub {
+        my $orig = shift;
+        my ($class, %args) = @_;
+        my $handler = delete $args{handler};
+        my $self = $class->$orig(%args);
+        $handler{$self} = $handler;
+        return $self;
+    };
+
+    sub handler { $handler{+shift} }
+    sub schema  { shift->handler->schema }
+    sub filter  { shift->handler->filter }
+
+    sub table {
+        my $self = shift;
+        return $self->handler->schema->get_table($self->table_name);
+    }
+
+    sub relationships {
+        my $self = shift;
+        return $self->handler->schema->get_relationships($self->table_name);
+    }
 
     sub get {
         my ($self, $column) = @_;
@@ -108,19 +108,31 @@ package Aniki::Row {
         return $self->handler->select($self->table_name => $where, $opts)->first;
     }
 
-    sub can {
+    sub _guess_accessor_method {
         my ($invocant, $method) = @_;
-        my $code = $invocant->SUPER::can($method);
-        return $code if defined $code;
 
         if (ref $invocant) {
             my $self   = $invocant;
             my $column = $method;
-            return sub { $self->get($column)   } if exists $self->row_data->{$column};
-            return sub { $self->relay($column) } if $self->relationships && $self->relationships->get_relationship($column);
+
+            my $cache = $self->_accessor_method_cache();
+            return $cache->{$column} if exists $cache->{$column};
+
+            weaken $self;
+            return $cache->{$column} = sub { $self->get($column) } if exists $self->row_data->{$column};
+
+            my $relationships = $self->relationships;
+            return $cache->{$column} = sub { $self->relay($column) } if $relationships && $relationships->get_relationship($column);
         }
 
         return undef; ## no critic
+    }
+
+    sub can {
+        my ($invocant, $method) = @_;
+        my $code = $invocant->SUPER::can($method);
+        return $code if defined $code;
+        return $invocant->_guess_accessor_method($method);
     }
 
     our $AUTOLOAD;
@@ -130,12 +142,8 @@ package Aniki::Row {
 
         if (ref $invocant) {
             my $self = $invocant;
-            if (exists $self->row_data->{$column}) {
-                return $self->get($column);
-            }
-            elsif ($self->relationships && $self->relationships->get_relationship($column)) {
-                return $self->relay($column);
-            }
+            my $method = $self->_guess_accessor_method($column);
+            return $self->$method(@_) if defined $method;
         }
 
         my $msg = sprintf q{Can't locate object method "%s" via package "%s"}, $column, ref $invocant || $invocant;
