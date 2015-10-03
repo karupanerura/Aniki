@@ -37,6 +37,8 @@ package Aniki::Row::Joined {
         my $msg = sprintf q{Can't locate object method "%s" via package "%s"}, $table_name, ref $invocant || $invocant;
         croak $msg;
     }
+
+    sub DESTROY {} # no autoload
 };
 
 1;
