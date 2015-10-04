@@ -13,6 +13,11 @@ package Aniki::Filter {
         default => sub { [] },
     );
 
+    has global_triggers => (
+        is      => 'ro',
+        default => sub { +{} },
+    );
+
     has table_inflators => (
         is      => 'ro',
         default => sub { +{} },
@@ -23,6 +28,12 @@ package Aniki::Filter {
         default => sub { +{} },
     );
 
+    has table_triggers => (
+        is      => 'ro',
+        default => sub { +{} },
+    );
+
+    sub _identity { $_[0] }
     sub _normalize_column2rx { ref $_[0] eq 'Regexp' ? $_[0] : qr/\A\Q$_[0]\E\z/m }
 
     sub add_global_inflator {
@@ -37,6 +48,11 @@ package Aniki::Filter {
         push @{ $self->global_deflators } => [$rx, $code];
     }
 
+    sub add_global_trigger {
+        my ($self, $event, $code) = @_;
+        push @{ $self->global_triggers->{$event} } => $code;
+    }
+
     sub add_table_inflator {
         my ($self, $table_name, $column, $code) = @_;
         my $rx = _normalize_column2rx($column);
@@ -47,6 +63,11 @@ package Aniki::Filter {
         my ($self, $table_name, $column, $code) = @_;
         my $rx = _normalize_column2rx($column);
         push @{ $self->table_deflators->{$table_name} } => [$rx, $code];
+    }
+
+    sub add_table_trigger {
+        my ($self, $table_name, $event, $code) = @_;
+        push @{ $self->table_triggers->{$table_name}->{$event} } => $code;
     }
 
     sub inflate_column {
@@ -81,6 +102,14 @@ package Aniki::Filter {
         return \%row;
     }
 
+    sub apply_trigger {
+        my ($self, $event, $table_name, $row) = @_;
+        my %row = %$row;
+
+        my $trigger = $self->get_trigger_callback($event, $table_name);
+        return $trigger->(\%row);
+    }
+
     sub get_inflate_callback {
         my ($self, $table_name, $column) = @_;
         unless (exists $self->{__inflate_callbacks_cache}->{$table_name}->{$column}) {
@@ -113,6 +142,26 @@ package Aniki::Filter {
             $self->{__deflate_callbacks_cache}->{$table_name}->{$column} = $callback;
         }
         return $self->{__deflate_callbacks_cache}->{$table_name}->{$column};
+    }
+
+    sub get_trigger_callback {
+        my ($self, $event, $table_name) = @_;
+
+        unless (exists $self->{__trigger_callback_cache}->{$table_name}->{$event}) {
+            my @triggers = (
+                @{ $self->table_triggers->{$table_name}->{$event} || [] },
+                @{ $self->global_triggers->{$event} || [] },
+            );
+
+            my $trigger = \&_identity;
+            for my $cb (reverse @triggers) {
+                my $next = $trigger;
+                $trigger = sub { $cb->($_[0], $next) };
+            }
+            $self->{__trigger_callback_cache}->{$table_name}->{$event} = $trigger;
+        }
+
+        return $self->{__trigger_callback_cache}->{$table_name}->{$event};
     }
 };
 

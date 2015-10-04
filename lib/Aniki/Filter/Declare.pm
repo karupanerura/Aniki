@@ -16,6 +16,7 @@ package Aniki::Filter::Declare {
         *{"${caller}::table"}    = \&_table;
         *{"${caller}::inflate"}  = _inflate($filter);
         *{"${caller}::deflate"}  = _deflate($filter);
+        *{"${caller}::trigger"}  = _trigger($filter);
         *{"${caller}::instance"} = _instance($filter);
     }
 
@@ -53,6 +54,19 @@ package Aniki::Filter::Declare {
         };
     }
 
+    sub _trigger {
+        my $filter = shift;
+        sub ($&) {## no critic
+            my ($event, $code) = @_;
+            if (defined $TARGET_TABLE) {
+                $filter->add_table_trigger($TARGET_TABLE, $event, $code);
+            }
+            else {
+                $filter->add_global_trigger($event, $code);
+            }
+        };
+    }
+
     sub _instance {
         my $filter = shift;
         return sub { $filter };
@@ -68,15 +82,71 @@ __END__
 
 =head1 NAME
 
-Aniki::Filter::Declare - TODO
+Aniki::Filter::Declare - DSL for declaring actions on sometimes
 
 =head1 SYNOPSIS
 
+    package MyApp::DB::Filter;
+    use strict;
+    use warnings;
+
     use Aniki::Filter::Declare;
 
-=head1 DESCRIPTION
+    use Scalar::Util qw/blessed/;
+    use Time::Moment;
+    use Data::GUID::URLSafe;
 
-TODO
+    # apply callback to row before insert
+    trigger insert => sub {
+        my ($row, $next) = @_;
+        $row->{created_at} = Time::Moment->now;
+        return $next->($row);
+    };
+
+    # define trigger/inflate/deflate filters in table context.
+    table author => sub {
+        trigger insert => sub {
+            my ($row, $next) = @_;
+            $row->{guid} = Data::GUID->new->as_base64_urlsafe;
+            return $next->($row);
+        };
+
+        inflate name => sub {
+            my $name = shift;
+            return uc $name;
+        };
+
+        deflate name => sub {
+            my $name = shift;
+            return lc $name;
+        };
+    };
+
+    # define inflate/deflate filters in global context. (apply to all tables)
+    inflate qr/_at$/ => sub {
+        my $datetime = shift;
+        return Time::Moment->from_string($datetime.'Z', lenient => 1);
+    };
+
+    deflate qr/_at$/ => sub {
+        my $datetime = shift;
+        return $datetime->at_utc->strftime('%F %T') if blessed $datetime and $datetime->isa('Time::Moment');
+        return $datetime;
+    };
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item C<table>
+
+=item C<inflate>
+
+=item C<deflate>
+
+=item C<trigger>
+
+=back
 
 =head1 SEE ALSO
 

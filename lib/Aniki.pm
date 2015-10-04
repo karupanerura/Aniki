@@ -154,6 +154,7 @@ package Aniki {
 
     sub filter_on_insert {
         my ($self, $table_name, $row) = @_;
+        $row = $self->filter->apply_trigger(insert => $table_name, $row);
         return $self->filter->deflate_row($table_name, $row);
     }
 
@@ -203,6 +204,7 @@ package Aniki {
 
     sub filter_on_update {
         my ($self, $table_name, $row) = @_;
+        $row = $self->filter->apply_trigger(update => $table_name, $row);
         return $self->filter->deflate_row($table_name, $row);
     }
 
