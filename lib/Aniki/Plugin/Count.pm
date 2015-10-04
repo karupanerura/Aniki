@@ -42,10 +42,6 @@ Aniki::Plugin::Count - Count rows in database.
     $db->count('user'); # => The number of rows in 'user' table.
     $db->count('user', '*', {type => 2}); # => SELECT COUNT(*) FROM user WHERE type=2
 
-=head1 DESCRIPTION
-
-TODO
-
 =head1 SEE ALSO
 
 L<perl>

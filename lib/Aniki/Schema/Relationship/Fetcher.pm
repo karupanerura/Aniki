@@ -48,7 +48,6 @@ package Aniki::Schema::Relationship::Fetcher {
         }
         else {
             # follow slow case...
-            # TODO: show warning
             my $handler = $self->handler;
             for my $row (@$rows) {
                 my @related_rows = $handler->select($table_name => {

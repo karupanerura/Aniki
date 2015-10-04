@@ -75,7 +75,7 @@ __END__
 
 =head1 NAME
 
-Aniki::Schema::Relationship::Declare - TODO
+Aniki::Schema::Relationship::Declare - DSL for declareing relationsip rules
 
 =head1 SYNOPSIS
 
@@ -104,9 +104,17 @@ Aniki::Schema::Relationship::Declare - TODO
 
     1;
 
-=head1 DESCRIPTION
+=head1 FUNCTIONS
 
-TODO
+=over 4
+
+=item C<relay_to>
+
+=item C<relay_by>
+
+=item C<relation>
+
+=back
 
 =head1 SEE ALSO
 

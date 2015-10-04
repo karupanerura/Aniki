@@ -68,11 +68,8 @@ Aniki::Plugin::Pager - SELECT with pager
 
     package main;
     my $db = MyDB->new(...);
-    $db->select_with_pager('user', '*', {type => 2}); # => SELECT COUNT(*) FROM user WHERE type=2
-
-=head1 DESCRIPTION
-
-TODO
+    my $result = $db->select_with_pager('user', { type => 2 }, { page => 1, rows => 10 }); # => Aniki::Result::Collection(+Aniki::Result::Role::Pager)
+    $result->pager; # => Data::Page::NoTotalEntries
 
 =head1 SEE ALSO
 

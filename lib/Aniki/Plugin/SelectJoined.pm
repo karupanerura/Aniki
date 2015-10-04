@@ -137,10 +137,6 @@ Aniki::Plugin::SelectJoined - Support for Joined query
         ...
     }
 
-=head1 DESCRIPTION
-
-TODO
-
 =head1 SEE ALSO
 
 L<Teng::Plugin::SelectJoined>
