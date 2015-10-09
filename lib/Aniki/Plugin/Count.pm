@@ -15,7 +15,8 @@ package Aniki::Plugin::Count {
         }
 
         my ($sql, @binds) = $self->query_builder->select($table, [\"COUNT($column)"], $where, $opt);
-        return $self->dbh->select_one($sql, @binds);
+        my ($count) = $self->dbh->selectrow_array($sql, undef, @binds);
+        return $count;
     }
 }
 

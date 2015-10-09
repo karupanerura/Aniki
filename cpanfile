@@ -1,7 +1,6 @@
 requires 'B::Hooks::EndOfScope';
 requires 'DBIx::Handler';
 requires 'DBIx::Schema::DSL';
-requires 'DBIx::Sunny';
 requires 'Data::Page::NoTotalEntries';
 requires 'Hash::Util::FieldHash';
 requires 'Lingua::EN::Inflect';

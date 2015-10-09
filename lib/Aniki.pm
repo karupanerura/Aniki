@@ -11,7 +11,6 @@ package Aniki {
     our $VERSION = '0.04_03';
 
     use SQL::Maker::SQLType qw/sql_type/;
-    use DBIx::Sunny;
     use DBIx::Handler;
     use Carp qw/croak/;
     use Try::Tiny;
@@ -39,7 +38,6 @@ package Aniki {
             my $self = shift;
             my ($dsn, $user, $pass, $attr) = @{ $self->connect_info };
             return DBIx::Handler->new($dsn, $user, $pass, $attr, {
-                dbi_class        => 'DBIx::Sunny',
                 on_connect_do    => $self->on_connect_do,
                 on_disconnect_do => $self->on_disconnect_do,
             });
@@ -101,6 +99,13 @@ package Aniki {
         else {
             my $filter = Aniki::Filter->new;
             $class->meta->add_method(filter => sub { $filter });
+        }
+
+        # last_insert_id
+        {
+            my $driver = lc $class->_database2driver($class->schema->database);
+            my $method = $class->can("_fetch_last_insert_id_from_$driver") or Carp::croak "Don't know how to get last insert id for $driver";
+            $class->meta->add_method(last_insert_id => $method);
         }
 
         # query_builder
@@ -212,7 +217,8 @@ package Aniki {
         my $self = shift;
         if ($self->insert(@_)) {
             return unless defined wantarray;
-            return $self->dbh->last_insert_id;
+            my $table_name = shift;
+            return $self->last_insert_id($table_name);
         }
         else {
             return undef; ## no critic
@@ -283,7 +289,7 @@ package Aniki {
         my %where;
         for my $pk ($table->primary_key->fields) {
             $where{$pk->name} = exists $row_data->{$pk->name} ? $row_data->{$pk->name}
-                              : $pk->is_auto_increment        ? $self->dbh->last_insert_id
+                              : $pk->is_auto_increment        ? $self->last_insert_id($table->name, $pk->name)
                               : undef
                               ;
         }
@@ -515,6 +521,20 @@ package Aniki {
         return $2 if $sql =~ /\sfrom\s+(["`]?)([\w]+)\1\s*/sio;
         return;
     }
+
+    # --------------------------------------------------
+    # last_insert_id
+    sub _fetch_last_insert_id_from_mysql { shift->dbh->{mysql_insertid} };
+    sub _fetch_last_insert_id_from_pg {
+        my ($self, $table_name, $column) = @_;
+        my $dbh = $self->dbh;
+        return $dbh->last_insert_id(undef, undef, $table_name, undef) unless defined $column;
+
+        my $sequence = join '_', $table_name, $column, 'seq';
+        return $dbh->last_insert_id(undef, undef, undef, undef, { sequence => $sequence });
+    }
+    sub _fetch_last_insert_id_from_sqlite { shift->dbh->func('last_insert_rowid') }
+    sub _fetch_last_insert_id_from_oracle { undef } ## XXX: Oracle haven't implement AUTO INCREMENT
 
     # --------------------------------------------------
     # for transaction
