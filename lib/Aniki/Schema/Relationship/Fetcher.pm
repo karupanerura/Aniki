@@ -15,7 +15,7 @@ package Aniki::Schema::Relationship::Fetcher {
         required => 1,
     );
 
-    use List::MoreUtils qw/pairwise/;
+    use List::MoreUtils qw/pairwise notall/;
     use List::UtilsBy qw/partition_by/;
     use SQL::QueryMaker;
 
@@ -35,12 +35,15 @@ package Aniki::Schema::Relationship::Fetcher {
             my $dest_column = $dest_columns[0];
 
             my @related_rows = $self->handler->select($table_name => {
-                $dest_column => sql_in([map { $_->get_column($src_column) } @$rows])
+                $dest_column => sql_in([grep defined, map { $_->get_column($src_column) } @$rows])
             }, { relay => $relay })->all;
 
             my %related_rows_map = partition_by { $_->get_column($dest_column) } @related_rows;
             for my $row (@$rows) {
-                my $related_rows = $related_rows_map{$row->get_column($src_column)};
+                my $src_value = $row->get_column($src_column);
+                next unless defined $src_value;
+
+                my $related_rows = $related_rows_map{$src_value};
                 $row->relay_data->{$name} = $has_many ? $related_rows : $related_rows->[0];
             }
 
@@ -50,6 +53,7 @@ package Aniki::Schema::Relationship::Fetcher {
             # follow slow case...
             my $handler = $self->handler;
             for my $row (@$rows) {
+                next if notall { defined $row->get_column($_) } @src_columns;
                 my @related_rows = $handler->select($table_name => {
                     pairwise { $a => $row->get_column($b) } @dest_columns, @src_columns
                 }, { relay => $relay })->all;
@@ -80,6 +84,7 @@ package Aniki::Schema::Relationship::Fetcher {
 
             my %dest_rows_map = partition_by { $dest_keygen->($_) } @$dest_rows;
             for my $src_row (@$src_rows) {
+                next if notall { defined $src_row->get_column($_) } @src_columns;
                 my $dest_rows = $dest_rows_map{$src_keygen->($src_row)};
                 $src_row->relay_data->{$name} = $has_many ? $dest_rows : $dest_rows->[0];
             }
