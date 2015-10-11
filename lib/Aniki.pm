@@ -435,12 +435,12 @@ package Aniki {
         my ($self, $sql, @bind) = @_;
         my $sth = $self->dbh->prepare($sql);
         $self->_bind_to_sth($sth, \@bind);
-        try {
+        eval {
             $sth->execute();
-        }
-        catch {
-            $self->handle_error($sql, \@bind, $_);
         };
+        if ($@) {
+            $self->handle_error($sql, \@bind, $@);
+        }
         return $sth;
     }
 
