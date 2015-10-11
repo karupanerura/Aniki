@@ -44,6 +44,8 @@ package Aniki::Result::Collection {
     sub first        { shift->rows(@_)->[0]  }
     sub last :method { shift->rows(@_)->[-1] }
     sub all          { @{ shift->rows(@_) }  }
+
+    __PACKAGE__->meta->make_immutable();
 };
 
 1;

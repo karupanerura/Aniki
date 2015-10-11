@@ -71,6 +71,8 @@ package Aniki::Schema::Relationships {
         return unless exists $self->rule->{$name};
         return $self->rule->{$name};
     }
+
+    __PACKAGE__->meta->make_immutable();
 }
 
 1;

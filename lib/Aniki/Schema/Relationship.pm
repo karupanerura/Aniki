@@ -88,6 +88,8 @@ package Aniki::Schema::Relationship {
         $self->{__inverse_relationships} = \@inverse_relationships;
         return @inverse_relationships;
     }
+
+    __PACKAGE__->meta->make_immutable();
 }
 
 1;

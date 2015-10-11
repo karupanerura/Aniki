@@ -130,6 +130,8 @@ package Aniki::Result::Collection::Joined {
 
         return \@rows;
     }
+
+    __PACKAGE__->meta->make_immutable();
 };
 
 1;

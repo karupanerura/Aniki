@@ -90,6 +90,8 @@ package Aniki::Schema::Relationship::Fetcher {
             }
         }
     }
+
+    __PACKAGE__->meta->make_immutable();
 }
 
 1;

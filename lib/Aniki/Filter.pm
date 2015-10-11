@@ -163,6 +163,8 @@ package Aniki::Filter {
 
         return $self->{__trigger_callback_cache}->{$table_name}->{$event};
     }
+
+    __PACKAGE__->meta->make_immutable();
 };
 
 1;

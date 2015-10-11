@@ -35,6 +35,8 @@ package Aniki::Result {
         my $self = shift;
         delete $handler{0+$self};
     }
+
+    __PACKAGE__->meta->make_immutable();
 };
 
 1;

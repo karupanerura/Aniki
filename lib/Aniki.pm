@@ -567,6 +567,8 @@ BIND    : %s
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 __TRACE__
     }
+
+    __PACKAGE__->meta->make_immutable();
 }
 
 1;

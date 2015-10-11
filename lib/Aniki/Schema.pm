@@ -130,6 +130,8 @@ package Aniki::Schema {
             croak qq{Can't locate object method "$method" via package "$class"};
         }
     }
+
+    __PACKAGE__->meta->make_immutable();
 }
 
 1;
