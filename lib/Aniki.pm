@@ -339,7 +339,7 @@ package Aniki {
         my $table = $self->schema->get_table($table_name);
 
         my @columns = exists $opt->{columns} ? @{ $opt->{columns} }
-                    : defined $table ? map { $_->name } $table->get_fields()
+                    : defined $table ? map { $_->name } $self->schema->get_fields_by_table($table_name)
                     : ('*');
 
         $where = $self->_bind_sql_type_to_args($table, $where) if defined $table;
@@ -360,7 +360,7 @@ package Aniki {
 
         $relay = [$relay] if ref $relay eq 'HASH';
 
-        my $relationships = $self->schema->get_relationships($table_name);
+        my $relationships = $self->schema->get_table($table_name)->get_relationships;
         for my $key (@$relay) {
             if (ref $key && ref $key eq 'HASH') {
                 my %relay = %$key;
@@ -376,7 +376,7 @@ package Aniki {
 
     sub _attach_relay_data {
         my ($self, $relationships, $rows, $key, $relay) = @_;
-        my $relationship = $relationships->get_relationship($key);
+        my $relationship = $relationships->get($key);
         unless ($relationship) {
             croak "'$key' is not defined as relationship. (maybe possible typo?)";
         }

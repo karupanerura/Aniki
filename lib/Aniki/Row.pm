@@ -45,11 +45,6 @@ package Aniki::Row {
         return $self->handler->schema->get_table($self->table_name);
     }
 
-    sub relationships {
-        my $self = shift;
-        return $self->handler->schema->get_relationships($self->table_name);
-    }
-
     sub get {
         my ($self, $column) = @_;
         return $self->{__instance_cache}{get}{$column} if exists $self->{__instance_cache}{get}{$column};
@@ -116,8 +111,8 @@ package Aniki::Row {
             weaken $self;
             return $cache->{$column} = sub { $self->get($column) } if exists $self->row_data->{$column};
 
-            my $relationships = $self->relationships;
-            return $cache->{$column} = sub { $self->relay($column) } if $relationships && $relationships->get_relationship($column);
+            my $relationships = $self->table->get_relationships;
+            return $cache->{$column} = sub { $self->relay($column) } if $relationships && $relationships->get($column);
         }
 
         return undef; ## no critic

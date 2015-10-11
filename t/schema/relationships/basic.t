@@ -54,14 +54,14 @@ subtest 'add' => sub {
         dest_table_name => 'module',
         dest_columns    => [qw/author_id/],
     );
-    is_deeply [$relationships->get_relationship_names], [qw/modules/];
+    is_deeply [$relationships->names], [qw/modules/];
     $relationships->add(
         src_table_name  => 'author',
         src_columns     => [qw/id/],
         dest_table_name => 'review',
         dest_columns    => [qw/author_id/],
     );
-    is_deeply [sort $relationships->get_relationship_names], [qw/modules reviews/];
+    is_deeply [sort $relationships->names], [qw/modules reviews/];
 };
 
 subtest 'add_by_constraint' => sub {
@@ -69,7 +69,7 @@ subtest 'add_by_constraint' => sub {
     my $relationships = Aniki::Schema::Relationships->new(schema => $schema, table => $table);
     my ($belongs_to_author) = grep { $_->type eq FOREIGN_KEY } $table->get_constraints;
     $relationships->add_by_constraint($belongs_to_author);
-    is_deeply [$relationships->get_relationship_names], [qw/author/];
+    is_deeply [$relationships->names], [qw/author/];
 };
 
 done_testing();

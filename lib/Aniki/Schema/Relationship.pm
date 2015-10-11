@@ -84,9 +84,49 @@ package Aniki::Schema::Relationship {
         my $self = shift;
         return @{ $self->{__inverse_relationships} } if exists $self->{__inverse_relationships};
 
-        my @inverse_relationships = $self->schema->get_inverse_relationships_by_relationship($self);
+        my @inverse_relationships = $self->_get_inverse_relationships;
         $self->{__inverse_relationships} = \@inverse_relationships;
         return @inverse_relationships;
+    }
+
+    sub _get_inverse_relationships {
+        my $self = shift;
+
+        my @relationships;
+        for my $dest ($self->schema->get_table($self->dest_table_name)->get_relationships->all) {
+            next if $dest->dest_table_name ne $self->src_table_name;
+            next if not _cmp_deeply($dest->dest_columns, $self->src_columns);
+            next if not _cmp_deeply($dest->src_columns,  $self->dest_columns);
+            push @relationships => $dest;
+        }
+
+        return @relationships;
+    }
+
+    sub _cmp_deeply {
+        my ($l, $r) = @_;
+        return $l eq $r if not ref $l or not ref $r;
+        return !!0      if ref $l ne ref $r;
+
+        if (ref $l eq 'HASH') {
+            for my $k (keys %$l) {
+                return !!0 if not exists $r->{$k};
+                return !!0 if not _cmp_deeply($l->{$k}, $r->{$k});
+            }
+            for my $k (keys %$r) {
+                return !!0 if not exists $l->{$k};
+            }
+            return !!1;
+        }
+        elsif (ref $l eq 'ARRAY') {
+            return !!0 if @$l != @$r;
+            for my $i (0..$#{$l}) {
+                return !!0 if not _cmp_deeply($l->[$i], $r->[$i]);
+            }
+            return !!1;
+        }
+
+        die "Unknwon case: $l cmp $r";
     }
 
     __PACKAGE__->meta->make_immutable();

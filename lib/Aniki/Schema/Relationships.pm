@@ -56,17 +56,17 @@ package Aniki::Schema::Relationships {
         }
     }
 
-    sub get_relationship_names {
+    sub names {
         my $self = shift;
         return keys %{ $self->rule };
     }
 
-    sub get_relationships {
+    sub all {
         my $self = shift;
-        return map { $self->get_relationship($_) } $self->get_relationship_names;
+        return map { $self->get($_) } $self->names;
     }
 
-    sub get_relationship {
+    sub get {
         my ($self, $name) = @_;
         return unless exists $self->rule->{$name};
         return $self->rule->{$name};
