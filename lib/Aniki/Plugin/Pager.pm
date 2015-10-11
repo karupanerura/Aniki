@@ -6,7 +6,7 @@ package Aniki::Plugin::Pager {
     use Data::Page::NoTotalEntries;
     use Aniki::Result::Role::Pager;
 
-    requires qw/select result_class/;
+    requires qw/select guess_result_class/;
 
     sub select_with_pager {
         my ($self, $table_name, $where, $opt) = @_;
@@ -22,7 +22,7 @@ package Aniki::Plugin::Pager {
 
         my $has_next = $rows < $result->count ? 1 : 0;
         if ($has_next) {
-            $result = $self->result_class->new(
+            $result = $self->guess_result_class($table_name)->new(
                 table_name           => $table_name,
                 handler              => $self,
                 row_datas            => [@{$result->row_datas}[0..$result->count-2]],
