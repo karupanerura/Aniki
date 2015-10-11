@@ -1,8 +1,6 @@
 package Aniki::Result {
     use namespace::sweep;
     use Mouse v2.4.5;
-    use Scalar::Util qw/weaken/;
-    use Hash::Util qw/fieldhash/;
 
     has table_name => (
         is       => 'ro',
@@ -24,19 +22,19 @@ package Aniki::Result {
         },
     );
 
-    fieldhash my %handler;
+    my %handler;
 
-    around new => sub {
-        my $orig = shift;
-        my ($class, %args) = @_;
-        my $handler = delete $args{handler};
-        my $self = $class->$orig(%args);
-        weaken $handler;
-        $handler{$self} = $handler;
-        return $self;
-    };
+    sub BUILD {
+        my ($self, $args) = @_;
+        $handler{0+$self} = delete $args->{handler};
+    }
 
-    sub handler { $handler{+shift} }
+    sub handler { $handler{0+shift} }
+
+    sub DEMOLISH {
+        my $self = shift;
+        delete $handler{0+$self};
+    }
 };
 
 1;

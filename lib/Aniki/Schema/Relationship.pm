@@ -2,7 +2,6 @@ use 5.014002;
 package Aniki::Schema::Relationship {
     use namespace::sweep;
     use Mouse v2.4.5;
-    use Hash::Util::FieldHash qw/fieldhash/;
     use Aniki::Schema::Relationship::Fetcher;
     use Lingua::EN::Inflect qw/PL/;
 
@@ -49,10 +48,7 @@ package Aniki::Schema::Relationship {
 
     has _fetcher => (
         is      => 'ro',
-        default => sub {
-            fieldhash my %fetcher;
-            return \%fetcher;
-        },
+        default => sub { +{} },
     );
 
     sub _guess_name {
@@ -80,8 +76,8 @@ package Aniki::Schema::Relationship {
 
     sub fetcher {
         my ($self, $handler) = @_;
-        return $self->_fetcher->{$handler} if exists $self->_fetcher->{$handler};
-        return $self->_fetcher->{$handler} = Aniki::Schema::Relationship::Fetcher->new(relationship => $self, handler => $handler);
+        return $self->_fetcher->{0+$handler} if exists $self->_fetcher->{0+$handler};
+        return $self->_fetcher->{0+$handler} = Aniki::Schema::Relationship::Fetcher->new(relationship => $self, handler => $handler);
     }
 
     sub get_inverse_relationships {
