@@ -66,11 +66,14 @@ package Aniki {
         return $map->{$database};
     }
 
-    sub schema        { croak 'This is abstract method.' }
-    sub query_builder { croak 'This is abstract method.' }
-    sub filter        { croak 'This is abstract method.' }
-    sub row_class     { croak 'This is abstract method.' }
-    sub result_class  { croak 'This is abstract method.' }
+    sub schema              { croak 'This is abstract method. (required to call setup method before call it)' }
+    sub query_builder       { croak 'This is abstract method. (required to call setup method before call it)' }
+    sub filter              { croak 'This is abstract method. (required to call setup method before call it)' }
+    sub last_insert_id      { croak 'This is abstract method. (required to call setup method before call it)' }
+    sub root_row_class      { croak 'This is abstract method. (required to call setup method before call it)' }
+    sub guess_row_class     { croak 'This is abstract method. (required to call setup method before call it)' }
+    sub root_result_class   { croak 'This is abstract method. (required to call setup method before call it)' }
+    sub guess_result_class  { croak 'This is abstract method. (required to call setup method before call it)' }
 
     # You can override this method on your application.
     sub use_strict_query_builder { 1 }
@@ -122,22 +125,52 @@ package Aniki {
 
         # row
         {
-            my $row_class = 'Aniki::Row';
+            my $root_row_class = 'Aniki::Row';
+            my %table_row_class;
             if ($args{row}) {
                 Module::Load::load($args{row});
-                $row_class = $args{row};
+                $root_row_class = $args{row};
+                for my $table ($class->schema->get_tables) {
+                    my $table_row_class = sprintf '%s::%s', $root_row_class, camelize($table->name);
+                    $table_row_class{$table->name} = try {
+                        Module::Load::load($table_row_class);
+                        return $table_row_class;
+                    } catch {
+                        die $_ unless /\A\QCan't locate/imo;
+                        return $root_row_class;
+                    };
+                }
             }
-            $class->meta->add_method(row_class => sub { $row_class });
+            else {
+                %table_row_class = map { $_->name => $root_row_class } $class->schema->get_tables;
+            }
+            $class->meta->add_method(root_row_class => sub { $root_row_class });
+            $class->meta->add_method(guess_row_class => sub { $table_row_class{$_[1]} //= $root_row_class });
         }
 
         # result
         {
-            my $result_class = 'Aniki::Result::Collection';
+            my $root_result_class = 'Aniki::Result::Collection';
+            my %table_result_class;
             if ($args{result}) {
                 Module::Load::load($args{result});
-                $result_class = $args{result};
+                $root_result_class = $args{result};
+                for my $table ($class->schema->get_tables) {
+                    my $table_result_class = sprintf '%s::%s', $root_result_class, camelize($table->name);
+                    $table_result_class{$table->name} = try {
+                        Module::Load::load($table_result_class);
+                        return $table_result_class;
+                    } catch {
+                        die $_ unless /\A\QCan't locate/imo;
+                        return $root_result_class;
+                    };
+                }
             }
-            $class->meta->add_method(result_class => sub { $result_class });
+            else {
+                %table_result_class = map { $_->name => $root_result_class } $class->schema->get_tables;
+            }
+            $class->meta->add_method(root_result_class => sub { $root_result_class });
+            $class->meta->add_method(guess_result_class => sub { $table_result_class{$_[1]} //= $root_result_class });
         }
     }
 
@@ -461,36 +494,6 @@ package Aniki {
             return \%cache;
         },
     );
-
-    sub guess_row_class {
-        my ($self, $table_name) = @_;
-        return $self->_row_class_cache->{$table_name} if defined $self->_row_class_cache->{$table_name};
-        return $self->_row_class_cache->{$table_name} = 'Aniki::Row' if $self->row_class eq 'Aniki::Row';
-
-        my $row_class = sprintf '%s::%s', $self->row_class, camelize($table_name);
-        return $self->_row_class_cache->{$table_name} = try {
-            Module::Load::load($row_class);
-            return $row_class;
-        } catch {
-            die $_ unless /\A\QCan't locate/imo;
-            return $self->row_class;
-        };
-    }
-
-    sub guess_result_class {
-        my ($self, $table_name) = @_;
-        return $self->_result_class_cache->{$table_name} if defined $self->_result_class_cache->{$table_name};
-        return $self->_result_class_cache->{$table_name} = 'Aniki::Result::Collection' if $self->result_class eq 'Aniki::Result::Collection';
-
-        my $result_class = sprintf '%s::%s', $self->result_class, camelize($table_name);
-        return $self->_result_class_cache->{$table_name} = try {
-            Module::Load::load($result_class);
-            return $result_class;
-        } catch {
-            die $_ unless /\A\QCan't locate/imo;
-            return $self->result_class;
-        };
-    }
 
     sub new_row_from_hashref {
         my ($self, $table_name, $row_data) = @_;
