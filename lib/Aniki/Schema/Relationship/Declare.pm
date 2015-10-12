@@ -75,7 +75,7 @@ __END__
 
 =head1 NAME
 
-Aniki::Schema::Relationship::Declare - DSL for declareing relationsip rules
+Aniki::Schema::Relationship::Declare - DSL for declaring relationship rules
 
 =head1 SYNOPSIS
 
