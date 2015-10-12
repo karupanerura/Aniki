@@ -204,10 +204,10 @@ package Aniki {
         my $self = shift;
         if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
             local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-            return $self->update($_[0]->table_name, $_[1], $self->_where_row_cond($_[0]->table, $_[0]->row_data), @_);
+            return $self->update($_[0]->table_name, $_[1], $self->_where_row_cond($_[0]->table, $_[0]->row_data));
         }
         else {
-            my ($table_name, $row, $where, $opt) = @_;
+            my ($table_name, $row, $where) = @_;
             $row = $self->filter_on_update($table_name, $row);
 
             my $table = $self->schema->get_table($table_name);
@@ -216,7 +216,7 @@ package Aniki {
                 $where = $self->_bind_sql_type_to_args($table, $where);
             }
 
-            my ($sql, @bind) = $self->query_builder->update($table_name, $row, $where, $opt);
+            my ($sql, @bind) = $self->query_builder->update($table_name, $row, $where);
             my $sth  = $self->execute($sql, @bind);
             my $rows = $sth->rows;
             $sth->finish;
