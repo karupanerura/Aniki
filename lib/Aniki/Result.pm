@@ -41,3 +41,60 @@ package Aniki::Result {
 
 1;
 __END__
+
+=pod
+
+=encoding utf-8
+
+=head1 NAME
+
+Aniki::Result - Result class
+
+=head1 SYNOPSIS
+
+    my $result = $db->select(foo => { bar => 1 });
+
+=head1 DESCRIPTION
+
+This is abstract result class.
+
+Aniki detect the collection class from root result class by table name.
+Default root result class is C<MyApp::DB::Collection>.
+
+You can use original result class:
+
+    package MyApp::DB;
+    use Mouse;
+    extends qw/Aniki/;
+
+    __PACKAGE__->setup(
+        schema => 'MyApp::DB::Schema',
+        result => 'MyApp::DB::Collection',
+    );
+
+=head1 ACCESSORS
+
+=over 4
+
+=item handler : Aniki
+
+=item table_name : Str
+
+=item suppress_row_objects : Bool
+
+=item row_class : ClassName
+
+=back
+
+=head1 LICENSE
+
+Copyright (C) karupanerura.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+karupanerura E<lt>karupa@cpan.orgE<gt>
+
+=cut

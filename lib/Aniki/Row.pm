@@ -148,3 +148,90 @@ package Aniki::Row {
 };
 
 1;
+
+=pod
+
+=encoding utf-8
+
+=head1 NAME
+
+Aniki::Row - Row class
+
+=head1 SYNOPSIS
+
+    my $result = $db->select(foo => { bar => 1 });
+    for my $row ($result->all) {
+        print $row->id, "\n";
+    }
+
+=head1 DESCRIPTION
+
+This is row class.
+
+=head1 INSTANCE METHODS
+
+=head2 $column
+
+Autoload column name method to C<< $row->get($column) >>.
+
+=head2 $relay
+
+Autoload relationship name method to C<< $row->relay($column) >>.
+
+=head2 get($column)
+
+Returns column data.
+
+=head2 relay($name)
+
+Returns related data.
+If not yet cached, call C<relay_fetch>.
+
+=head2 relay_fetch($name)
+
+Fetch related data, and returns related data.
+
+=head2 get_column($column)
+
+Returns column data without inflate filters.
+
+=head2 get_columns()
+
+Returns columns data as hash reference.
+
+=head2 refetch()
+
+=head1 ACCESSORS
+
+=over 4
+
+=item handler : Aniki
+
+=item schema : Aniki::Schema
+
+=item table : Aniki::Schema::Table
+
+=item filter : Aniki::Filter
+
+=item table_name : Str
+
+=item is_new : Bool
+
+=item row_data : HashRef
+
+=item relay_data : HashRef
+
+=back
+
+=head1 LICENSE
+
+Copyright (C) karupanerura.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+karupanerura E<lt>karupa@cpan.orgE<gt>
+
+=cut

@@ -68,24 +68,47 @@ Aniki::Result::Collection - Rows as a collection
 
 =head1 DESCRIPTION
 
-This is result class of C<SELECT> query.
+This is collection result class.
 
-You can use original result class:
+=head1 INSTANCE METHODS
 
-    package MyApp::DB;
-    use Mouse;
-    extends qw/Aniki/;
+=head2 rows
 
-    __PACKAGE__->setup(
-        schema => 'MyApp::DB::Schema',
-        result => 'MyApp::DB::Collection',
-    );
+Returns rows as array reference.
 
-And it auto detect the collection class by C<MyApp::DB::Collection>.
+=head2 count
 
-=head1 SEE ALSO
+Returns rows count.
 
-L<perl>
+=head2 first
+
+Returns first row.
+
+=head2 last
+
+Returns last row.
+
+=head2 all
+
+Returns rows as array.
+
+=head1 ACCESSORS
+
+=over 4
+
+=item handler : Aniki
+
+=item table_name : Str
+
+=item suppress_row_objects : Bool
+
+=item row_class : ClassName
+
+=item row_datas : ArrayRef[HashRef]
+
+=item inflated_rows : ArrayRef[Aniki::Row]
+
+=back
 
 =head1 LICENSE
 
