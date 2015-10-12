@@ -30,8 +30,18 @@ on configure => sub {
 
 on test => sub {
     requires 'DBD::SQLite';
+    requires 'List::Util';
     requires 'Mouse::Util';
     requires 'Test::Builder::Module';
     requires 'Test::More', '0.98';
     requires 'feature';
+};
+
+on develop => sub {
+    requires 'DBI';
+    requires 'DBIx::Class::Core';
+    requires 'DBIx::Class::Schema';
+    requires 'Teng';
+    requires 'Teng::Schema::Declare';
+    requires 'Time::Moment';
 };
