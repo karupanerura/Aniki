@@ -45,11 +45,6 @@ package Aniki {
         },
     );
 
-    has fields_case => (
-        is      => 'rw',
-        default => sub { 'NAME_lc' },
-    );
-
     has suppress_row_objects => (
         is      => 'rw',
         default => 0,
@@ -374,6 +369,8 @@ package Aniki {
         return \%where;
     }
 
+    my $WILDCARD_COLUMNS = ['*'];
+
     sub select :method {
         my ($self, $table_name, $where, $opt) = @_;
         $opt //= {};
@@ -383,16 +380,17 @@ package Aniki {
 
         my $table = $self->schema->get_table($table_name);
 
-        my @columns = exists $opt->{columns} ? @{ $opt->{columns} }
-                    : defined $table ? map { $_->name } $self->schema->get_fields_by_table($table_name)
-                    : ('*');
+        my $columns = exists $opt->{columns} ? $opt->{columns}
+                    : defined $table ? $table->field_names
+                    : $WILDCARD_COLUMNS;
 
         $where = $self->_bind_sql_type_to_args($table, $where) if defined $table;
 
         local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-        my ($sql, @bind) = $self->query_builder->select($table_name, \@columns, $where, $opt);
+        my ($sql, @bind) = $self->query_builder->select($table_name, $columns, $where, $opt);
         return $self->select_by_sql($sql, \@bind, {
             table_name => $table_name,
+            columns    => $columns,
             exists $opt->{relay} ? (
                 relay => $opt->{relay},
             ) : (),
@@ -438,6 +436,7 @@ package Aniki {
         $opt //= {};
 
         my $table_name = exists $opt->{table_name}  ? $opt->{table_name} : $self->_guess_table_name($sql);
+        my $columns    = exists $opt->{columns}     ? $opt->{columns}    : undef;
         my $relay      = exists $opt->{relay}       ? $opt->{relay}      : [];
            $relay      = [$relay] if ref $relay eq 'HASH';
 
@@ -446,7 +445,7 @@ package Aniki {
             my $txn; $txn = $self->txn_scope unless $self->in_txn;
 
             my $sth = $self->execute($sql, @$bind);
-            my $result = $self->_fetch_by_sth($sth, $table_name);
+            my $result = $self->_fetch_by_sth($sth, $table_name, $columns);
             $self->attach_relay_data($table_name, $relay, $result->rows);
 
             $txn->rollback if defined $txn; ## for read only
@@ -454,17 +453,19 @@ package Aniki {
         }
         else {
             my $sth = $self->execute($sql, @$bind);
-            return $self->_fetch_by_sth($sth, $table_name);
+            return $self->_fetch_by_sth($sth, $table_name, $columns);
         }
     }
 
     sub _fetch_by_sth {
-        my ($self, $sth, $table_name) = @_;
+        my ($self, $sth, $table_name, $columns) = @_;
+        $columns //= $sth->{NAME};
+        $columns   = $sth->{NAME} if $columns == $WILDCARD_COLUMNS;
+
         my @rows;
 
         my %row;
-        my @columns = @{ $sth->{$self->fields_case} };
-        $sth->bind_columns(\@row{@columns});
+        $sth->bind_columns(\@row{@$columns});
         push @rows => {%row} while $sth->fetch;
         $sth->finish;
 

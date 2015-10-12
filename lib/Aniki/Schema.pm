@@ -27,16 +27,6 @@ package Aniki::Schema {
         },
     );
 
-    has _table_fields_cache => (
-        is      => 'ro',
-        default => sub {
-            my $self = shift;
-            return {
-                map { $_->name => [$_->get_fields] } values %{ $self->_table_cache }
-            };
-        },
-    );
-
     sub BUILD {
         my $self = shift;
 
@@ -57,12 +47,6 @@ package Aniki::Schema {
     sub get_tables {
         my $self = shift;
         return values %{ $self->_table_cache };
-    }
-
-    sub get_fields_by_table {
-        my ($self, $table_name) = @_;
-        return unless exists $self->_table_fields_cache->{$table_name};
-        return @{ $self->_table_fields_cache->{$table_name} };
     }
 
     sub has_many {

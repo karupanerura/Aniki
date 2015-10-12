@@ -43,6 +43,14 @@ package Aniki::Schema::Table {
         },
     );
 
+    has field_names => (
+        is      => 'ro',
+        default => sub {
+            my $self = shift;
+            return [map { $_->name } @{ $self->_fields_cache }];
+        },
+    );
+
     has _fields_map_cache => (
         is      => 'ro',
         default => sub {
