@@ -177,6 +177,20 @@ package Aniki {
         }
     }
 
+    sub preload_all_row_classes {
+        my $class = shift;
+        for my $table ($class->schema->get_tables) {
+            $class->guess_row_class($table->name);
+        }
+    }
+
+    sub preload_all_result_classes {
+        my $class = shift;
+        for my $table ($class->schema->get_tables) {
+            $class->guess_result_class($table->name);
+        }
+    }
+
     sub dbh { shift->handler->dbh }
 
     sub insert {
@@ -874,6 +888,14 @@ This method returns true value default.
 So you need to disable L<SQL::Maker>'s strict mode, override it and return false value.
 
 SEE ALSO: L<The JSON SQL Injection Vulnerability|http://blog.kazuhooku.com/2014/07/the-json-sql-injection-vulnerability.html>
+
+=head3 preload_all_row_classes
+
+Preload all row classes.
+
+=head3 preload_all_result_classes
+
+Preload all result classes.
 
 =head3 guess_result_class($table_name) : ClassName
 
