@@ -10,7 +10,8 @@ table {
     columns
         { name => 'id', type => SQL_INTEGER }, # INTEGER
         { name => 'name', type => SQL_VARCHAR }, # VARCHAR
-        ;
+        { name => 'message', type => SQL_VARCHAR }, # VARCHAR
+    ;
 
     inflate name => sub {
         my $name = shift;
@@ -30,7 +31,7 @@ table {
         { name => 'id', type => SQL_INTEGER }, # INTEGER
         { name => 'name', type => SQL_VARCHAR }, # VARCHAR
         { name => 'author_id', type => SQL_INTEGER }, # INTEGER
-        ;
+    ;
 };
 
 1;

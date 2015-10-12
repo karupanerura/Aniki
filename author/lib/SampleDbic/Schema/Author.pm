@@ -8,22 +8,31 @@ use parent qw/DBIx::Class::Core/;
 __PACKAGE__->table('author');
 __PACKAGE__->add_columns(
     'id' => {
-        'is_foreign_key' => 0,
-        'name' => 'id',
-        'is_nullable' => 0,
-        'default_value' => undef,
-        'data_type' => 'INTEGER',
         'is_auto_increment' => 1,
-        'size' => '0'
+        'is_nullable' => 0,
+        'data_type' => 'INTEGER',
+        'default_value' => undef,
+        'is_foreign_key' => 0,
+        'size' => '0',
+        'name' => 'id'
     },
     'name' => {
+        'default_value' => undef,
+        'is_foreign_key' => 0,
         'size' => '255',
+        'name' => 'name',
+        'is_auto_increment' => 0,
+        'is_nullable' => 1,
+        'data_type' => 'VARCHAR'
+    },
+    'message' => {
         'is_auto_increment' => 0,
         'data_type' => 'VARCHAR',
-        'default_value' => undef,
         'is_nullable' => 1,
+        'default_value' => 'hello',
         'is_foreign_key' => 0,
-        'name' => 'name'
+        'name' => 'message',
+        'size' => '255'
     },
 );
 __PACKAGE__->set_primary_key('id');

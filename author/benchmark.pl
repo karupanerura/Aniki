@@ -56,24 +56,39 @@ $teng->dbh->do('DELETE FROM sqlite_sequence WHERE name = ?', undef, 'author');
 
 say '=============== INSERT ===============';
 ($dbic_id, $teng_id, $aniki_id) = (0, 0, 0);
-cmpthese timethese 10000 => {
-    dbic => sub {
-        my $data = {
-            name => "name:".$dbic_id++,
-        };
-        my $row = $dbic->resultset('Author')->create($data);
+cmpthese {
+    %{
+        timethese 20000 => {
+            dbic => sub {
+                my $row = $dbic->resultset('Author')->create({
+                    name => "name:".$dbic_id++,
+                });
+            },
+            teng => sub {
+                my $row = $teng->insert('author' => {
+                    name => "name:".$teng_id++,
+                });
+            },
+            'aniki(emulate)' => sub {
+                my $row = $aniki->insert_and_emulate_row('author' => {
+                    name => "name:".$aniki_id++,
+                });
+            },
+        }
     },
-    teng => sub {
-        my $data = {
-            name => "name:".$teng_id++,
-        };
-        my $row = $teng->insert('author' => $data);
+    do {
+        $aniki->dbh->do('DELETE FROM author');
+        $aniki->dbh->do('DELETE FROM sqlite_sequence WHERE name = ?', undef, 'author');
+        ();
     },
-    aniki => sub {
-        my $data = {
-            name => "name:".$aniki_id++,
-        };
-        my $row = $aniki->insert_and_emulate_row('author' => $data);
+    %{
+        timethese 20000 => {
+            'aniki(fetch)' => sub {
+                my $row = $aniki->insert_and_fetch_row('author' => {
+                    name => "name:".$aniki_id++,
+                });
+            },
+        }
     },
 };
 
@@ -89,4 +104,71 @@ cmpthese timethese 20000 => {
     aniki => sub {
         my @rows = $aniki->select('author' => {}, { limit => 10, order_by => { id => 'ASC' } })->all;
     },
+};
+
+say '=============== UPDATE ===============';
+cmpthese timethese 20000 => {
+    dbic => sub {
+        my $row = $dbic->resultset('Author')->single({ id => 1 });
+        $row->update({ message => 'good morning' });
+    },
+    'teng(row)' => sub {
+        my $row = $teng->single('author' => { id => 1 });
+        $row->update({ message => 'good morning' });
+    },
+    teng => sub {
+        $teng->update('author' => { message => 'good morning' }, { id => 1 });
+    },
+    'aniki(row)' => sub {
+        my $row = $aniki->select('author' => { id => 1 }, { limit => 1 })->first;
+        $aniki->update($row => { message => 'good morning' });
+    },
+    aniki => sub {
+        $aniki->update('author' => { message => 'good morning' }, { id => 1 });
+    },
+};
+
+say '=============== DELETE ===============';
+my ($dbic_delete_id, $teng_delete_id, $aniki_delete_id) = (0, 0, 0);
+cmpthese {
+    %{
+        timethese 20000 => {
+            dbic => sub {
+                my $row = $dbic->resultset('Author')->single({ id => ++$dbic_delete_id });
+                $row->delete;
+            },
+            'teng(row)' => sub {
+                my $row = $teng->single('author' => { id => ++$teng_delete_id });
+                $row->delete;
+            },
+            'aniki(row)' => sub {
+                my $row = $aniki->select('author' => { id => ++$aniki_delete_id }, { limit => 1 })->first;
+                $aniki->delete($row);
+            },
+        }
+    },
+    do {
+        ($teng_delete_id, $aniki_delete_id) = (0, 0);
+        $aniki->dbh->do('DELETE FROM author');
+        $aniki->dbh->do('DELETE FROM sqlite_sequence WHERE name = ?', undef, 'author');
+        $teng->dbh->do('DELETE FROM author');
+        $teng->dbh->do('DELETE FROM sqlite_sequence WHERE name = ?', undef, 'author');
+
+        for my $i (1..20000) {
+            $aniki->insert('author' => { name => "name:".$i });
+            $teng->fast_insert('author' => { name => "name:".$i });
+        }
+
+        ();
+    },
+    %{
+        timethese 20000 => {
+            teng => sub {
+                $teng->delete('author' => { id => ++$teng_delete_id });
+            },
+            aniki => sub {
+                $aniki->delete('author' => { id => ++$aniki_delete_id });
+            },
+        }
+    }
 };

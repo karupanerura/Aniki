@@ -8,6 +8,7 @@ package SampleAniki::DB::Schema {
     create_table 'author' => columns {
         integer 'id', primary_key, auto_increment, extra => { auto_increment_type => 'monotonic' };
         varchar 'name', unique;
+        varchar 'message', default => 'hello';
         relay_by 'module', has_many => 1;
     };
 
