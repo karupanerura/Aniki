@@ -183,7 +183,7 @@ package Aniki {
 
     sub insert {
         my ($self, $table_name, $row, $opt) = @_;
-        $row = $self->filter_on_insert($table_name, $row);
+        $row = $self->filter_on_insert($table_name, $row) unless $opt->{no_filter};
 
         my $table = $self->schema->get_table($table_name);
         $row = $self->_bind_sql_type_to_args($table, $row) if $table;
@@ -273,8 +273,45 @@ package Aniki {
         return unless defined wantarray;
 
         my $row = $self->select($table_name, $self->_where_row_cond($table, $row_data), { limit => 1, suppress_result_objects => 1 })->[0];
+        return $row if $self->suppress_row_objects;
+
         $row->is_new(1);
         return $row;
+    }
+
+    sub insert_and_create_row {
+        my ($self, $table_name, $row, $opt) = @_;
+
+        my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
+
+        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+        $row = $self->filter_on_insert($table_name, $row) unless $opt->{no_filter};
+
+        $self->insert($table_name, $row, { %$opt, no_filter => 1 });
+        return unless defined wantarray;
+
+        my %row_data;
+        for my $field ($table->get_fields) {
+            if (exists $row->{$field->name}) {
+                $row_data{$field->name} = $row->{$field->name};
+            }
+            elsif (my $default_value = $field->default_value) {
+                $row_data{$field->name} = $default_value;
+            }
+            elsif ($field->is_auto_increment) {
+                $row_data{$field->name} = $self->last_insert_id($table_name, $field->name);
+            }
+            else {
+                $row_data{$field->name} = undef;
+            }
+        }
+        return \%row_data if $self->suppress_row_objects;
+        return $self->guess_row_class($table_name)->new(
+            table_name => $table_name,
+            handler    => $self,
+            row_data   => \%row_data,
+            is_new     => 1,
+        );
     }
 
     sub insert_on_duplicate {

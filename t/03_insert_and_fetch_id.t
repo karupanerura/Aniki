@@ -15,8 +15,9 @@ ok defined $id, 'id is defined.';
 
 my $row = $db->select(author => { id => $id }, { limit => 1 })->first;
 is_deeply $row->get_columns, {
-    id   => $id,
-    name => 'MOZNION',
+    id      => $id,
+    name    => 'MOZNION',
+    message => 'hello',
 }, 'Data is valid.';
 
 done_testing();

@@ -37,7 +37,7 @@ cmpthese timethese 10000 => {
         my $data = {
             name => "name:".$aniki_id++,
         };
-        my $row = $aniki->insert_and_fetch_row('author' => $data);
+        my $row = $aniki->insert_and_create_row('author' => $data);
     },
 };
 
