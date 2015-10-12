@@ -10,7 +10,7 @@ use t::Util;
 
 my $db = t::Util->db;
 
-my $row = $db->insert_and_create_row(author => { name => 'MOZNION' });
+my $row = $db->insert_and_emulate_row(author => { name => 'MOZNION' });
 ok defined $row, 'row is defined.';
 ok $row->is_new, 'new row.';
 

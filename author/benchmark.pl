@@ -23,7 +23,7 @@ print SampleAniki::DB::Schema->output;
 
 say '=============== INSERT (no fetch) ===============';
 my ($dbic_id, $teng_id, $aniki_id) = (0, 0, 0);
-timethese 10000 => {
+timethese 100000 => {
     aniki => sub {
         my $id = $aniki->insert_and_fetch_id('author' => {
             name => "name:".$aniki_id++,
@@ -36,7 +36,7 @@ $aniki->dbh->do('DELETE FROM sqlite_sequence WHERE name = ?', undef, 'author');
 
 say '=============== INSERT (fetch auto increment id only) ===============';
 ($dbic_id, $teng_id, $aniki_id) = (0, 0, 0);
-cmpthese timethese 10000 => {
+cmpthese timethese 100000 => {
     teng => sub {
         my $id = $teng->fast_insert('author' => {
             name => "name:".$teng_id++,
@@ -73,7 +73,7 @@ cmpthese timethese 10000 => {
         my $data = {
             name => "name:".$aniki_id++,
         };
-        my $row = $aniki->insert_and_create_row('author' => $data);
+        my $row = $aniki->insert_and_emulate_row('author' => $data);
     },
 };
 

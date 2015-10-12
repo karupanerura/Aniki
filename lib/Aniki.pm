@@ -279,7 +279,7 @@ package Aniki {
         return $row;
     }
 
-    sub insert_and_create_row {
+    sub insert_and_emulate_row {
         my ($self, $table_name, $row, $opt) = @_;
 
         my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
