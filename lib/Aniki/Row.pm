@@ -2,7 +2,6 @@ package Aniki::Row {
     use namespace::sweep;
     use Mouse v2.4.5;
     use Carp qw/croak/;
-    use Scalar::Util qw/weaken/;
 
     has table_name => (
         is       => 'ro',
@@ -20,11 +19,6 @@ package Aniki::Row {
     );
 
     has relay_data => (
-        is      => 'ro',
-        default => sub { +{} },
-    );
-
-    has _accessor_method_cache => (
         is      => 'ro',
         default => sub { +{} },
     );
@@ -98,6 +92,12 @@ package Aniki::Row {
         return $self->handler->select($self->table_name => $where, $opts)->first;
     }
 
+    my %accessor_method_cache;
+    sub _accessor_method_cache {
+        my $self = shift;
+        return $accessor_method_cache{$self->table_name} //= {};
+    }
+
     sub _guess_accessor_method {
         my ($invocant, $method) = @_;
 
@@ -108,11 +108,10 @@ package Aniki::Row {
             my $cache = $self->_accessor_method_cache();
             return $cache->{$column} if exists $cache->{$column};
 
-            weaken $self;
-            return $cache->{$column} = sub { $self->get($column) } if exists $self->row_data->{$column};
+            return $cache->{$column} = sub { shift->get($column) } if exists $self->row_data->{$column};
 
             my $relationships = $self->table->get_relationships;
-            return $cache->{$column} = sub { $self->relay($column) } if $relationships && $relationships->get($column);
+            return $cache->{$column} = sub { shift->relay($column) } if $relationships && $relationships->get($column);
         }
 
         return undef; ## no critic
