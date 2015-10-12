@@ -76,13 +76,13 @@ You can use original result class:
 
 =over 4
 
-=item handler : Aniki
+=item C<handler : Aniki>
 
-=item table_name : Str
+=item C<table_name : Str>
 
-=item suppress_row_objects : Bool
+=item C<suppress_row_objects : Bool>
 
-=item row_class : ClassName
+=item C<row_class : ClassName>
 
 =back
 

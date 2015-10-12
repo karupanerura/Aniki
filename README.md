@@ -121,21 +121,21 @@ Lite, but powerful.
     And inflates row to [Aniki::Row](https://metacpan.org/pod/Aniki::Row) object.
 
     You can change result class, also we can change row class.
-    Aniki dispatchs result/row class by table. (e.g. `foo` table to `MyDB::Row::Foo`)
+    Aniki dispatches result/row class by table. (e.g. `foo` table to `MyDB::Row::Foo`)
 
 - Raw SQL support
 
-    Supports to execure raw `SELECT` SQL and fetch rows of result.
+    Supports to execute raw `SELECT` SQL and fetch rows of result.
     Of course, Aniki can inflate to result/row also.
 
 - Query builder
 
-    Aniki includes query builder powerd by [SQL::Maker](https://metacpan.org/pod/SQL::Maker).
+    Aniki includes query builder powered by [SQL::Maker](https://metacpan.org/pod/SQL::Maker).
     [SQL::Maker](https://metacpan.org/pod/SQL::Maker) is fast and secure SQL builder.
 
 - Fork safe & Transaction support
 
-    Aniki includes [DBI](https://metacpan.org/pod/DBI) handler powerd by [DBIx::Handler](https://metacpan.org/pod/DBIx::Handler).
+    Aniki includes [DBI](https://metacpan.org/pod/DBI) handler powered by [DBIx::Handler](https://metacpan.org/pod/DBIx::Handler).
 
 - Error handling
 
@@ -201,13 +201,13 @@ And run `install-aniki` command.
 
     install-aniki --lib=./lib MyApp::DB
 
-`install-aniki` creates skelton modules.
+`install-aniki` creates skeleton modules.
 
 # METHODS
 
 ## CLASS METHODS
 
-### setup(%args)
+### `setup(%args)`
 
 Initialize and customize Aniki class.
 `schema` is required. Others are optional.
@@ -220,13 +220,13 @@ Initialize and customize Aniki class.
 =item result : ClassName
 =item query\_builder : ClassName
 
-### use\_prepare\_cached
+### `use_prepare_cached`
 
 If this method returns true value, Aniki uses `preare_cached`.
 This method returns true value default.
 So you don't need to use `preare_cached`, override it and return false value.
 
-### use\_strict\_query\_builder
+### `use_strict_query_builder`
 
 If this method returns true value, Aniki enables [SQL::Maker](https://metacpan.org/pod/SQL::Maker)'s strict mode.
 This method returns true value default.
@@ -234,21 +234,29 @@ So you need to disable [SQL::Maker](https://metacpan.org/pod/SQL::Maker)'s stric
 
 SEE ALSO: [The JSON SQL Injection Vulnerability](http://blog.kazuhooku.com/2014/07/the-json-sql-injection-vulnerability.html)
 
-### guess\_result\_class($table\_name) : ClassName
+### `preload_all_row_classes`
+
+Preload all row classes.
+
+### `preload_all_result_classes`
+
+Preload all result classes.
+
+### `guess_result_class($table_name) : ClassName`
 
 Guesses result class by table name.
 
-### guess\_row\_class($table\_name) : ClassName
+### `guess_row_class($table_name) : ClassName`
 
 Guesses row class by table name.
 
-### new(%args)
+### `new(%args) : Aniki`
 
 Create instance of Aniki.
 
 #### Arguments
 
-- connect\_info : ArrayRef
+- `connect_info : ArrayRef`
 
     Auguments for [DBI](https://metacpan.org/pod/DBI)'s connect method.
 
@@ -257,19 +265,19 @@ Create instance of Aniki.
 
     Execute SQL or CodeRef when connected/disconnected.
 
-- suppress\_row\_objects : Bool
+- `suppress_row_objects : Bool`
 
     If this option is true, no create row objects.
     Aniki's methods returns hash reference instead of row object.
 
-- suppress\_result\_objects : Bool
+- `suppress_result_objects : Bool`
 
     If this option is true, no create result objects.
     Aniki's methods returns array reference instead of result object.
 
 ## INSTANCE METHODS
 
-### select($table\_name, \\%where, \\%opt)
+### `select($table_name, \%where, \%opt)`
 
 Execute `SELECT` query by generated SQL, and returns result object.
 
@@ -284,28 +292,28 @@ See also [SQL::Maker](https://metacpan.org/pod/SQL::Maker#opt).
 
 And you can use there options:
 
-- suppress\_row\_objects: Bool
+- `suppress_row_objects : Bool`
 
     If this option is true, no create row objects.
     This methods returns hash reference instead of row object.
 
-- suppress\_result\_objects: Bool
+- `suppress_result_objects : Bool`
 
     If this option is true, no create result objects.
     This method returns array reference instead of result object.
 
-- columns: ArrayRef\[Str\]
+- `columns : ArrayRef[Str]`
 
     List for retrieving columns from database.
 
-- prefetch: ArrayRef|HashRef
+- `prefetch : ArrayRef|HashRef`
 
     Pre-fetch specified related rows.
     See also ["RELATIONSHIP"](#relationship) section.
 
-### select\_named($sql, \\%bind, \\%opt)
+### `select_named($sql, \%bind, \%opt)`
 
-### select\_by\_sql($sql, \\@bind, \\%opt)
+### `select_by_sql($sql, \@bind, \%opt)`
 
 Execute `SELECT` query by specified SQL, and returns result object.
 
@@ -317,20 +325,20 @@ Execute `SELECT` query by specified SQL, and returns result object.
 
 You can use there options:
 
-- table\_name: Str
+- `table_name: Str`
 
     This is table name using row/result class guessing.
 
-- columns: ArrayRef\[Str\]
+- `columns: ArrayRef[Str]`
 
     List for retrieving columns from database.
 
-- prefetch: ArrayRef|HashRef
+- `prefetch: ArrayRef|HashRef`
 
     Pre-fetch specified related rows.
     See also ["RELATIONSHIP"](#relationship) section.
 
-### insert($table\_name, \\%values, \\%opt)
+### `insert($table_name, \%values, \%opt)`
 
 Execute `INSERT INTO` query.
 
@@ -338,7 +346,7 @@ Execute `INSERT INTO` query.
     # stmt: INSERT INTO foo (bar) VALUES (?)
     # bind: [1]
 
-### insert\_and\_fetch\_id($table\_name, \\%values, \\%opt)
+### `insert_and_fetch_id($table_name, \%values, \%opt)`
 
 Execute `INSERT INTO` query, and returns `last_insert_id`.
 
@@ -346,7 +354,7 @@ Execute `INSERT INTO` query, and returns `last_insert_id`.
     # stmt: INSERT INTO foo (bar) VALUES (?)
     # bind: [1]
 
-### insert\_and\_fetch\_row($table\_name, \\%values, \\%opt)
+### `insert_and_fetch_row($table_name, \%values, \%opt)`
 
 Execute `INSERT INTO` query, and `SELECT` it, and returns row object.
 
@@ -354,7 +362,7 @@ Execute `INSERT INTO` query, and `SELECT` it, and returns row object.
     # stmt: INSERT INTO foo (bar) VALUES (?)
     # bind: [1]
 
-### insert\_and\_emulate\_row($table\_name, \\%values, \\%opt)
+### `insert_and_emulate_row($table_name, \%values, \%opt)`
 
 Execute `INSERT INTO` query, and returns row object created by `$row` and schema definition.
 
@@ -369,7 +377,7 @@ This method is faster than `insert_and_fetch_row`.
 If you use SQL `TRIGGER` or dynamic default value, this method don't return the correct value, maybe.
 In this case, you should use `insert_and_fetch_row` instead of this method.
 
-### insert\_on\_duplicate($table\_name, \\%insert, \\%update)
+### `insert_on_duplicate($table_name, \%insert, \%update)`
 
 Execute `INSERT ... ON DUPLICATE KEY UPDATE` query for MySQL.
 
@@ -379,7 +387,7 @@ Execute `INSERT ... ON DUPLICATE KEY UPDATE` query for MySQL.
 
 SEE ALSO: [INSERT ... ON DUPLICATE KEY UPDATE Syntax](https://dev.mysql.com/doc/refman/5.6/en/insert-on-duplicate.html)
 
-### insert\_multi($table\_name, \\@values, \\%opts)
+### `insert_multi($table_name, \@values, \%opts)`
 
 Execute `INSERT INTO ... (...) VALUES (...), (...), ...` query for MySQL.
 Insert multiple rows at once.
@@ -390,7 +398,7 @@ Insert multiple rows at once.
 
 SEE ALSO: [INSERT Syntax](https://dev.mysql.com/doc/refman/5.6/en/insert.html)
 
-### update($table\_name, \\%set, \\%where)
+### `update($table_name, \%set, \%where)`
 
 Execute `UPDATE` query, and returns changed rows count.
 
@@ -398,7 +406,7 @@ Execute `UPDATE` query, and returns changed rows count.
     # stmt: UPDATE foo SET bar = ? WHERE id = ?
     # bind: [2, 1]
 
-### update($row, \\%set)
+### `update($row, \%set)`
 
 Execute `UPDATE` query, and returns changed rows count.
 
@@ -407,7 +415,7 @@ Execute `UPDATE` query, and returns changed rows count.
     # stmt: UPDATE foo SET bar = ? WHERE id = ?
     # bind: [2, 1]
 
-### delete($table\_name, \\%where)
+### `delete($table_name, \%where)`
 
 Execute `DELETE` query, and returns changed rows count.
 
@@ -415,7 +423,7 @@ Execute `DELETE` query, and returns changed rows count.
     # stmt: DELETE FROM foo WHERE id = ?
     # bind: [1]
 
-### delete($row)
+### `delete($row)`
 
 Execute `DELETE` query, and returns changed rows count.
 
@@ -426,19 +434,19 @@ Execute `DELETE` query, and returns changed rows count.
 
 ## ACCESSORS
 
-- schema : Aniki::Schema
-- filter : Aniki::Filter
-- query\_builder : Aniki::QueryBuilder
-- root\_row\_class : Aniki::Row
-- root\_result\_class : Aniki::Result
-- connect\_info : ArrayRef
-- on\_connect\_do : CodeRef|ArrayRef\[Str\]|Str
-- on\_disconnect\_do : CodeRef|ArrayRef\[Str\]|Str
-- suppress\_row\_objects : Bool
-- suppress\_result\_objects : Bool
-- dbh : DBI::db
-- handler : DBIx::Handler
-- txn\_manager : DBIx::TransactionManager
+- `schema : Aniki::Schema`
+- `filter : Aniki::Filter`
+- `query_builder : Aniki::QueryBuilder`
+- `root_row_class : Aniki::Row`
+- `root_result_class : Aniki::Result`
+- `connect_info : ArrayRef`
+- `on_connect_do : CodeRef|ArrayRef[Str]|Str`
+- `on_disconnect_do : CodeRef|ArrayRef[Str]|Str`
+- `suppress_row_objects : Bool`
+- `suppress_result_objects : Bool`
+- `dbh : DBI::db`
+- `handler : DBIx::Handler`
+- `txn_manager : DBIx::TransactionManager`
 
 # CONTRIBUTE
 

@@ -170,56 +170,56 @@ This is row class.
 
 =head1 INSTANCE METHODS
 
-=head2 $column
+=head2 C<$column()>
 
 Autoload column name method to C<< $row->get($column) >>.
 
-=head2 $relay
+=head2 C<$relay()>
 
 Autoload relationship name method to C<< $row->relay($column) >>.
 
-=head2 get($column)
+=head2 C<get($column)>
 
 Returns column data.
 
-=head2 relay($name)
+=head2 C<relay($name)>
 
 Returns related data.
 If not yet cached, call C<relay_fetch>.
 
-=head2 relay_fetch($name)
+=head2 C<relay_fetch($name)>
 
 Fetch related data, and returns related data.
 
-=head2 get_column($column)
+=head2 C<get_column($column)>
 
 Returns column data without inflate filters.
 
-=head2 get_columns()
+=head2 C<get_columns()>
 
 Returns columns data as hash reference.
 
-=head2 refetch()
+=head2 C<refetch()>
 
 =head1 ACCESSORS
 
 =over 4
 
-=item handler : Aniki
+=item C<handler : Aniki>
 
-=item schema : Aniki::Schema
+=item C<schema : Aniki::Schema>
 
-=item table : Aniki::Schema::Table
+=item C<table : Aniki::Schema::Table>
 
-=item filter : Aniki::Filter
+=item C<filter : Aniki::Filter>
 
-=item table_name : Str
+=item C<table_name : Str>
 
-=item is_new : Bool
+=item C<is_new : Bool>
 
-=item row_data : HashRef
+=item C<row_data : HashRef>
 
-=item relay_data : HashRef
+=item C<relay_data : HashRef>
 
 =back
 

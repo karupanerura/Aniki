@@ -72,23 +72,23 @@ This is collection result class.
 
 =head1 INSTANCE METHODS
 
-=head2 rows
+=head2 C<rows()>
 
 Returns rows as array reference.
 
-=head2 count
+=head2 C<count()>
 
 Returns rows count.
 
-=head2 first
+=head2 C<first()>
 
 Returns first row.
 
-=head2 last
+=head2 C<last()>
 
 Returns last row.
 
-=head2 all
+=head2 C<all()>
 
 Returns rows as array.
 
@@ -96,17 +96,17 @@ Returns rows as array.
 
 =over 4
 
-=item handler : Aniki
+=item C<handler : Aniki>
 
-=item table_name : Str
+=item C<table_name : Str>
 
-=item suppress_row_objects : Bool
+=item C<suppress_row_objects : Bool>
 
-=item row_class : ClassName
+=item C<row_class : ClassName>
 
-=item row_datas : ArrayRef[HashRef]
+=item C<row_datas : ArrayRef[HashRef]>
 
-=item inflated_rows : ArrayRef[Aniki::Row]
+=item C<inflated_rows : ArrayRef[Aniki::Row]>
 
 =back
 

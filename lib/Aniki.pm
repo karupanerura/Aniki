@@ -858,7 +858,7 @@ C<install-aniki> creates skeleton modules.
 
 =head2 CLASS METHODS
 
-=head3 setup(%args)
+=head3 C<setup(%args)>
 
 Initialize and customize Aniki class.
 C<schema> is required. Others are optional.
@@ -875,13 +875,13 @@ C<schema> is required. Others are optional.
 
 =back
 
-=head3 use_prepare_cached
+=head3 C<use_prepare_cached>
 
 If this method returns true value, Aniki uses C<preare_cached>.
 This method returns true value default.
 So you don't need to use C<preare_cached>, override it and return false value.
 
-=head3 use_strict_query_builder
+=head3 C<use_strict_query_builder>
 
 If this method returns true value, Aniki enables L<SQL::Maker>'s strict mode.
 This method returns true value default.
@@ -889,23 +889,23 @@ So you need to disable L<SQL::Maker>'s strict mode, override it and return false
 
 SEE ALSO: L<The JSON SQL Injection Vulnerability|http://blog.kazuhooku.com/2014/07/the-json-sql-injection-vulnerability.html>
 
-=head3 preload_all_row_classes
+=head3 C<preload_all_row_classes>
 
 Preload all row classes.
 
-=head3 preload_all_result_classes
+=head3 C<preload_all_result_classes>
 
 Preload all result classes.
 
-=head3 guess_result_class($table_name) : ClassName
+=head3 C<guess_result_class($table_name) : ClassName>
 
 Guesses result class by table name.
 
-=head3 guess_row_class($table_name) : ClassName
+=head3 C<guess_row_class($table_name) : ClassName>
 
 Guesses row class by table name.
 
-=head3 new(%args)
+=head3 C<new(%args) : Aniki>
 
 Create instance of Aniki.
 
@@ -913,7 +913,7 @@ Create instance of Aniki.
 
 =over 4
 
-=item connect_info : ArrayRef
+=item C<connect_info : ArrayRef>
 
 Auguments for L<DBI>'s connect method.
 
@@ -922,12 +922,12 @@ Auguments for L<DBI>'s connect method.
 
 Execute SQL or CodeRef when connected/disconnected.
 
-=item suppress_row_objects : Bool
+=item C<suppress_row_objects : Bool>
 
 If this option is true, no create row objects.
 Aniki's methods returns hash reference instead of row object.
 
-=item suppress_result_objects : Bool
+=item C<suppress_result_objects : Bool>
 
 If this option is true, no create result objects.
 Aniki's methods returns array reference instead of result object.
@@ -936,7 +936,7 @@ Aniki's methods returns array reference instead of result object.
 
 =head2 INSTANCE METHODS
 
-=head3 select($table_name, \%where, \%opt)
+=head3 C<select($table_name, \%where, \%opt)>
 
 Execute C<SELECT> query by generated SQL, and returns result object.
 
@@ -953,30 +953,30 @@ And you can use there options:
 
 =over 4
 
-=item suppress_row_objects : Bool
+=item C<suppress_row_objects : Bool>
 
 If this option is true, no create row objects.
 This methods returns hash reference instead of row object.
 
-=item suppress_result_objects : Bool
+=item C<suppress_result_objects : Bool>
 
 If this option is true, no create result objects.
 This method returns array reference instead of result object.
 
-=item columns : ArrayRef[Str]
+=item C<columns : ArrayRef[Str]>
 
 List for retrieving columns from database.
 
-=item prefetch : ArrayRef|HashRef
+=item C<prefetch : ArrayRef|HashRef>
 
 Pre-fetch specified related rows.
 See also L</"RELATIONSHIP"> section.
 
 =back
 
-=head3 select_named($sql, \%bind, \%opt)
+=head3 C<select_named($sql, \%bind, \%opt)>
 
-=head3 select_by_sql($sql, \@bind, \%opt)
+=head3 C<select_by_sql($sql, \@bind, \%opt)>
 
 Execute C<SELECT> query by specified SQL, and returns result object.
 
@@ -990,22 +990,22 @@ You can use there options:
 
 =over 4
 
-=item table_name: Str
+=item C<table_name: Str>
 
 This is table name using row/result class guessing.
 
-=item columns: ArrayRef[Str]
+=item C<columns: ArrayRef[Str]>
 
 List for retrieving columns from database.
 
-=item prefetch: ArrayRef|HashRef
+=item C<prefetch: ArrayRef|HashRef>
 
 Pre-fetch specified related rows.
 See also L</"RELATIONSHIP"> section.
 
 =back
 
-=head3 insert($table_name, \%values, \%opt)
+=head3 C<insert($table_name, \%values, \%opt)>
 
 Execute C<INSERT INTO> query.
 
@@ -1014,7 +1014,7 @@ Execute C<INSERT INTO> query.
     # bind: [1]
 
 
-=head3 insert_and_fetch_id($table_name, \%values, \%opt)
+=head3 C<insert_and_fetch_id($table_name, \%values, \%opt)>
 
 Execute C<INSERT INTO> query, and returns C<last_insert_id>.
 
@@ -1022,7 +1022,7 @@ Execute C<INSERT INTO> query, and returns C<last_insert_id>.
     # stmt: INSERT INTO foo (bar) VALUES (?)
     # bind: [1]
 
-=head3 insert_and_fetch_row($table_name, \%values, \%opt)
+=head3 C<insert_and_fetch_row($table_name, \%values, \%opt)>
 
 Execute C<INSERT INTO> query, and C<SELECT> it, and returns row object.
 
@@ -1030,7 +1030,7 @@ Execute C<INSERT INTO> query, and C<SELECT> it, and returns row object.
     # stmt: INSERT INTO foo (bar) VALUES (?)
     # bind: [1]
 
-=head3 insert_and_emulate_row($table_name, \%values, \%opt)
+=head3 C<insert_and_emulate_row($table_name, \%values, \%opt)>
 
 Execute C<INSERT INTO> query, and returns row object created by C<$row> and schema definition.
 
@@ -1045,7 +1045,7 @@ This method is faster than C<insert_and_fetch_row>.
 If you use SQL C<TRIGGER> or dynamic default value, this method don't return the correct value, maybe.
 In this case, you should use C<insert_and_fetch_row> instead of this method.
 
-=head3 insert_on_duplicate($table_name, \%insert, \%update)
+=head3 C<insert_on_duplicate($table_name, \%insert, \%update)>
 
 Execute C<INSERT ... ON DUPLICATE KEY UPDATE> query for MySQL.
 
@@ -1055,7 +1055,7 @@ Execute C<INSERT ... ON DUPLICATE KEY UPDATE> query for MySQL.
 
 SEE ALSO: L<INSERT ... ON DUPLICATE KEY UPDATE Syntax|https://dev.mysql.com/doc/refman/5.6/en/insert-on-duplicate.html>
 
-=head3 insert_multi($table_name, \@values, \%opts)
+=head3 C<insert_multi($table_name, \@values, \%opts)>
 
 Execute C<INSERT INTO ... (...) VALUES (...), (...), ...> query for MySQL.
 Insert multiple rows at once.
@@ -1066,7 +1066,7 @@ Insert multiple rows at once.
 
 SEE ALSO: L<INSERT Syntax|https://dev.mysql.com/doc/refman/5.6/en/insert.html>
 
-=head3 update($table_name, \%set, \%where)
+=head3 C<update($table_name, \%set, \%where)>
 
 Execute C<UPDATE> query, and returns changed rows count.
 
@@ -1074,7 +1074,7 @@ Execute C<UPDATE> query, and returns changed rows count.
     # stmt: UPDATE foo SET bar = ? WHERE id = ?
     # bind: [2, 1]
 
-=head3 update($row, \%set)
+=head3 C<update($row, \%set)>
 
 Execute C<UPDATE> query, and returns changed rows count.
 
@@ -1083,7 +1083,7 @@ Execute C<UPDATE> query, and returns changed rows count.
     # stmt: UPDATE foo SET bar = ? WHERE id = ?
     # bind: [2, 1]
 
-=head3 delete($table_name, \%where)
+=head3 C<delete($table_name, \%where)>
 
 Execute C<DELETE> query, and returns changed rows count.
 
@@ -1091,7 +1091,7 @@ Execute C<DELETE> query, and returns changed rows count.
     # stmt: DELETE FROM foo WHERE id = ?
     # bind: [1]
 
-=head3 delete($row)
+=head3 C<delete($row)>
 
 Execute C<DELETE> query, and returns changed rows count.
 
@@ -1104,31 +1104,31 @@ Execute C<DELETE> query, and returns changed rows count.
 
 =over 4
 
-=item schema : Aniki::Schema
+=item C<schema : Aniki::Schema>
 
-=item filter : Aniki::Filter
+=item C<filter : Aniki::Filter>
 
-=item query_builder : Aniki::QueryBuilder
+=item C<query_builder : Aniki::QueryBuilder>
 
-=item root_row_class : Aniki::Row
+=item C<root_row_class : Aniki::Row>
 
-=item root_result_class : Aniki::Result
+=item C<root_result_class : Aniki::Result>
 
-=item connect_info : ArrayRef
+=item C<connect_info : ArrayRef>
 
-=item on_connect_do : CodeRef|ArrayRef[Str]|Str
+=item C<on_connect_do : CodeRef|ArrayRef[Str]|Str>
 
-=item on_disconnect_do : CodeRef|ArrayRef[Str]|Str
+=item C<on_disconnect_do : CodeRef|ArrayRef[Str]|Str>
 
-=item suppress_row_objects : Bool
+=item C<suppress_row_objects : Bool>
 
-=item suppress_result_objects : Bool
+=item C<suppress_result_objects : Bool>
 
-=item dbh : DBI::db
+=item C<dbh : DBI::db>
 
-=item handler : DBIx::Handler
+=item C<handler : DBIx::Handler>
 
-=item txn_manager : DBIx::TransactionManager
+=item C<txn_manager : DBIx::TransactionManager>
 
 =back
 
