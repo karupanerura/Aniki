@@ -4,7 +4,7 @@
       "karupanerura <karupa@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v2.4.3, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Minilla/v2.5.0, CPAN::Meta::Converter version 2.150005",
    "license" : [
       "perl_5"
    ],
@@ -33,11 +33,17 @@
       },
       "develop" : {
          "requires" : {
+            "DBI" : "0",
+            "DBIx::Class::Core" : "0",
+            "DBIx::Class::Schema" : "0",
+            "Teng" : "0",
+            "Teng::Schema::Declare" : "0",
             "Test::CPAN::Meta" : "0",
             "Test::MinimumVersion::Fast" : "0.04",
             "Test::PAUSE::Permissions" : "0.04",
             "Test::Pod" : "1.41",
-            "Test::Spellunker" : "v0.2.7"
+            "Test::Spellunker" : "v0.2.7",
+            "Time::Moment" : "0"
          }
       },
       "runtime" : {
@@ -48,7 +54,6 @@
             "B::Hooks::EndOfScope" : "0",
             "DBIx::Handler" : "0",
             "DBIx::Schema::DSL" : "0",
-            "DBIx::Sunny" : "0",
             "Data::Page::NoTotalEntries" : "0",
             "Hash::Util::FieldHash" : "0",
             "Lingua::EN::Inflect" : "0",
@@ -74,6 +79,7 @@
       "test" : {
          "requires" : {
             "DBD::SQLite" : "0",
+            "List::Util" : "0",
             "Mouse::Util" : "0",
             "Test::Builder::Module" : "0",
             "Test::More" : "0.98",
