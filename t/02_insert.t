@@ -10,8 +10,7 @@ use t::Util;
 
 my $db = t::Util->db;
 
-my $ret = $db->insert(author => { name => 'MOZNION' });
-ok $ret, 'INSERT is successful.';
+$db->insert(author => { name => 'MOZNION' });
 is $db->select(author => {}, { limit => 1 })->count, 1, 'created.';
 
 done_testing();

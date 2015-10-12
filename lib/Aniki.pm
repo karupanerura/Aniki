@@ -186,7 +186,8 @@ package Aniki {
         $row = $self->_bind_sql_type_to_args($table, $row) if $table;
 
         my ($sql, @bind) = $self->query_builder->insert($table_name, $row, $opt);
-        $self->execute($sql, @bind)->finish;
+        $self->execute($sql, @bind);
+        return;
     }
 
     sub filter_on_insert {
@@ -212,10 +213,7 @@ package Aniki {
             }
 
             my ($sql, @bind) = $self->query_builder->update($table_name, $row, $where);
-            my $sth  = $self->execute($sql, @bind);
-            my $rows = $sth->rows;
-            $sth->finish;
-            return $rows;
+            return $self->execute($sql, @bind)->rows;
         }
     }
 
@@ -234,10 +232,7 @@ package Aniki {
             }
 
             my ($sql, @bind) = $self->query_builder->delete($table_name, $where, $opt);
-            my $sth  = $self->execute($sql, @bind);
-            my $rows = $sth->rows;
-            $sth->finish;
-            return $rows;
+            return $self->execute($sql, @bind)->rows;
         }
     }
 
@@ -323,10 +318,8 @@ package Aniki {
         }
 
         my ($sql, @bind) = $self->query_builder->insert_on_duplicate($table_name, $insert, $update);
-        my $sth  = $self->execute($sql, @bind);
-        my $rows = $sth->rows;
-        $sth->finish;
-        return $rows;
+        $self->execute($sql, @bind);
+        return;
     }
 
     sub insert_multi {
@@ -347,10 +340,8 @@ package Aniki {
         }
 
         my ($sql, @bind) = $self->query_builder->insert_multi($table_name, \@values, $opts);
-        my $sth  = $self->execute($sql, @bind);
-        my $rows = $sth->rows;
-        $sth->finish;
-        return $rows;
+        $self->execute($sql, @bind);
+        return;
     }
 
     sub _where_row_cond {
