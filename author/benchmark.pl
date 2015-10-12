@@ -25,7 +25,7 @@ say '=============== INSERT (no fetch) ===============';
 my ($dbic_id, $teng_id, $aniki_id) = (0, 0, 0);
 timethese 100000 => {
     aniki => sub {
-        my $id = $aniki->insert_and_fetch_id('author' => {
+        $aniki->insert('author' => {
             name => "name:".$aniki_id++,
         });
     },
