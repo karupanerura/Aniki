@@ -594,7 +594,7 @@ package Aniki {
         my $sequence = join '_', $table_name, $column, 'seq';
         return $dbh->last_insert_id(undef, undef, undef, undef, { sequence => $sequence });
     }
-    sub _fetch_last_insert_id_from_sqlite { shift->dbh->func('last_insert_rowid') }
+    sub _fetch_last_insert_id_from_sqlite { shift->dbh->sqlite_last_insert_rowid }
     sub _fetch_last_insert_id_from_oracle { undef } ## XXX: Oracle haven't implement AUTO INCREMENT
 
     # --------------------------------------------------
