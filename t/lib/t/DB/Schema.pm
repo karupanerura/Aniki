@@ -8,14 +8,14 @@ use Aniki::Schema::Relationship::Declare;
 database 'SQLite';
 
 create_table 'author' => columns {
-    integer 'id', primary_key, auto_increment;
+    integer 'id', primary_key, auto_increment, extra => { auto_increment_type => 'monotonic' };
     varchar 'name', unique;
     varchar 'message', default => 'hello';
     relay_by 'module', has_many => 1;
 };
 
 create_table 'module' => columns {
-    integer 'id', primary_key, auto_increment;
+    integer 'id', primary_key, auto_increment, extra => { auto_increment_type => 'monotonic' };
     varchar 'name', unique;
     integer 'author_id';
 
@@ -26,7 +26,7 @@ create_table 'module' => columns {
 };
 
 create_table 'version' => columns {
-    integer 'id', primary_key, auto_increment;
+    integer 'id', primary_key, auto_increment, extra => { auto_increment_type => 'monotonic' };
     varchar 'name';
     integer 'module_id';
 

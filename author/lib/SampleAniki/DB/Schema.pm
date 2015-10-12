@@ -6,13 +6,13 @@ package SampleAniki::DB::Schema {
     database 'SQLite';
 
     create_table 'author' => columns {
-        integer 'id', primary_key, auto_increment;
+        integer 'id', primary_key, auto_increment, extra => { auto_increment_type => 'monotonic' };
         varchar 'name', unique;
         relay_by 'module', has_many => 1;
     };
 
     create_table 'module' => columns {
-        integer 'id', primary_key, auto_increment;
+        integer 'id', primary_key, auto_increment, extra => { auto_increment_type => 'monotonic' };
         varchar 'name';
         integer 'author_id';
 
