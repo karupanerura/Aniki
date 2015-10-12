@@ -18,8 +18,44 @@ $aniki->dbh->do($_) for split /;/, SampleAniki::DB::Schema->output;
 $teng->dbh->do($_) for split /;/, SampleAniki::DB::Schema->output;
 $dbic->storage->dbh->do($_) for split /;/, SampleAniki::DB::Schema->output;
 
-say '=============== INSERT ===============';
+say '=============== SCHEMA ===============';
+print SampleAniki::DB::Schema->output;
+
+say '=============== INSERT (no fetch) ===============';
 my ($dbic_id, $teng_id, $aniki_id) = (0, 0, 0);
+timethese 10000 => {
+    aniki => sub {
+        my $id = $aniki->insert_and_fetch_id('author' => {
+            name => "name:".$aniki_id++,
+        });
+    },
+};
+
+$aniki->dbh->do('DELETE FROM author');
+$aniki->dbh->do('DELETE FROM sqlite_sequence WHERE name = ?', undef, 'author');
+
+say '=============== INSERT (fetch auto increment id only) ===============';
+($dbic_id, $teng_id, $aniki_id) = (0, 0, 0);
+cmpthese timethese 10000 => {
+    teng => sub {
+        my $id = $teng->fast_insert('author' => {
+            name => "name:".$teng_id++,
+        });
+    },
+    aniki => sub {
+        my $id = $aniki->insert_and_fetch_id('author' => {
+            name => "name:".$aniki_id++,
+        });
+    },
+};
+
+$aniki->dbh->do('DELETE FROM author');
+$aniki->dbh->do('DELETE FROM sqlite_sequence WHERE name = ?', undef, 'author');
+$teng->dbh->do('DELETE FROM author');
+$teng->dbh->do('DELETE FROM sqlite_sequence WHERE name = ?', undef, 'author');
+
+say '=============== INSERT ===============';
+($dbic_id, $teng_id, $aniki_id) = (0, 0, 0);
 cmpthese timethese 10000 => {
     dbic => sub {
         my $data = {
@@ -41,19 +77,6 @@ cmpthese timethese 10000 => {
     },
 };
 
-say '=============== INSERT (fetch auto increment id only) ===============';
-cmpthese timethese 10000 => {
-    teng => sub {
-        my $id = $teng->fast_insert('author' => {
-            name => "name:".$teng_id++,
-        });
-    },
-    aniki => sub {
-        my $id = $aniki->insert_and_fetch_id('author' => {
-            name => "name:".$aniki_id++,
-        });
-    },
-};
 
 say '=============== SELECT ===============';
 cmpthese timethese 20000 => {
