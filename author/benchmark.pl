@@ -12,7 +12,7 @@ use Benchmark qw/cmpthese timethese/;
 
 my $aniki = SampleAniki::DB->new(connect_info => ["dbi:SQLite:dbname=:memory:", "", "", { ShowErrorStatement => 1 }]);
 my $dbic = SampleDbic::Schema->connect('dbi:SQLite:dbname=:memory:');
-my $teng = SampleTeng::DB->new({ connect_info => ["dbi:SQLite:dbname=:memory:", "", ""] });
+my $teng = SampleTeng::DB->new({ connect_info => ["dbi:SQLite:dbname=:memory:", "", ""], sql_builder_args => { strict => 1 } });
 
 $aniki->dbh->do($_) for split /;/, SampleAniki::DB::Schema->output;
 $teng->dbh->do($_) for split /;/, SampleAniki::DB::Schema->output;
