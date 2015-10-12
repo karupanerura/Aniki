@@ -654,7 +654,6 @@ Aniki - The ORM as our great brother.
         create_table 'author' => columns {
             integer 'id', primary_key, auto_increment;
             varchar 'name', unique;
-            has_many 'module';
         };
     };
 
@@ -737,15 +736,383 @@ Aniki - The ORM as our great brother.
 
     1;
 
-=head1 WARNING
-
-IT'S STILL IN DEVELOPMENT PHASE.
-I haven't written document and test script yet.
-
 =head1 DESCRIPTION
 
 Aniki is ORM.
 Lite, but powerful.
+
+=head2 FEATURES
+
+=over 4
+
+=item Small & Simple
+
+You can read codes easily.
+
+=item Object mapping
+
+Inflates rows to L<Aniki::Result::Collection> object.
+And inflates row to L<Aniki::Row> object.
+
+You can change result class, also we can change row class.
+Aniki dispatchs result/row class by table. (e.g. C<foo> table to C<MyDB::Row::Foo>)
+
+=item Raw SQL support
+
+Supports to execure raw C<SELECT> SQL and fetch rows of result.
+Of course, Aniki can inflate to result/row also.
+
+=item Query builder
+
+Aniki includes query builder powerd by L<SQL::Maker>.
+L<SQL::Maker> is fast and secure SQL builder.
+
+=item Fork safe & Transaction support
+
+Aniki includes L<DBI> handler powerd by L<DBIx::Handler>.
+
+=item Error handling
+
+Easy to handle execution errors by C<handle_error> method.
+You can override it.
+
+=item Extendable
+
+You can extend Aniki by L<Mouse::Role>.
+Aniki provides some default plugins as L<Mouse::Role>.
+
+=back
+
+=head2 RELATIONSHIP
+
+Aniki supports relationship.
+Extracts relationship from schema class.
+
+Example:
+
+    use 5.014002;
+    package MyProj::DB::Schema {
+        use DBIx::Schema::DSL;
+
+        create_table 'module' => columns {
+            integer 'id', primary_key, auto_increment;
+            varchar 'name';
+            integer 'author_id';
+
+            add_index 'author_id_idx' => ['author_id'];
+
+            belongs_to 'author';
+        };
+
+        create_table 'author' => columns {
+            integer 'id', primary_key, auto_increment;
+            varchar 'name', unique;
+        };
+    };
+
+A C<author> has many C<modules>.
+So you can access C<author> row object to C<modules>.
+
+    my $author = $db->select(author => { name => 'songmu' })->first;
+    say 'modules[]->name: ', $_->name for $author->modules; ## DBIx::Schema::DSL, Riji
+
+Also C<module> has a C<author>.
+So you can access C<module> row object to C<author> also.
+
+    my $module = $db->select(module => { name => 'Riji' })->first;
+    say "Riji's author is ", $module->author->name; ## SONGMU
+
+And you can pre-fetch related rows.
+
+    my @modules = $db->select(module => {}, { prefetch => [qw/author/] });
+    say $_->name, "'s author is ", $_->author->name for @modules;
+
+=head1 SETUP
+
+Install Aniki from CPAN:
+
+    cpanm Aniki
+
+And run C<install-aniki> command.
+
+    install-aniki --lib=./lib MyApp::DB
+
+C<install-aniki> creates skelton modules.
+
+=head1 METHODS
+
+=head2 CLASS METHODS
+
+=head3 setup(%args)
+
+Initialize and customize Aniki class.
+C<schema> is required. Others are optional.
+
+=head4 Arguments
+
+=over 4
+
+=item schema : ClassName
+=item filter : ClassName
+=item row : ClassName
+=item result : ClassName
+=item query_builder : ClassName
+
+=back
+
+=head3 use_prepare_cached
+
+If this method returns true value, Aniki uses C<preare_cached>.
+This method returns true value default.
+So you don't need to use C<preare_cached>, override it and return false value.
+
+=head3 use_strict_query_builder
+
+If this method returns true value, Aniki enables L<SQL::Maker>'s strict mode.
+This method returns true value default.
+So you need to disable L<SQL::Maker>'s strict mode, override it and return false value.
+
+SEE ALSO: L<The JSON SQL Injection Vulnerability|http://blog.kazuhooku.com/2014/07/the-json-sql-injection-vulnerability.html>
+
+=head3 guess_result_class($table_name) : ClassName
+
+Guesses result class by table name.
+
+=head3 guess_row_class($table_name) : ClassName
+
+Guesses row class by table name.
+
+=head3 new(%args)
+
+Create instance of Aniki.
+
+=head4 Arguments
+
+=over 4
+
+=item connect_info : ArrayRef
+
+Auguments for L<DBI>'s connect method.
+
+=item on_connect_do : CodeRef|ArrayRef[Str]|Str
+=item on_disconnect_do : CodeRef|ArrayRef[Str]|Str
+
+Execute SQL or CodeRef when connected/disconnected.
+
+=item suppress_row_objects : Bool
+
+If this option is true, no create row objects.
+Aniki's methods returns hash reference instead of row object.
+
+=item suppress_result_objects : Bool
+
+If this option is true, no create result objects.
+Aniki's methods returns array reference instead of result object.
+
+=back
+
+=head2 INSTANCE METHODS
+
+=head3 select($table_name, \%where, \%opt)
+
+Execute C<SELECT> query by generated SQL, and returns result object.
+
+    my $result = $db->select(foo => { id => 1 }, { limit => 1 });
+    # stmt: SELECT FROM foo WHERE id = ? LIMIT 1
+    # bind: [1]
+
+=head4 Options
+
+There are the options of C<SELECT> query.
+See also L<SQL::Maker|https://metacpan.org/pod/SQL::Maker#opt>.
+
+And you can use there options:
+
+=over 4
+
+=item suppress_row_objects: Bool
+
+If this option is true, no create row objects.
+This methods returns hash reference instead of row object.
+
+=item suppress_result_objects: Bool
+
+If this option is true, no create result objects.
+This method returns array reference instead of result object.
+
+=item columns: ArrayRef[Str]
+
+List for retrieving columns from database.
+
+=item prefetch: ArrayRef|HashRef
+
+Pre-fetch specified related rows.
+See also L</"RELATIONSHIP"> section.
+
+=back
+
+=head3 select_named($sql, \%bind, \%opt)
+
+=head3 select_by_sql($sql, \@bind, \%opt)
+
+Execute C<SELECT> query by specified SQL, and returns result object.
+
+    my $result = $db->select_by_sql('SELECT FROM foo WHERE id = ? LIMIT 1', [1]);
+    # stmt: SELECT FROM foo WHERE id = ? LIMIT 1
+    # bind: [1]
+
+=head4 Options
+
+You can use there options:
+
+=over 4
+
+=item table_name: Str
+
+This is table name using row/result class guessing.
+
+=item columns: ArrayRef[Str]
+
+List for retrieving columns from database.
+
+=item prefetch: ArrayRef|HashRef
+
+Pre-fetch specified related rows.
+See also L</"RELATIONSHIP"> section.
+
+=back
+
+=head3 insert($table_name, \%values, \%opt)
+
+Execute C<INSERT INTO> query.
+
+    $db->insert(foo => { bar => 1 });
+    # stmt: INSERT INTO foo (bar) VALUES (?)
+    # bind: [1]
+
+
+=head3 insert_and_fetch_id($table_name, \%values, \%opt)
+
+Execute C<INSERT INTO> query, and returns C<last_insert_id>.
+
+    my $id = $db->insert_and_fetch_id(foo => { bar => 1 });
+    # stmt: INSERT INTO foo (bar) VALUES (?)
+    # bind: [1]
+
+=head3 insert_and_fetch_row($table_name, \%values, \%opt)
+
+Execute C<INSERT INTO> query, and C<SELECT> it, and returns row object.
+
+    my $row = $db->insert_and_fetch_row(foo => { bar => 1 });
+    # stmt: INSERT INTO foo (bar) VALUES (?)
+    # bind: [1]
+
+=head3 insert_and_emulate_row($table_name, \%values, \%opt)
+
+Execute C<INSERT INTO> query, and returns row object created by C<$row> and schema definition.
+
+    my $row = $db->insert_and_fetch_row(foo => { bar => 1 });
+    # stmt: INSERT INTO foo (bar) VALUES (?)
+    # bind: [1]
+
+This method is faster than C<insert_and_fetch_row>.
+
+=head4 WARNING
+
+If you use SQL C<TRIGGER> or dynamic default value, this method don't return the correct value, maybe.
+In this case, you should use C<insert_and_fetch_row> instead of this method.
+
+=head3 insert_on_duplicate($table_name, \%insert, \%update)
+
+Execute C<INSERT ... ON DUPLICATE KEY UPDATE> query for MySQL.
+
+    my $row = $db->insert_on_duplicate(foo => { bar => 1 }, { bar => \'VALUE(bar) + 1' });
+    # stmt: INSERT INTO foo (bar) VALUES (?) ON DUPLICATE KEY UPDATE bar = VALUE(bar) + 1
+    # bind: [1]
+
+SEE ALSO: L<INSERT ... ON DUPLICATE KEY UPDATE Syntax|https://dev.mysql.com/doc/refman/5.6/en/insert-on-duplicate.html>
+
+=head3 insert_multi($table_name, \@values, \%opts)
+
+Execute C<INSERT INTO ... (...) VALUES (...), (...), ...> query for MySQL.
+Insert multiple rows at once.
+
+    my $row = $db->insert_multi(foo => [{ bar => 1 }, { bar => 2 }, { bar => 3 }]);
+    # stmt: INSERT INTO foo (bar) VALUES (?),(?),(?)
+    # bind: [1, 2, 3]
+
+SEE ALSO: L<INSERT Syntax|https://dev.mysql.com/doc/refman/5.6/en/insert.html>
+
+=head3 update($table_name, \%set, \%where)
+
+Execute C<UPDATE> query, and returns changed rows count.
+
+    my $count = $db->update(foo => { bar => 2 }, { id => 1 });
+    # stmt: UPDATE foo SET bar = ? WHERE id = ?
+    # bind: [2, 1]
+
+=head3 update($row, \%set)
+
+Execute C<UPDATE> query, and returns changed rows count.
+
+    my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
+    my $count = $db->update($row => { bar => 2 });
+    # stmt: UPDATE foo SET bar = ? WHERE id = ?
+    # bind: [2, 1]
+
+=head3 delete($table_name, \%where)
+
+Execute C<DELETE> query, and returns changed rows count.
+
+    my $count = $db->delete(foo => { id => 1 });
+    # stmt: DELETE FROM foo WHERE id = ?
+    # bind: [1]
+
+=head3 delete($row)
+
+Execute C<DELETE> query, and returns changed rows count.
+
+    my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
+    my $count = $db->delete($row);
+    # stmt: DELETE foo WHERE id = ?
+    # bind: [1]
+
+=head2 ACCESSORS
+
+=over 4
+
+=item schema : Aniki::Schema
+
+=item filter : Aniki::Filter
+
+=item query_builder : Aniki::QueryBuilder
+
+=item root_row_class : Aniki::Row
+
+=item root_result_class : Aniki::Result
+
+=item connect_info : ArrayRef
+
+=item on_connect_do : CodeRef|ArrayRef[Str]|Str
+
+=item on_disconnect_do : CodeRef|ArrayRef[Str]|Str
+
+=item suppress_row_objects : Bool
+
+=item suppress_result_objects : Bool
+
+=item dbh : DBI::db
+
+=item handler : DBIx::Handler
+
+=item txn_manager : DBIx::TransactionManager
+
+=back
+
+=head1 CONTRIBUTE
+
+I need to support documentation and reviewing my english.
+This module is developed on L<Github|http://github.com/karupanerura/Aniki>.
 
 =head1 LICENSE
 
