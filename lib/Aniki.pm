@@ -128,51 +128,52 @@ package Aniki {
         # row
         {
             my $root_row_class = 'Aniki::Row';
-            my %table_row_class;
+            my $guess_row_class = sub { $root_row_class };
             if ($args{row}) {
                 Module::Load::load($args{row});
                 $root_row_class = $args{row};
-                for my $table ($class->schema->get_tables) {
-                    my $table_row_class = sprintf '%s::%s', $root_row_class, camelize($table->name);
-                    $table_row_class{$table->name} = try {
+
+                my %table_row_class;
+                $guess_row_class = sub {
+                    my $table_name = $_[1];
+                    return $table_row_class{$table_name} //= try {
+                        my $table_row_class = sprintf '%s::%s', $root_row_class, camelize($table_name);
                         Module::Load::load($table_row_class);
                         return $table_row_class;
                     } catch {
                         die $_ unless /\A\QCan't locate/imo;
                         return $root_row_class;
                     };
-                }
-            }
-            else {
-                %table_row_class = map { $_->name => $root_row_class } $class->schema->get_tables;
+                };
             }
             $class->meta->add_method(root_row_class => sub { $root_row_class });
-            $class->meta->add_method(guess_row_class => sub { $table_row_class{$_[1]} //= $root_row_class });
+            $class->meta->add_method(guess_row_class => $guess_row_class);
         }
 
         # result
         {
             my $root_result_class = 'Aniki::Result::Collection';
-            my %table_result_class;
+            my $guess_result_class = sub { $root_result_class };
             if ($args{result}) {
                 Module::Load::load($args{result});
                 $root_result_class = $args{result};
-                for my $table ($class->schema->get_tables) {
-                    my $table_result_class = sprintf '%s::%s', $root_result_class, camelize($table->name);
-                    $table_result_class{$table->name} = try {
+
+                my %table_result_class;
+                $guess_result_class = sub {
+                    my $table_name = $_[1];
+                    return $table_result_class{$table_name} //= try {
+                        my $table_result_class = sprintf '%s::%s', $root_result_class, camelize($table_name);
                         Module::Load::load($table_result_class);
                         return $table_result_class;
                     } catch {
                         die $_ unless /\A\QCan't locate/imo;
                         return $root_result_class;
                     };
-                }
+                };
             }
-            else {
-                %table_result_class = map { $_->name => $root_result_class } $class->schema->get_tables;
-            }
+
             $class->meta->add_method(root_result_class => sub { $root_result_class });
-            $class->meta->add_method(guess_result_class => sub { $table_result_class{$_[1]} //= $root_result_class });
+            $class->meta->add_method(guess_result_class => $guess_result_class);
         }
     }
 
