@@ -1,0 +1,93 @@
+#!perl
+use strict;
+use warnings;
+use utf8;
+
+use Data::Section::Simple qw/get_data_section/;
+use File::Spec;
+use File::Path qw/make_path/;
+use Getopt::Long qw/:config posix_default no_ignore_case bundling auto_help/;
+
+GetOptions(\my %opt, qw/lib=s/) or die "Usage: $0 --lib=./lib MyApp::DB";
+die "Usage: $0 --lib=./lib MyApp::DB" if grep { !exists $opt{$_}} qw/lib/;
+my $prefix = shift @ARGV or die "Usage: $0 --lib=./lib MyApp::DB";
+
+my $basefile = File::Spec->catfile($opt{lib}, split /::/, $prefix).'.pm';
+my $basedir  = File::Spec->catdir($opt{lib}, split /::/, $prefix);
+make_path($basedir);
+
+print "Creating ${prefix} ... ";
+spew($basefile, render('DB'));
+print "done\n";
+system $^X, '-wc', $basefile;
+
+for my $type (qw/Schema Filter Result Row/) {
+    print "Creating ${prefix}::${type} ... ";
+    my $file = File::Spec->catfile($basedir, split /::/, $type).'.pm';
+    my $code = render($type);
+    spew($file, $code);
+    print "done\n";
+    system $^X, '-wc', $file;
+}
+
+sub render {
+    my $type = shift;
+    my $code = get_data_section($type.'.pm');
+    $code =~ s/\$\{prefix\}/$prefix/mg;
+    return $code;
+}
+
+sub spew {
+    my ($file, $content) = @_;
+    open my $fh, '>', $file or die $!;
+    print {$fh} $content;
+}
+
+__DATA__
+@@ DB.pm
+package ${prefix}::DB;
+use 5.014002;
+use Mouse v2.4.5;
+extends qw/Aniki/;
+
+__PACKAGE__->setup(
+    schema => '${prefix}::Schema',
+    filter => '${prefix}::Filter',
+    result => '${prefix}::Result',
+    row    => '${prefix}::Row',
+);
+
+__PACKAGE__->meta->make_immutable();
+
+@@ Schema.pm
+package ${prefix}::Schema;
+use 5.014002;
+
+use DBIx::Schema::DSL;
+use Aniki::Schema::Relationship::Declare;
+
+1;
+
+@@ Filter.pm
+package ${prefix}::Filter;
+use 5.014002;
+
+use Aniki::Filter::Declare;
+
+1;
+
+@@ Result.pm
+package ${prefix}::Result;
+use 5.014002;
+use Mouse v2.4.5;
+extends qw/Aniki::Result::Collection/;
+
+1;
+
+@@ Row.pm
+package ${prefix}::Row;
+use 5.014002;
+use Mouse v2.4.5;
+extends qw/Aniki::Row/;
+
+1;
