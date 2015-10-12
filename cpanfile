@@ -2,6 +2,7 @@ requires 'B::Hooks::EndOfScope';
 requires 'DBIx::Handler';
 requires 'DBIx::Schema::DSL';
 requires 'Data::Page::NoTotalEntries';
+requires 'Hash::Util::FieldHash';
 requires 'Lingua::EN::Inflect';
 requires 'List::MoreUtils';
 requires 'List::UtilsBy';
