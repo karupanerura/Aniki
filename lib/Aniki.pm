@@ -54,6 +54,11 @@ package Aniki {
         default => sub { 0 },
     );
 
+    has suppress_result_objects => (
+        is      => 'rw',
+        default => sub { 0 },
+    );
+
     sub _database2driver {
         my ($class, $database) = @_;
         state $map = {
@@ -267,7 +272,7 @@ package Aniki {
         $self->insert($table_name, $row_data, @_);
         return unless defined wantarray;
 
-        my $row = $self->select($table_name, $self->_where_row_cond($table, $row_data), { limit => 1 })->first;
+        my $row = $self->select($table_name, $self->_where_row_cond($table, $row_data), { limit => 1, suppress_result_objects => 1 })->[0];
         $row->is_new(1);
         return $row;
     }
@@ -334,7 +339,8 @@ package Aniki {
         my ($self, $table_name, $where, $opt) = @_;
         $opt //= {};
 
-        local $self->{suppress_row_objects} = 1 if $opt->{suppress_row_objects};
+        local $self->{suppress_row_objects}    = 1 if $opt->{suppress_row_objects};
+        local $self->{suppress_result_objects} = 1 if $opt->{suppress_result_objects};
 
         my $table = $self->schema->get_table($table_name);
 
@@ -423,6 +429,21 @@ package Aniki {
         push @rows => {%row} while $sth->fetch;
         $sth->finish;
 
+        if ($self->suppress_result_objects) {
+            return \@rows if $self->suppress_row_objects;
+
+            my $row_class = $self->guess_row_class($table_name);
+            return [
+                map {
+                    $row_class->new(
+                        table_name => $table_name,
+                        handler    => $self,
+                        row_data   => $_,
+                    )
+                } @rows
+            ];
+        }
+
         my $result_class = $self->guess_result_class($table_name);
         return $result_class->new(
             table_name => $table_name,
@@ -509,7 +530,7 @@ package Aniki {
 
     sub new_collection_from_arrayref {
         my ($self, $table_name, $row_datas) = @_;
-        return $row_datas if $self->suppress_row_objects;
+        return $row_datas if $self->suppress_result_objects;
 
         my $result_class = $self->guess_result_class($table_name);
         return $result_class->new(
