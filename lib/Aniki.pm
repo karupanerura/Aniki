@@ -189,10 +189,7 @@ package Aniki {
         $row = $self->_bind_sql_type_to_args($table, $row) if $table;
 
         my ($sql, @bind) = $self->query_builder->insert($table_name, $row, $opt);
-        my $sth  = $self->execute($sql, @bind);
-        my $rows = $sth->rows;
-        $sth->finish;
-        return $rows;
+        $self->execute($sql, @bind)->finish;
     }
 
     sub filter_on_insert {
@@ -256,14 +253,12 @@ package Aniki {
     sub insert_and_fetch_id {
         my $self = shift;
         local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-        if ($self->insert(@_)) {
-            return unless defined wantarray;
-            my $table_name = shift;
-            return $self->last_insert_id($table_name);
-        }
-        else {
-            return undef; ## no critic
-        }
+
+        $self->insert(@_);
+        return unless defined wantarray;
+
+        my $table_name = shift;
+        return $self->last_insert_id($table_name);
     }
 
     sub insert_and_fetch_row {
