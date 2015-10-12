@@ -15,17 +15,6 @@ package SampleAniki::DB::Filter {
             return lc $name;
         };
     };
-
-    inflate qr/_at$/ => sub {
-        my $datetime = shift;
-        return Time::Moment->from_string($datetime.'Z', lenient => 1);
-    };
-
-    deflate qr/_at$/ => sub {
-        my $datetime = shift;
-        return $datetime->at_utc->strftime('%F %T') if blessed $datetime and $datetime->isa('Time::Moment');
-        return $datetime;
-    };
 };
 
 1;
