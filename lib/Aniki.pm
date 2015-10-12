@@ -204,6 +204,7 @@ package Aniki {
     sub update {
         my $self = shift;
         if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
+            local $Carp::CarpLevel = $Carp::CarpLevel + 1;
             return $self->update($_[0]->table_name, $_[1], $self->_where_row_cond($_[0]->table, $_[0]->row_data), @_);
         }
         else {
@@ -227,6 +228,7 @@ package Aniki {
     sub delete :method {
         my $self = shift;
         if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
+            local $Carp::CarpLevel = $Carp::CarpLevel + 1;
             return $self->delete($_[0]->table_name, $self->_where_row_cond($_[0]->table, $_[0]->row_data), @_);
         }
         else {
@@ -253,6 +255,7 @@ package Aniki {
 
     sub insert_and_fetch_id {
         my $self = shift;
+        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
         if ($self->insert(@_)) {
             return unless defined wantarray;
             my $table_name = shift;
@@ -269,6 +272,8 @@ package Aniki {
         my $row_data   = shift;
 
         my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
+
+        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
         $self->insert($table_name, $row_data, @_);
         return unless defined wantarray;
 
