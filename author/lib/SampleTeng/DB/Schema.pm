@@ -11,6 +11,16 @@ table {
         { name => 'id', type => SQL_INTEGER }, # INTEGER
         { name => 'name', type => SQL_VARCHAR }, # VARCHAR
         ;
+
+    inflate name => sub {
+        my $name = shift;
+        return uc $name;
+    };
+
+    deflate name => sub {
+        my $name = shift;
+        return lc $name;
+    };
 };
 
 table {
