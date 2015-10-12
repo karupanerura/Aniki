@@ -7,6 +7,8 @@ package MyProj::DB {
         schema => 'MyProj::DB::Schema',
         filter => 'MyProj::DB::Filter',
     );
+
+    __PACKAGE__->meta->make_immutable();
 };
 
 1;
