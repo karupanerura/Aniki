@@ -30,7 +30,13 @@ package Aniki::Schema::Table {
 
     has primary_key => (
         is      => 'ro',
-        default => sub { Aniki::Schema::Table::PrimaryKey->new(shift->_table->primary_key) },
+        default => sub {
+            my $self = shift;
+            if (my $primary_key = $self->_table->primary_key) {
+                return Aniki::Schema::Table::PrimaryKey->new($primary_key);
+            }
+            return undef;
+        },
     );
 
     has _fields_cache => (
