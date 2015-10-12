@@ -2,6 +2,16 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.05 2015-10-12T18:17:51Z
+
+   - Renamed some methods/classes
+   - Performance improvements
+   - Support custom result class
+   - Added insert_and_emulate_row method
+   - Use prepare_cached as default
+   - Unsupport fields case for consistency
+   - Added skeleton generator
+
 0.04_03 2015-09-29T00:59:39Z
 
     - Keep inflated rows to keep relay cache
