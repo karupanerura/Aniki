@@ -2,6 +2,7 @@ package Aniki::Schema::Table::PrimaryKey {
     use namespace::sweep;
     use Mouse v2.4.5;
     use Aniki::Schema::Table::Field;
+    use Carp qw/croak/;
 
     has _primary_key => (
         is       => 'ro',
@@ -24,6 +25,20 @@ package Aniki::Schema::Table::PrimaryKey {
     }
 
     sub fields { @{ shift->_fields } }
+
+    our $AUTOLOAD;
+    sub AUTOLOAD {
+        my $self = shift;
+        my $method = $AUTOLOAD =~ s/^.*://r;
+        if ($self->_primary_key->can($method)) {
+            return $self->_primary_key->$method(@_);
+        }
+
+        my $class = ref $self;
+        croak qq{Can't locate object method "$method" via package "$class"};
+    }
+
+    __PACKAGE__->meta->make_immutable;
 };
 
 1;

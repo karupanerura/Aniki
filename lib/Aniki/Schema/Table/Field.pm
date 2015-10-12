@@ -1,6 +1,7 @@
 package Aniki::Schema::Table::Field {
     use namespace::sweep;
     use Mouse v2.4.5;
+    use Carp qw/croak/;
 
     has _field => (
         is       => 'ro',
@@ -32,6 +33,19 @@ package Aniki::Schema::Table::Field {
         return $class->SUPER::BUILDARGS(_field => $field);
     }
 
+    our $AUTOLOAD;
+    sub AUTOLOAD {
+        my $self = shift;
+        my $method = $AUTOLOAD =~ s/^.*://r;
+        if ($self->_field->can($method)) {
+            return $self->_field->$method(@_);
+        }
+
+        my $class = ref $self;
+        croak qq{Can't locate object method "$method" via package "$class"};
+    }
+
+    __PACKAGE__->meta->make_immutable;
 };
 
 1;
