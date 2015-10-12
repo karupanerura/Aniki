@@ -770,21 +770,21 @@ Inflates rows to L<Aniki::Result::Collection> object.
 And inflates row to L<Aniki::Row> object.
 
 You can change result class, also we can change row class.
-Aniki dispatchs result/row class by table. (e.g. C<foo> table to C<MyDB::Row::Foo>)
+Aniki dispatches result/row class by table. (e.g. C<foo> table to C<MyDB::Row::Foo>)
 
 =item Raw SQL support
 
-Supports to execure raw C<SELECT> SQL and fetch rows of result.
+Supports to execute raw C<SELECT> SQL and fetch rows of result.
 Of course, Aniki can inflate to result/row also.
 
 =item Query builder
 
-Aniki includes query builder powerd by L<SQL::Maker>.
+Aniki includes query builder powered by L<SQL::Maker>.
 L<SQL::Maker> is fast and secure SQL builder.
 
 =item Fork safe & Transaction support
 
-Aniki includes L<DBI> handler powerd by L<DBIx::Handler>.
+Aniki includes L<DBI> handler powered by L<DBIx::Handler>.
 
 =item Error handling
 
@@ -852,7 +852,7 @@ And run C<install-aniki> command.
 
     install-aniki --lib=./lib MyApp::DB
 
-C<install-aniki> creates skelton modules.
+C<install-aniki> creates skeleton modules.
 
 =head1 METHODS
 
@@ -953,21 +953,21 @@ And you can use there options:
 
 =over 4
 
-=item suppress_row_objects: Bool
+=item suppress_row_objects : Bool
 
 If this option is true, no create row objects.
 This methods returns hash reference instead of row object.
 
-=item suppress_result_objects: Bool
+=item suppress_result_objects : Bool
 
 If this option is true, no create result objects.
 This method returns array reference instead of result object.
 
-=item columns: ArrayRef[Str]
+=item columns : ArrayRef[Str]
 
 List for retrieving columns from database.
 
-=item prefetch: ArrayRef|HashRef
+=item prefetch : ArrayRef|HashRef
 
 Pre-fetch specified related rows.
 See also L</"RELATIONSHIP"> section.
