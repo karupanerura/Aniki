@@ -391,39 +391,39 @@ package Aniki {
         return $self->select_by_sql($sql, \@bind, {
             table_name => $table_name,
             columns    => $columns,
-            exists $opt->{relay} ? (
-                relay => $opt->{relay},
+            exists $opt->{prefetch} ? (
+                prefetch => $opt->{prefetch},
             ) : (),
         });
     }
 
-    sub attach_relay_data {
-        my ($self, $table_name, $relay, $rows) = @_;
+    sub attach_prefetched_data {
+        my ($self, $table_name, $prefetch, $rows) = @_;
         return unless @$rows;
 
-        $relay = [$relay] if ref $relay eq 'HASH';
+        $prefetch = [$prefetch] if ref $prefetch eq 'HASH';
 
         my $relationships = $self->schema->get_table($table_name)->get_relationships;
-        for my $key (@$relay) {
+        for my $key (@$prefetch) {
             if (ref $key && ref $key eq 'HASH') {
-                my %relay = %$key;
-                for my $key (keys %relay) {
-                    $self->_attach_relay_data($relationships, $rows, $key, $relay{$key});
+                my %prefetch = %$key;
+                for my $key (keys %prefetch) {
+                    $self->_attach_prefetched_data($relationships, $rows, $key, $prefetch{$key});
                 }
             }
             else {
-                $self->_attach_relay_data($relationships, $rows, $key, []);
+                $self->_attach_prefetched_data($relationships, $rows, $key, []);
             }
         }
     }
 
-    sub _attach_relay_data {
-        my ($self, $relationships, $rows, $key, $relay) = @_;
+    sub _attach_prefetched_data {
+        my ($self, $relationships, $rows, $key, $prefetch) = @_;
         my $relationship = $relationships->get($key);
         unless ($relationship) {
             croak "'$key' is not defined as relationship. (maybe possible typo?)";
         }
-        $relationship->fetcher($self)->execute($rows, $relay);
+        $relationship->fetcher($self)->execute($rows, $prefetch);
     }
 
     sub select_named {
@@ -437,16 +437,16 @@ package Aniki {
 
         my $table_name = exists $opt->{table_name}  ? $opt->{table_name} : $self->_guess_table_name($sql);
         my $columns    = exists $opt->{columns}     ? $opt->{columns}    : undef;
-        my $relay      = exists $opt->{relay}       ? $opt->{relay}      : [];
-           $relay      = [$relay] if ref $relay eq 'HASH';
+        my $prefetch   = exists $opt->{prefetch}    ? $opt->{prefetch}      : [];
+           $prefetch   = [$prefetch] if ref $prefetch eq 'HASH';
 
-        my $relay_enabled_fg = @$relay && !$self->suppress_row_objects;
-        if ($relay_enabled_fg) {
+        my $prefetch_enabled_fg = @$prefetch && !$self->suppress_row_objects;
+        if ($prefetch_enabled_fg) {
             my $txn; $txn = $self->txn_scope unless $self->in_txn;
 
             my $sth = $self->execute($sql, @$bind);
             my $result = $self->_fetch_by_sth($sth, $table_name, $columns);
-            $self->attach_relay_data($table_name, $relay, $result->rows);
+            $self->attach_prefetched_data($table_name, $prefetch, $result->rows);
 
             $txn->rollback if defined $txn; ## for read only
             return $result;
@@ -736,8 +736,8 @@ Aniki - The ORM as our great brother.
         my $author = $db->select(author => {
             name => 'songmu',
         }, {
-            limit => 1,
-            relay => [qw/modules/],
+            limit    => 1,
+            prefetch => [qw/modules/],
         })->first;
 
         say '$author->name:   ', $author->name;                 ## SONGMU

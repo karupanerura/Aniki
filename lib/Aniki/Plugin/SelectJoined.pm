@@ -43,10 +43,10 @@ package Aniki::Plugin::SelectJoined {
 
         my $table_names = $opt->{table_names} or croak 'table_names is required';
         my $columns     = $opt->{columns}     or croak 'columns is required';
-        my $relay       = exists $opt->{relay} ? $opt->{relay} : {};
+        my $prefetch    = exists $opt->{prefetch} ? $opt->{prefetch} : {};
 
-        my $relay_enabled_fg = %$relay && !$self->suppress_row_objects;
-        if ($relay_enabled_fg) {
+        my $prefetch_enabled_fg = %$prefetch && !$self->suppress_row_objects;
+        if ($prefetch_enabled_fg) {
             my $txn; $txn = $self->txn_scope unless $self->txn_manager->in_transaction;
 
             my $sth = $self->execute($sql, @$bind);
@@ -54,9 +54,9 @@ package Aniki::Plugin::SelectJoined {
 
             for my $table_name (@$table_names) {
                 my $rows  = $result->rows($table_name);
-                my $relay = $relay->{$table_name};
-                   $relay = [$relay] if ref $relay eq 'HASH';
-                $self->attach_relay_data($table_name, $relay, $rows);
+                my $prefetch = $prefetch->{$table_name};
+                   $prefetch = [$prefetch] if ref $prefetch eq 'HASH';
+                $self->attach_prefetched_data($table_name, $prefetch, $rows);
             }
 
             $txn->rollback if defined $txn; ## for read only

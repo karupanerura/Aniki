@@ -31,7 +31,7 @@ $db->insert_multi(version => [map {
 subtest 'shallow' => sub {
     subtest 'prefetch' => sub {
         my $queries = query_count {
-            my $rows = $db->select(author => {}, { relay => [qw/modules/] });
+            my $rows = $db->select(author => {}, { prefetch => [qw/modules/] });
             isa_ok $rows, 'Aniki::Result::Collection';
             is $rows->count, 2;
 
@@ -63,7 +63,7 @@ subtest 'shallow' => sub {
 subtest 'deep' => sub {
     subtest 'prefetch' => sub {
         my $queries = query_count {
-            my $rows = $db->select(author => {}, { relay => { modules => [qw/versions/] } });
+            my $rows = $db->select(author => {}, { prefetch => { modules => [qw/versions/] } });
             isa_ok $rows, 'Aniki::Result::Collection';
             is $rows->count, 2;
 
@@ -123,7 +123,7 @@ subtest 'deep' => sub {
 subtest 'inverse' => sub {
     subtest 'prefetch' => sub {
         my $queries = query_count {
-            my $rows = $db->select(author => {}, { relay => { modules => [qw/versions/] } });
+            my $rows = $db->select(author => {}, { prefetch => { modules => [qw/versions/] } });
             isa_ok $rows, 'Aniki::Result::Collection';
             is $rows->count, 2;
 

@@ -111,14 +111,14 @@ subtest outer => sub {
 };
 
 
-subtest relay => sub {
+subtest prefetch => sub {
     my $result = $db->select_joined(author => [
         module => { 'module.author_id' => 'author.id' },
     ], {
         'author.id' => $moznion_id,
     }, {
         order_by => 'module.id',
-        relay    => {
+        prefetch => {
             module => [qw/versions/],
         }
     });

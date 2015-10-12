@@ -95,8 +95,8 @@ Aniki - The ORM as our great brother.
         my $author = $db->select(author => {
             name => 'songmu',
         }, {
-            limit => 1,
-            relay => [qw/modules/],
+            limit    => 1,
+            prefetch => [qw/modules/],
         })->first;
 
         say '$author->name:   ', $author->name;                 ## SONGMU

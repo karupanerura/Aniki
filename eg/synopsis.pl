@@ -31,8 +31,8 @@ say '$module->author->name: ', $module->author->name; ## SONGMU
 my $author = $db->select(author => {
     name => 'songmu',
 }, {
-    limit => 1,
-    relay => [qw/modules/],
+    limit    => 1,
+    prefetch => [qw/modules/],
 })->first;
 
 say '$author->name:   ', $author->name;                 ## SONGMU
