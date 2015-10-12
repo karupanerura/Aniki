@@ -51,12 +51,12 @@ package Aniki {
 
     has suppress_row_objects => (
         is      => 'rw',
-        default => sub { 0 },
+        default => 0,
     );
 
     has suppress_result_objects => (
         is      => 'rw',
-        default => sub { 0 },
+        default => 0,
     );
 
     sub _database2driver {

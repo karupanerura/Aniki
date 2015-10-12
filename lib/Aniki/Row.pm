@@ -16,7 +16,7 @@ package Aniki::Row {
 
     has is_new => (
         is      => 'rw',
-        default => sub { 0 },
+        default => 0,
     );
 
     has relay_data => (
