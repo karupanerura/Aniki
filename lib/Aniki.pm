@@ -7,6 +7,7 @@ package Aniki {
     use Aniki::Result::Collection;
     use Aniki::Schema;
     use Aniki::QueryBuilder;
+    use Aniki::QueryBuilder::Canonical;
 
     our $VERSION = '0.04_03';
 
@@ -81,6 +82,7 @@ package Aniki {
     sub guess_result_class  { croak 'This is abstract method. (required to call setup method before call it)' }
 
     # You can override this method on your application.
+    sub use_prepare_cached       { 1 }
     sub use_strict_query_builder { 1 }
 
     sub setup {
@@ -118,7 +120,7 @@ package Aniki {
 
         # query_builder
         {
-            my $query_builder_class = 'Aniki::QueryBuilder';
+            my $query_builder_class = $class->use_prepare_cached ? 'Aniki::QueryBuilder::Canonical' : 'Aniki::QueryBuilder';
             if ($args{query_builder}) {
                 Module::Load::load($args{query_builder});
                 $query_builder_class = $args{query_builder};
@@ -491,7 +493,7 @@ package Aniki {
 
     sub execute {
         my ($self, $sql, @bind) = @_;
-        my $sth = $self->dbh->prepare($sql);
+        my $sth = $self->use_prepare_cached ? $self->dbh->prepare_cached($sql) : $self->dbh->prepare($sql);
         $self->_bind_to_sth($sth, \@bind);
         eval {
             $sth->execute();
