@@ -492,9 +492,10 @@ package Aniki {
 
         my $result_class = $self->guess_result_class($table_name);
         return $result_class->new(
-            table_name => $table_name,
-            handler    => $self,
-            row_datas  => \@rows,
+            table_name           => $table_name,
+            handler              => $self,
+            row_datas            => \@rows,
+            suppress_row_objects => $self->suppress_row_objects,
         );
     }
 
@@ -580,9 +581,10 @@ package Aniki {
 
         my $result_class = $self->guess_result_class($table_name);
         return $result_class->new(
-            table_name => $table_name,
-            handler    => $self,
-            row_datas  => $row_datas,
+            table_name           => $table_name,
+            handler              => $self,
+            row_datas            => $row_datas,
+            suppress_row_objects => $self->suppress_row_objects,
         );
     }
 
