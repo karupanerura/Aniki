@@ -403,7 +403,7 @@ package Aniki {
         });
     }
 
-    sub attach_prefetched_data {
+    sub fetch_and_attach_relay_data {
         my ($self, $table_name, $prefetch, $rows) = @_;
         return unless @$rows;
 
@@ -414,16 +414,16 @@ package Aniki {
             if (ref $key && ref $key eq 'HASH') {
                 my %prefetch = %$key;
                 for my $key (keys %prefetch) {
-                    $self->_attach_prefetched_data($relationships, $rows, $key, $prefetch{$key});
+                    $self->_fetch_and_attach_relay_data($relationships, $rows, $key, $prefetch{$key});
                 }
             }
             else {
-                $self->_attach_prefetched_data($relationships, $rows, $key, []);
+                $self->_fetch_and_attach_relay_data($relationships, $rows, $key, []);
             }
         }
     }
 
-    sub _attach_prefetched_data {
+    sub _fetch_and_attach_relay_data {
         my ($self, $relationships, $rows, $key, $prefetch) = @_;
         my $relationship = $relationships->get($key);
         unless ($relationship) {
@@ -452,7 +452,7 @@ package Aniki {
 
             my $sth = $self->execute($sql, @$bind);
             my $result = $self->_fetch_by_sth($sth, $table_name, $columns);
-            $self->attach_prefetched_data($table_name, $prefetch, $result->rows);
+            $self->fetch_and_attach_relay_data($table_name, $prefetch, $result->rows);
 
             $txn->rollback if defined $txn; ## for read only
             return $result;

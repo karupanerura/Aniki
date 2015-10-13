@@ -63,7 +63,7 @@ package Aniki::Row {
 
     sub relay_fetch {
         my ($self, $key) = @_;
-        $self->handler->attach_prefetched_data($self->table_name, [$key], [$self]);
+        $self->handler->fetch_and_attach_relay_data($self->table_name, [$key], [$self]);
         return $self->relay_data->{$key};
     }
 

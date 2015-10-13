@@ -56,7 +56,7 @@ package Aniki::Plugin::SelectJoined {
                 my $rows  = $result->rows($table_name);
                 my $prefetch = $prefetch->{$table_name};
                    $prefetch = [$prefetch] if ref $prefetch eq 'HASH';
-                $self->attach_prefetched_data($table_name, $prefetch, $rows);
+                $self->fetch_and_attach_relay_data($table_name, $prefetch, $rows);
             }
 
             $txn->rollback if defined $txn; ## for read only
