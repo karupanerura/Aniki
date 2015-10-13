@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.06 2015-10-13T00:39:45Z
+
+   - A little refactor. (no feature changes)
+
 0.05 2015-10-12T18:17:51Z
 
    - Renamed some methods/classes
