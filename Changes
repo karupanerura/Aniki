@@ -1,6 +1,11 @@
-Revision history for Perl extension Aniki
+
+0;95;cRevision history for Perl extension Aniki
 
 {{$NEXT}}
+
+0.07 2015-10-13T07:59:29Z
+
+   - Fixed broken suppress_row_objects option of select method.
 
 0.06 2015-10-13T00:39:45Z
 

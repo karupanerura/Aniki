@@ -9,7 +9,7 @@ package Aniki {
     use Aniki::QueryBuilder;
     use Aniki::QueryBuilder::Canonical;
 
-    our $VERSION = '0.06';
+    our $VERSION = '0.07';
 
     use SQL::Maker::SQLType qw/sql_type/;
     use DBIx::Handler;
