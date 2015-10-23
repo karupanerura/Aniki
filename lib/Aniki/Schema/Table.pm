@@ -49,7 +49,7 @@ package Aniki::Schema::Table {
         },
     );
 
-    has field_names => (
+    has _field_names => (
         is      => 'ro',
         default => sub {
             my $self = shift;
@@ -73,6 +73,8 @@ package Aniki::Schema::Table {
     }
 
     sub get_fields { @{ shift->_fields_cache } }
+
+    sub field_names { wantarray ? @{ shift->_field_names } : [@{ shift->_field_names }] }
 
     sub get_field {
         my ($self, $name) = @_;
