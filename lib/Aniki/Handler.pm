@@ -127,6 +127,8 @@ Auguments for L<DBI>'s connect method.
 
 Execute SQL or CodeRef when connected/disconnected.
 
+=back
+
 =head2 INSTANCE METHODS
 
 =head3 C<connect() : DBIx::Handler>

@@ -147,3 +147,5 @@ Example:
 =item on_disconnect_do : CodeRef|ArrayRef[Str]|Str
 
 Execute SQL or CodeRef when connected/disconnected.
+
+=back
