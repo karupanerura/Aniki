@@ -48,6 +48,7 @@
       },
       "runtime" : {
          "recommends" : {
+            "Data::WeightedRoundRobin" : "0",
             "SQL::Maker::Plugin::JoinSelect" : "0"
          },
          "requires" : {

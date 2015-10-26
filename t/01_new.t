@@ -12,9 +12,9 @@ my $db = t::DB->new(connect_info => ['dbi:SQLite:dbname=:memory:', '', '']);
 isa_ok $db, 'Aniki';
 
 subtest 'no connect info' => sub {
-    my $db = eval { t::DB->new() }; my ($file, $line) = (__FILE__, __LINE__);
+    my $db = eval { t::DB->new() };
     ok not defined $db;
-    like $@, qr/\A\QAttribute (connect_info) is required at $file line $line/m;
+    like $@, qr/\A\QAttribute (connect_info) is required/m;
 };
 
 done_testing();

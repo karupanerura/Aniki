@@ -215,6 +215,7 @@ Initialize and customize Aniki class.
 #### Arguments
 
 - schema : ClassName
+=item handler : ClassName
 =item filter : ClassName
 =item row : ClassName
 =item result : ClassName
@@ -255,6 +256,11 @@ Guesses row class by table name.
 Create instance of Aniki.
 
 #### Arguments
+
+- `handler : Aniki::Handler`
+
+    Instance of Aniki::Hanlder.
+    If this argument is given, not required to give `connect_info` for arguments.
 
 - `connect_info : ArrayRef`
 
@@ -445,7 +451,7 @@ Execute `DELETE` query, and returns changed rows count.
 - `suppress_row_objects : Bool`
 - `suppress_result_objects : Bool`
 - `dbh : DBI::db`
-- `handler : DBIx::Handler`
+- `handler : Aniki::Handler`
 - `txn_manager : DBIx::TransactionManager`
 
 # CONTRIBUTE

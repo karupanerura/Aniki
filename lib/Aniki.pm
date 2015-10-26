@@ -3,6 +3,7 @@ package Aniki {
     use namespace::sweep;
     use Mouse v2.4.5;
     use Module::Load ();
+    use Aniki::Handler;
     use Aniki::Row;
     use Aniki::Result::Collection;
     use Aniki::Schema;
@@ -13,36 +14,34 @@ package Aniki {
 
     use SQL::Maker::SQLType qw/sql_type/;
     use DBIx::Handler;
-    use Carp qw/croak/;
+    use Carp qw/croak confess/;
     use Try::Tiny;
     use Scalar::Util qw/blessed/;
     use String::CamelCase qw/camelize/;
     use SQL::NamedPlaceholder qw/bind_named/;
 
-    has connect_info => (
-        is       => 'ro',
-        isa      => 'ArrayRef',
-        required => 1,
-    );
+    around BUILDARGS => sub {
+        my $orig  = shift;
+        my $class = shift;
+        my %args  = (@_ == 1 && ref $_[0] eq 'HASH') ? %{$_[0]} : @_;
 
-    has on_connect_do => (
-        is => 'ro',
-    );
+        if (not exists $args{handler}) {
+            my $connect_info     = delete $args{connect_info} or confess 'Attribute (connect_info) is required';
+            my $on_connect_do    = delete $args{on_connect_do};
+            my $on_disconnect_do = delete $args{on_disconnect_do};
+            $args{handler} = $class->handler_class->new(
+                connect_info     => $connect_info,
+                on_connect_do    => $on_connect_do,
+                on_disconnect_do => $on_disconnect_do,
+            );
+        }
 
-    has on_disconnect_do => (
-        is => 'ro',
-    );
+        return $class->$orig(\%args);
+    };
 
     has handler => (
-        is      => 'ro',
-        default => sub {
-            my $self = shift;
-            my ($dsn, $user, $pass, $attr) = @{ $self->connect_info };
-            return DBIx::Handler->new($dsn, $user, $pass, $attr, {
-                on_connect_do    => $self->on_connect_do,
-                on_disconnect_do => $self->on_disconnect_do,
-            });
-        },
+        is       => 'ro',
+        required => 1,
     );
 
     has suppress_row_objects => (
@@ -75,6 +74,7 @@ package Aniki {
     sub guess_row_class     { croak 'This is abstract method. (required to call setup method before call it)' }
     sub root_result_class   { croak 'This is abstract method. (required to call setup method before call it)' }
     sub guess_result_class  { croak 'This is abstract method. (required to call setup method before call it)' }
+    sub handler_class       { 'Aniki::Handler' }
 
     # You can override this method on your application.
     sub use_prepare_cached       { 1 }
@@ -104,6 +104,12 @@ package Aniki {
         else {
             my $filter = Aniki::Filter->new;
             $class->meta->add_method(filter => sub { $filter });
+        }
+
+        # handler
+        if (my $handler_class = $args{handler}) {
+            Module::Load::load($handler_class);
+            $class->meta->add_method(handler_class => sub { $handler_class });
         }
 
         # last_insert_id
@@ -640,6 +646,11 @@ BIND    : %s
 __TRACE__
     }
 
+    sub DEMOLISH {
+        my $self = shift;
+        $self->handler->disconnect();
+    }
+
     __PACKAGE__->meta->make_immutable();
 }
 
@@ -870,6 +881,7 @@ C<schema> is required. Others are optional.
 =over 4
 
 =item schema : ClassName
+=item handler : ClassName
 =item filter : ClassName
 =item row : ClassName
 =item result : ClassName
@@ -914,6 +926,11 @@ Create instance of Aniki.
 =head4 Arguments
 
 =over 4
+
+=item C<handler : Aniki::Handler>
+
+Instance of Aniki::Hanlder.
+If this argument is given, not required to give C<connect_info> for arguments.
 
 =item C<connect_info : ArrayRef>
 
@@ -1128,7 +1145,7 @@ Execute C<DELETE> query, and returns changed rows count.
 
 =item C<dbh : DBI::db>
 
-=item C<handler : DBIx::Handler>
+=item C<handler : Aniki::Handler>
 
 =item C<txn_manager : DBIx::TransactionManager>
 
