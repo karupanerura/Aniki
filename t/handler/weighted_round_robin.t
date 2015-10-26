@@ -45,6 +45,8 @@ ok eq_set(
     [map { $_->{value}->[0] } @connect_info],
 );
 
+ok $handler->is_connect_error(q{DBI connect('dbname=test;host=127.0.0.1;port=34783','foo25622',...) failed: Can't connect to MySQL server on '127.0.0.1' (61)});
+
 if (eval { require DBD::mysql; 1 }) {
     my $called = 0;
     no warnings qw/redefine once/;
