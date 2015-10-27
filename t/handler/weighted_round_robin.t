@@ -3,16 +3,13 @@ use warnings;
 use utf8;
 
 use Test::More;
+use Test::Requires qw(Data::WeightedRoundRobin);
 
 use File::Spec;
 use lib File::Spec->catfile('t', 'lib');
 
 use Aniki::Handler::WeightedRoundRobin;
 use List::Util qw/reduce/;
-
-if (!eval { require Data::WeightedRoundRobin; 1 }) {
-    plan skip_all => 'Data::WeightedRoundRobin is required for WeightedRoundRobin handler';
-}
 
 srand 4649;
 
