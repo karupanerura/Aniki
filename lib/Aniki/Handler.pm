@@ -35,7 +35,7 @@ sub connect :method {
     });
 }
 
-sub _proxy_methods { qw/dbh txn_manager txn in_txn txn_scope txn_begin txn_rollback txn_commit/ }
+sub _proxy_methods { qw/dbh run txn_manager txn in_txn txn_scope txn_begin txn_rollback txn_commit/ }
 
 for my $name (__PACKAGE__->_proxy_methods) {
     __PACKAGE__->meta->add_method($name => sub { shift->handler->$name(@_) });
