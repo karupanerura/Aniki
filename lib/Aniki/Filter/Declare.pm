@@ -1,76 +1,75 @@
+package Aniki::Filter::Declare;
 use 5.014002;
-package Aniki::Filter::Declare {
-    use strict;
-    use warnings;
-    use utf8;
 
-    use Aniki::Filter;
+use strict;
+use warnings;
 
-    sub import {
-        my $class  = shift;
-        my $caller = caller;
+use Aniki::Filter;
 
-        my $filter = Aniki::Filter->new;
+sub import {
+    my $class  = shift;
+    my $caller = caller;
 
-        no strict qw/refs/; ## no critic
-        *{"${caller}::table"}    = \&_table;
-        *{"${caller}::inflate"}  = _inflate($filter);
-        *{"${caller}::deflate"}  = _deflate($filter);
-        *{"${caller}::trigger"}  = _trigger($filter);
-        *{"${caller}::instance"} = _instance($filter);
-    }
+    my $filter = Aniki::Filter->new;
 
-    our $TARGET_TABLE;
+    no strict qw/refs/; ## no critic
+    *{"${caller}::table"}    = \&_table;
+    *{"${caller}::inflate"}  = _inflate($filter);
+    *{"${caller}::deflate"}  = _deflate($filter);
+    *{"${caller}::trigger"}  = _trigger($filter);
+    *{"${caller}::instance"} = _instance($filter);
+}
 
-    sub _table ($&) {## no critic
-        my ($table, $code) = @_;
-        local $TARGET_TABLE = $table;
-        $code->();
-    }
+our $TARGET_TABLE;
 
-    sub _inflate {
-        my $filter = shift;
-        return sub ($&) {## no critic
-            my ($column, $code) = @_;
-            if (defined $TARGET_TABLE) {
-                $filter->add_table_inflator($TARGET_TABLE, $column, $code);
-            }
-            else {
-                $filter->add_global_inflator($column, $code);
-            }
-        };
-    }
+sub _table ($&) {## no critic
+    my ($table, $code) = @_;
+    local $TARGET_TABLE = $table;
+    $code->();
+}
 
-    sub _deflate {
-        my $filter = shift;
-        sub ($&) {## no critic
-            my ($column, $code) = @_;
-            if (defined $TARGET_TABLE) {
-                $filter->add_table_deflator($TARGET_TABLE, $column, $code);
-            }
-            else {
-                $filter->add_global_deflator($column, $code);
-            }
-        };
-    }
+sub _inflate {
+    my $filter = shift;
+    return sub ($&) {## no critic
+        my ($column, $code) = @_;
+        if (defined $TARGET_TABLE) {
+            $filter->add_table_inflator($TARGET_TABLE, $column, $code);
+        }
+        else {
+            $filter->add_global_inflator($column, $code);
+        }
+    };
+}
 
-    sub _trigger {
-        my $filter = shift;
-        sub ($&) {## no critic
-            my ($event, $code) = @_;
-            if (defined $TARGET_TABLE) {
-                $filter->add_table_trigger($TARGET_TABLE, $event, $code);
-            }
-            else {
-                $filter->add_global_trigger($event, $code);
-            }
-        };
-    }
+sub _deflate {
+    my $filter = shift;
+    sub ($&) {## no critic
+        my ($column, $code) = @_;
+        if (defined $TARGET_TABLE) {
+            $filter->add_table_deflator($TARGET_TABLE, $column, $code);
+        }
+        else {
+            $filter->add_global_deflator($column, $code);
+        }
+    };
+}
 
-    sub _instance {
-        my $filter = shift;
-        return sub { $filter };
-    }
+sub _trigger {
+    my $filter = shift;
+    sub ($&) {## no critic
+        my ($event, $code) = @_;
+        if (defined $TARGET_TABLE) {
+            $filter->add_table_trigger($TARGET_TABLE, $event, $code);
+        }
+        else {
+            $filter->add_global_trigger($event, $code);
+        }
+    };
+}
+
+sub _instance {
+    my $filter = shift;
+    return sub { $filter };
 }
 
 1;

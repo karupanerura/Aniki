@@ -1,642 +1,644 @@
+package Aniki;
 use 5.014002;
-package Aniki {
-    use namespace::sweep;
-    use Mouse v2.4.5;
-    use Module::Load ();
-    use Aniki::Handler;
-    use Aniki::Row;
-    use Aniki::Result::Collection;
-    use Aniki::Schema;
-    use Aniki::QueryBuilder;
-    use Aniki::QueryBuilder::Canonical;
 
-    our $VERSION = '0.08';
+use namespace::sweep;
+use Mouse v2.4.5;
 
-    use SQL::Maker::SQLType qw/sql_type/;
-    use DBIx::Handler;
-    use Carp qw/croak confess/;
-    use Try::Tiny;
-    use Scalar::Util qw/blessed/;
-    use String::CamelCase qw/camelize/;
-    use SQL::NamedPlaceholder qw/bind_named/;
+use Module::Load ();
+use Aniki::Handler;
+use Aniki::Row;
+use Aniki::Result::Collection;
+use Aniki::Schema;
+use Aniki::QueryBuilder;
+use Aniki::QueryBuilder::Canonical;
 
-    around BUILDARGS => sub {
-        my $orig  = shift;
-        my $class = shift;
-        my %args  = (@_ == 1 && ref $_[0] eq 'HASH') ? %{$_[0]} : @_;
+our $VERSION = '0.08';
 
-        if (not exists $args{handler}) {
-            my $connect_info     = delete $args{connect_info} or confess 'Attribute (connect_info) is required';
-            my $on_connect_do    = delete $args{on_connect_do};
-            my $on_disconnect_do = delete $args{on_disconnect_do};
-            $args{handler} = $class->handler_class->new(
-                connect_info     => $connect_info,
-                on_connect_do    => $on_connect_do,
-                on_disconnect_do => $on_disconnect_do,
-            );
-        }
+use SQL::Maker::SQLType qw/sql_type/;
+use DBIx::Handler;
+use Carp qw/croak confess/;
+use Try::Tiny;
+use Scalar::Util qw/blessed/;
+use String::CamelCase qw/camelize/;
+use SQL::NamedPlaceholder qw/bind_named/;
 
-        return $class->$orig(\%args);
+around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+    my %args  = (@_ == 1 && ref $_[0] eq 'HASH') ? %{$_[0]} : @_;
+
+    if (not exists $args{handler}) {
+        my $connect_info     = delete $args{connect_info} or confess 'Attribute (connect_info) is required';
+        my $on_connect_do    = delete $args{on_connect_do};
+        my $on_disconnect_do = delete $args{on_disconnect_do};
+        $args{handler} = $class->handler_class->new(
+            connect_info     => $connect_info,
+            on_connect_do    => $on_connect_do,
+            on_disconnect_do => $on_disconnect_do,
+        );
+    }
+
+    return $class->$orig(\%args);
+};
+
+has handler => (
+    is       => 'ro',
+    required => 1,
+);
+
+has suppress_row_objects => (
+    is      => 'rw',
+    default => 0,
+);
+
+has suppress_result_objects => (
+    is      => 'rw',
+    default => 0,
+);
+
+sub _database2driver {
+    my ($class, $database) = @_;
+    state $map = {
+        MySQL      => 'mysql',
+        PostgreSQL => 'Pg',
+        SQLite     => 'SQLite',
+        Oracle     => 'Oracle',
+        DB2        => 'DB2',
     };
+    return $map->{$database};
+}
 
-    has handler => (
-        is       => 'ro',
-        required => 1,
-    );
+sub schema              { croak 'This is abstract method. (required to call setup method before call it)' }
+sub query_builder       { croak 'This is abstract method. (required to call setup method before call it)' }
+sub filter              { croak 'This is abstract method. (required to call setup method before call it)' }
+sub last_insert_id      { croak 'This is abstract method. (required to call setup method before call it)' }
+sub root_row_class      { croak 'This is abstract method. (required to call setup method before call it)' }
+sub guess_row_class     { croak 'This is abstract method. (required to call setup method before call it)' }
+sub root_result_class   { croak 'This is abstract method. (required to call setup method before call it)' }
+sub guess_result_class  { croak 'This is abstract method. (required to call setup method before call it)' }
+sub handler_class       { 'Aniki::Handler' }
 
-    has suppress_row_objects => (
-        is      => 'rw',
-        default => 0,
-    );
+# You can override this method on your application.
+sub use_prepare_cached       { 1 }
+sub use_strict_query_builder { 1 }
 
-    has suppress_result_objects => (
-        is      => 'rw',
-        default => 0,
-    );
+sub setup {
+    my ($class, %args) = @_;
 
-    sub _database2driver {
-        my ($class, $database) = @_;
-        state $map = {
-            MySQL      => 'mysql',
-            PostgreSQL => 'Pg',
-            SQLite     => 'SQLite',
-            Oracle     => 'Oracle',
-            DB2        => 'DB2',
-        };
-        return $map->{$database};
+    # schema
+    if (my $schema_class = $args{schema}) {
+        Module::Load::load($schema_class);
+
+        my $schema = Aniki::Schema->new(schema_class => $schema_class);
+        $class->meta->add_method(schema => sub { $schema });
+    }
+    else {
+        croak 'schema option is required.';
     }
 
-    sub schema              { croak 'This is abstract method. (required to call setup method before call it)' }
-    sub query_builder       { croak 'This is abstract method. (required to call setup method before call it)' }
-    sub filter              { croak 'This is abstract method. (required to call setup method before call it)' }
-    sub last_insert_id      { croak 'This is abstract method. (required to call setup method before call it)' }
-    sub root_row_class      { croak 'This is abstract method. (required to call setup method before call it)' }
-    sub guess_row_class     { croak 'This is abstract method. (required to call setup method before call it)' }
-    sub root_result_class   { croak 'This is abstract method. (required to call setup method before call it)' }
-    sub guess_result_class  { croak 'This is abstract method. (required to call setup method before call it)' }
-    sub handler_class       { 'Aniki::Handler' }
+    # filter
+    if (my $filter_class = $args{filter}) {
+        Module::Load::load($filter_class);
 
-    # You can override this method on your application.
-    sub use_prepare_cached       { 1 }
-    sub use_strict_query_builder { 1 }
+        my $filter = $filter_class->instance();
+        $class->meta->add_method(filter => sub { $filter });
+    }
+    else {
+        my $filter = Aniki::Filter->new;
+        $class->meta->add_method(filter => sub { $filter });
+    }
 
-    sub setup {
-        my ($class, %args) = @_;
+    # handler
+    if (my $handler_class = $args{handler}) {
+        Module::Load::load($handler_class);
+        $class->meta->add_method(handler_class => sub { $handler_class });
+    }
 
-        # schema
-        if (my $schema_class = $args{schema}) {
-            Module::Load::load($schema_class);
+    # last_insert_id
+    {
+        my $driver = lc $class->_database2driver($class->schema->database);
+        my $method = $class->can("_fetch_last_insert_id_from_$driver") or Carp::croak "Don't know how to get last insert id for $driver";
+        $class->meta->add_method(last_insert_id => $method);
+    }
 
-            my $schema = Aniki::Schema->new(schema_class => $schema_class);
-            $class->meta->add_method(schema => sub { $schema });
+    # query_builder
+    {
+        my $query_builder_class = $class->use_prepare_cached ? 'Aniki::QueryBuilder::Canonical' : 'Aniki::QueryBuilder';
+        if ($args{query_builder}) {
+            Module::Load::load($args{query_builder});
+            $query_builder_class = $args{query_builder};
         }
-        else {
-            croak 'schema option is required.';
-        }
+        my $driver        = $class->_database2driver($class->schema->database);
+        my $query_builder = $query_builder_class->new(driver => $driver, strict => $class->use_strict_query_builder);
+        $class->meta->add_method(query_builder => sub { $query_builder });
+    }
 
-        # filter
-        if (my $filter_class = $args{filter}) {
-            Module::Load::load($filter_class);
+    # row
+    {
+        my $root_row_class = 'Aniki::Row';
+        my $guess_row_class = sub { $root_row_class };
+        if ($args{row}) {
+            Module::Load::load($args{row});
+            $root_row_class = $args{row};
 
-            my $filter = $filter_class->instance();
-            $class->meta->add_method(filter => sub { $filter });
-        }
-        else {
-            my $filter = Aniki::Filter->new;
-            $class->meta->add_method(filter => sub { $filter });
-        }
-
-        # handler
-        if (my $handler_class = $args{handler}) {
-            Module::Load::load($handler_class);
-            $class->meta->add_method(handler_class => sub { $handler_class });
-        }
-
-        # last_insert_id
-        {
-            my $driver = lc $class->_database2driver($class->schema->database);
-            my $method = $class->can("_fetch_last_insert_id_from_$driver") or Carp::croak "Don't know how to get last insert id for $driver";
-            $class->meta->add_method(last_insert_id => $method);
-        }
-
-        # query_builder
-        {
-            my $query_builder_class = $class->use_prepare_cached ? 'Aniki::QueryBuilder::Canonical' : 'Aniki::QueryBuilder';
-            if ($args{query_builder}) {
-                Module::Load::load($args{query_builder});
-                $query_builder_class = $args{query_builder};
-            }
-            my $driver        = $class->_database2driver($class->schema->database);
-            my $query_builder = $query_builder_class->new(driver => $driver, strict => $class->use_strict_query_builder);
-            $class->meta->add_method(query_builder => sub { $query_builder });
-        }
-
-        # row
-        {
-            my $root_row_class = 'Aniki::Row';
-            my $guess_row_class = sub { $root_row_class };
-            if ($args{row}) {
-                Module::Load::load($args{row});
-                $root_row_class = $args{row};
-
-                my %table_row_class;
-                $guess_row_class = sub {
-                    my $table_name = $_[1];
-                    return $table_row_class{$table_name} //= try {
-                        my $table_row_class = sprintf '%s::%s', $root_row_class, camelize($table_name);
-                        Module::Load::load($table_row_class);
-                        return $table_row_class;
-                    } catch {
-                        die $_ unless /\A\QCan't locate/imo;
-                        return $root_row_class;
-                    };
+            my %table_row_class;
+            $guess_row_class = sub {
+                my $table_name = $_[1];
+                return $table_row_class{$table_name} //= try {
+                    my $table_row_class = sprintf '%s::%s', $root_row_class, camelize($table_name);
+                    Module::Load::load($table_row_class);
+                    return $table_row_class;
+                } catch {
+                    die $_ unless /\A\QCan't locate/imo;
+                    return $root_row_class;
                 };
-            }
-            $class->meta->add_method(root_row_class => sub { $root_row_class });
-            $class->meta->add_method(guess_row_class => $guess_row_class);
+            };
         }
+        $class->meta->add_method(root_row_class => sub { $root_row_class });
+        $class->meta->add_method(guess_row_class => $guess_row_class);
+    }
 
-        # result
-        {
-            my $root_result_class = 'Aniki::Result::Collection';
-            my $guess_result_class = sub { $root_result_class };
-            if ($args{result}) {
-                Module::Load::load($args{result});
-                $root_result_class = $args{result};
+    # result
+    {
+        my $root_result_class = 'Aniki::Result::Collection';
+        my $guess_result_class = sub { $root_result_class };
+        if ($args{result}) {
+            Module::Load::load($args{result});
+            $root_result_class = $args{result};
 
-                my %table_result_class;
-                $guess_result_class = sub {
-                    my $table_name = $_[1];
-                    return $table_result_class{$table_name} //= try {
-                        my $table_result_class = sprintf '%s::%s', $root_result_class, camelize($table_name);
-                        Module::Load::load($table_result_class);
-                        return $table_result_class;
-                    } catch {
-                        die $_ unless /\A\QCan't locate/imo;
-                        return $root_result_class;
-                    };
+            my %table_result_class;
+            $guess_result_class = sub {
+                my $table_name = $_[1];
+                return $table_result_class{$table_name} //= try {
+                    my $table_result_class = sprintf '%s::%s', $root_result_class, camelize($table_name);
+                    Module::Load::load($table_result_class);
+                    return $table_result_class;
+                } catch {
+                    die $_ unless /\A\QCan't locate/imo;
+                    return $root_result_class;
                 };
-            }
-
-            $class->meta->add_method(root_result_class => sub { $root_result_class });
-            $class->meta->add_method(guess_result_class => $guess_result_class);
+            };
         }
+
+        $class->meta->add_method(root_result_class => sub { $root_result_class });
+        $class->meta->add_method(guess_result_class => $guess_result_class);
     }
+}
 
-    sub preload_all_row_classes {
-        my $class = shift;
-        for my $table ($class->schema->get_tables) {
-            $class->guess_row_class($table->name);
-        }
+sub preload_all_row_classes {
+    my $class = shift;
+    for my $table ($class->schema->get_tables) {
+        $class->guess_row_class($table->name);
     }
+}
 
-    sub preload_all_result_classes {
-        my $class = shift;
-        for my $table ($class->schema->get_tables) {
-            $class->guess_result_class($table->name);
-        }
+sub preload_all_result_classes {
+    my $class = shift;
+    for my $table ($class->schema->get_tables) {
+        $class->guess_result_class($table->name);
     }
+}
 
-    sub dbh { shift->handler->dbh }
+sub dbh { shift->handler->dbh }
 
-    sub insert {
-        my ($self, $table_name, $row, $opt) = @_;
-        $row = $self->filter_on_insert($table_name, $row) unless $opt->{no_filter};
+sub insert {
+    my ($self, $table_name, $row, $opt) = @_;
+    $row = $self->filter_on_insert($table_name, $row) unless $opt->{no_filter};
 
-        my $table = $self->schema->get_table($table_name);
-        $row = $self->_bind_sql_type_to_args($table, $row) if $table;
+    my $table = $self->schema->get_table($table_name);
+    $row = $self->_bind_sql_type_to_args($table, $row) if $table;
 
-        my ($sql, @bind) = $self->query_builder->insert($table_name, $row, $opt);
-        $self->execute($sql, @bind);
-        return;
-    }
+    my ($sql, @bind) = $self->query_builder->insert($table_name, $row, $opt);
+    $self->execute($sql, @bind);
+    return;
+}
 
-    sub filter_on_insert {
-        my ($self, $table_name, $row) = @_;
-        $row = $self->filter->apply_trigger(insert => $table_name, $row);
-        return $self->filter->deflate_row($table_name, $row);
-    }
+sub filter_on_insert {
+    my ($self, $table_name, $row) = @_;
+    $row = $self->filter->apply_trigger(insert => $table_name, $row);
+    return $self->filter->deflate_row($table_name, $row);
+}
 
-    sub update {
-        my $self = shift;
-        if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
-            local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-            return $self->update($_[0]->table_name, $_[1], $self->_where_row_cond($_[0]->table, $_[0]->row_data));
-        }
-        else {
-            my ($table_name, $row, $where) = @_;
-            $row = $self->filter_on_update($table_name, $row);
-
-            my $table = $self->schema->get_table($table_name);
-            if ($table) {
-                $row   = $self->_bind_sql_type_to_args($table, $row);
-                $where = $self->_bind_sql_type_to_args($table, $where);
-            }
-
-            my ($sql, @bind) = $self->query_builder->update($table_name, $row, $where);
-            return $self->execute($sql, @bind)->rows;
-        }
-    }
-
-    sub delete :method {
-        my $self = shift;
-        if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
-            local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-            return $self->delete($_[0]->table_name, $self->_where_row_cond($_[0]->table, $_[0]->row_data), @_);
-        }
-        else {
-            my ($table_name, $where, $opt) = @_;
-
-            my $table = $self->schema->get_table($table_name);
-            if ($table) {
-                $where = $self->_bind_sql_type_to_args($table, $where);
-            }
-
-            my ($sql, @bind) = $self->query_builder->delete($table_name, $where, $opt);
-            return $self->execute($sql, @bind)->rows;
-        }
-    }
-
-    sub filter_on_update {
-        my ($self, $table_name, $row) = @_;
-        $row = $self->filter->apply_trigger(update => $table_name, $row);
-        return $self->filter->deflate_row($table_name, $row);
-    }
-
-    sub insert_and_fetch_id {
-        my $self = shift;
+sub update {
+    my $self = shift;
+    if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
         local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-
-        $self->insert(@_);
-        return unless defined wantarray;
-
-        my $table_name = shift;
-        return $self->last_insert_id($table_name);
+        return $self->update($_[0]->table_name, $_[1], $self->_where_row_cond($_[0]->table, $_[0]->row_data));
     }
-
-    sub insert_and_fetch_row {
-        my $self       = shift;
-        my $table_name = shift;
-        my $row_data   = shift;
-
-        my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
-
-        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-        $self->insert($table_name, $row_data, @_);
-        return unless defined wantarray;
-
-        my $row = $self->select($table_name, $self->_where_row_cond($table, $row_data), { limit => 1, suppress_result_objects => 1 })->[0];
-        return $row if $self->suppress_row_objects;
-
-        $row->is_new(1);
-        return $row;
-    }
-
-    sub insert_and_emulate_row {
-        my ($self, $table_name, $row, $opt) = @_;
-
-        my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
-
-        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-        $row = $self->filter_on_insert($table_name, $row) unless $opt->{no_filter};
-
-        $self->insert($table_name, $row, { %$opt, no_filter => 1 });
-        return unless defined wantarray;
-
-        my %row_data;
-        for my $field ($table->get_fields) {
-            if (exists $row->{$field->name}) {
-                $row_data{$field->name} = $row->{$field->name};
-            }
-            elsif (my $default_value = $field->default_value) {
-                $row_data{$field->name} = $default_value;
-            }
-            elsif ($field->is_auto_increment) {
-                $row_data{$field->name} = $self->last_insert_id($table_name, $field->name);
-            }
-            else {
-                $row_data{$field->name} = undef;
-            }
-        }
-        return \%row_data if $self->suppress_row_objects;
-        return $self->guess_row_class($table_name)->new(
-            table_name => $table_name,
-            handler    => $self,
-            row_data   => \%row_data,
-            is_new     => 1,
-        );
-    }
-
-    sub insert_on_duplicate {
-        my ($self, $table_name, $insert, $update) = @_;
-        $insert = $self->filter_on_insert($table_name, $insert);
-        $update = $self->filter_on_update($table_name, $update);
+    else {
+        my ($table_name, $row, $where) = @_;
+        $row = $self->filter_on_update($table_name, $row);
 
         my $table = $self->schema->get_table($table_name);
         if ($table) {
-            $insert = $self->_bind_sql_type_to_args($table, $insert);
-            $update = $self->_bind_sql_type_to_args($table, $update);
+            $row   = $self->_bind_sql_type_to_args($table, $row);
+            $where = $self->_bind_sql_type_to_args($table, $where);
         }
 
-        my ($sql, @bind) = $self->query_builder->insert_on_duplicate($table_name, $insert, $update);
-        $self->execute($sql, @bind);
-        return;
+        my ($sql, @bind) = $self->query_builder->update($table_name, $row, $where);
+        return $self->execute($sql, @bind)->rows;
+    }
+}
+
+sub delete :method {
+    my $self = shift;
+    if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
+        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+        return $self->delete($_[0]->table_name, $self->_where_row_cond($_[0]->table, $_[0]->row_data), @_);
+    }
+    else {
+        my ($table_name, $where, $opt) = @_;
+
+        my $table = $self->schema->get_table($table_name);
+        if ($table) {
+            $where = $self->_bind_sql_type_to_args($table, $where);
+        }
+
+        my ($sql, @bind) = $self->query_builder->delete($table_name, $where, $opt);
+        return $self->execute($sql, @bind)->rows;
+    }
+}
+
+sub filter_on_update {
+    my ($self, $table_name, $row) = @_;
+    $row = $self->filter->apply_trigger(update => $table_name, $row);
+    return $self->filter->deflate_row($table_name, $row);
+}
+
+sub insert_and_fetch_id {
+    my $self = shift;
+    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+
+    $self->insert(@_);
+    return unless defined wantarray;
+
+    my $table_name = shift;
+    return $self->last_insert_id($table_name);
+}
+
+sub insert_and_fetch_row {
+    my $self       = shift;
+    my $table_name = shift;
+    my $row_data   = shift;
+
+    my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
+
+    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+    $self->insert($table_name, $row_data, @_);
+    return unless defined wantarray;
+
+    my $row = $self->select($table_name, $self->_where_row_cond($table, $row_data), { limit => 1, suppress_result_objects => 1 })->[0];
+    return $row if $self->suppress_row_objects;
+
+    $row->is_new(1);
+    return $row;
+}
+
+sub insert_and_emulate_row {
+    my ($self, $table_name, $row, $opt) = @_;
+
+    my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
+
+    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+    $row = $self->filter_on_insert($table_name, $row) unless $opt->{no_filter};
+
+    $self->insert($table_name, $row, { %$opt, no_filter => 1 });
+    return unless defined wantarray;
+
+    my %row_data;
+    for my $field ($table->get_fields) {
+        if (exists $row->{$field->name}) {
+            $row_data{$field->name} = $row->{$field->name};
+        }
+        elsif (my $default_value = $field->default_value) {
+            $row_data{$field->name} = $default_value;
+        }
+        elsif ($field->is_auto_increment) {
+            $row_data{$field->name} = $self->last_insert_id($table_name, $field->name);
+        }
+        else {
+            $row_data{$field->name} = undef;
+        }
+    }
+    return \%row_data if $self->suppress_row_objects;
+    return $self->guess_row_class($table_name)->new(
+        table_name => $table_name,
+        handler    => $self,
+        row_data   => \%row_data,
+        is_new     => 1,
+    );
+}
+
+sub insert_on_duplicate {
+    my ($self, $table_name, $insert, $update) = @_;
+    $insert = $self->filter_on_insert($table_name, $insert);
+    $update = $self->filter_on_update($table_name, $update);
+
+    my $table = $self->schema->get_table($table_name);
+    if ($table) {
+        $insert = $self->_bind_sql_type_to_args($table, $insert);
+        $update = $self->_bind_sql_type_to_args($table, $update);
     }
 
-    sub insert_multi {
-        my ($self, $table_name, $values, $opts) = @_;
-        $opts = defined $opts ? {%$opts} : {};
+    my ($sql, @bind) = $self->query_builder->insert_on_duplicate($table_name, $insert, $update);
+    $self->execute($sql, @bind);
+    return;
+}
 
-        my @values = map { $self->filter_on_insert($table_name, $_) } @$values;
+sub insert_multi {
+    my ($self, $table_name, $values, $opts) = @_;
+    $opts = defined $opts ? {%$opts} : {};
+
+    my @values = map { $self->filter_on_insert($table_name, $_) } @$values;
+    if (exists $opts->{update}) {
+        $opts->{update} = $self->filter_on_update($table_name, $opts->{update});
+    }
+
+    my $table = $self->schema->get_table($table_name);
+    if ($table) {
+        $_ = $self->_bind_sql_type_to_args($table, $_) for @values;
         if (exists $opts->{update}) {
-            $opts->{update} = $self->filter_on_update($table_name, $opts->{update});
+            $opts->{update} = $self->_bind_sql_type_to_args($table, $opts->{update});
         }
+    }
 
-        my $table = $self->schema->get_table($table_name);
-        if ($table) {
-            $_ = $self->_bind_sql_type_to_args($table, $_) for @values;
-            if (exists $opts->{update}) {
-                $opts->{update} = $self->_bind_sql_type_to_args($table, $opts->{update});
+    my ($sql, @bind) = $self->query_builder->insert_multi($table_name, \@values, $opts);
+    $self->execute($sql, @bind);
+    return;
+}
+
+sub _where_row_cond {
+    my ($self, $table, $row_data) = @_;
+    die "@{[ $table->name ]} doesn't have primary key." unless $table->primary_key;
+
+    # fetch by primary key
+    my %where;
+    for my $pk ($table->primary_key->fields) {
+        $where{$pk->name} = exists $row_data->{$pk->name} ? $row_data->{$pk->name}
+                          : $pk->is_auto_increment        ? $self->last_insert_id($table->name, $pk->name)
+                          : undef
+                          ;
+    }
+
+    return \%where;
+}
+
+my $WILDCARD_COLUMNS = ['*'];
+
+sub select :method {
+    my ($self, $table_name, $where, $opt) = @_;
+    $opt //= {};
+
+    local $self->{suppress_row_objects}    = 1 if $opt->{suppress_row_objects};
+    local $self->{suppress_result_objects} = 1 if $opt->{suppress_result_objects};
+
+    my $table = $self->schema->get_table($table_name);
+
+    my $columns = exists $opt->{columns} ? $opt->{columns}
+                : defined $table ? $table->field_names
+                : $WILDCARD_COLUMNS;
+
+    $where = $self->_bind_sql_type_to_args($table, $where) if defined $table;
+
+    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+    my ($sql, @bind) = $self->query_builder->select($table_name, $columns, $where, $opt);
+    return $self->select_by_sql($sql, \@bind, {
+        table_name => $table_name,
+        columns    => $columns,
+        exists $opt->{prefetch} ? (
+            prefetch => $opt->{prefetch},
+        ) : (),
+    });
+}
+
+sub fetch_and_attach_relay_data {
+    my ($self, $table_name, $prefetch, $rows) = @_;
+    return unless @$rows;
+
+    $prefetch = [$prefetch] if ref $prefetch eq 'HASH';
+
+    my $relationships = $self->schema->get_table($table_name)->get_relationships;
+    for my $key (@$prefetch) {
+        if (ref $key && ref $key eq 'HASH') {
+            my %prefetch = %$key;
+            for my $key (keys %prefetch) {
+                $self->_fetch_and_attach_relay_data($relationships, $rows, $key, $prefetch{$key});
             }
-        }
-
-        my ($sql, @bind) = $self->query_builder->insert_multi($table_name, \@values, $opts);
-        $self->execute($sql, @bind);
-        return;
-    }
-
-    sub _where_row_cond {
-        my ($self, $table, $row_data) = @_;
-        die "@{[ $table->name ]} doesn't have primary key." unless $table->primary_key;
-
-        # fetch by primary key
-        my %where;
-        for my $pk ($table->primary_key->fields) {
-            $where{$pk->name} = exists $row_data->{$pk->name} ? $row_data->{$pk->name}
-                              : $pk->is_auto_increment        ? $self->last_insert_id($table->name, $pk->name)
-                              : undef
-                              ;
-        }
-
-        return \%where;
-    }
-
-    my $WILDCARD_COLUMNS = ['*'];
-
-    sub select :method {
-        my ($self, $table_name, $where, $opt) = @_;
-        $opt //= {};
-
-        local $self->{suppress_row_objects}    = 1 if $opt->{suppress_row_objects};
-        local $self->{suppress_result_objects} = 1 if $opt->{suppress_result_objects};
-
-        my $table = $self->schema->get_table($table_name);
-
-        my $columns = exists $opt->{columns} ? $opt->{columns}
-                    : defined $table ? $table->field_names
-                    : $WILDCARD_COLUMNS;
-
-        $where = $self->_bind_sql_type_to_args($table, $where) if defined $table;
-
-        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-        my ($sql, @bind) = $self->query_builder->select($table_name, $columns, $where, $opt);
-        return $self->select_by_sql($sql, \@bind, {
-            table_name => $table_name,
-            columns    => $columns,
-            exists $opt->{prefetch} ? (
-                prefetch => $opt->{prefetch},
-            ) : (),
-        });
-    }
-
-    sub fetch_and_attach_relay_data {
-        my ($self, $table_name, $prefetch, $rows) = @_;
-        return unless @$rows;
-
-        $prefetch = [$prefetch] if ref $prefetch eq 'HASH';
-
-        my $relationships = $self->schema->get_table($table_name)->get_relationships;
-        for my $key (@$prefetch) {
-            if (ref $key && ref $key eq 'HASH') {
-                my %prefetch = %$key;
-                for my $key (keys %prefetch) {
-                    $self->_fetch_and_attach_relay_data($relationships, $rows, $key, $prefetch{$key});
-                }
-            }
-            else {
-                $self->_fetch_and_attach_relay_data($relationships, $rows, $key, []);
-            }
-        }
-    }
-
-    sub _fetch_and_attach_relay_data {
-        my ($self, $relationships, $rows, $key, $prefetch) = @_;
-        my $relationship = $relationships->get($key);
-        unless ($relationship) {
-            croak "'$key' is not defined as relationship. (maybe possible typo?)";
-        }
-        $relationship->fetcher($self)->execute($rows, $prefetch);
-    }
-
-    sub select_named {
-        my ($self, $sql, $bind, $opt) = @_;
-        return $self->select_by_sql(bind_named($sql, $bind), $opt);
-    }
-
-    sub select_by_sql {
-        my ($self, $sql, $bind, $opt) = @_;
-        $opt //= {};
-
-        my $table_name = exists $opt->{table_name}  ? $opt->{table_name} : $self->_guess_table_name($sql);
-        my $columns    = exists $opt->{columns}     ? $opt->{columns}    : undef;
-        my $prefetch   = exists $opt->{prefetch}    ? $opt->{prefetch}      : [];
-           $prefetch   = [$prefetch] if ref $prefetch eq 'HASH';
-
-        my $prefetch_enabled_fg = @$prefetch && !$self->suppress_row_objects;
-        if ($prefetch_enabled_fg) {
-            my $txn; $txn = $self->txn_scope unless $self->in_txn;
-
-            my $sth = $self->execute($sql, @$bind);
-            my $result = $self->_fetch_by_sth($sth, $table_name, $columns);
-            $self->fetch_and_attach_relay_data($table_name, $prefetch, $result->rows);
-
-            $txn->rollback if defined $txn; ## for read only
-            return $result;
         }
         else {
-            my $sth = $self->execute($sql, @$bind);
-            return $self->_fetch_by_sth($sth, $table_name, $columns);
+            $self->_fetch_and_attach_relay_data($relationships, $rows, $key, []);
         }
     }
+}
 
-    sub _fetch_by_sth {
-        my ($self, $sth, $table_name, $columns) = @_;
-        $columns //= $sth->{NAME};
-        $columns   = $sth->{NAME} if $columns == $WILDCARD_COLUMNS;
-
-        my @rows;
-
-        my %row;
-        $sth->bind_columns(\@row{@$columns});
-        push @rows => {%row} while $sth->fetch;
-        $sth->finish;
-
-        if ($self->suppress_result_objects) {
-            return \@rows if $self->suppress_row_objects;
-
-            my $row_class = $self->guess_row_class($table_name);
-            return [
-                map {
-                    $row_class->new(
-                        table_name => $table_name,
-                        handler    => $self,
-                        row_data   => $_,
-                    )
-                } @rows
-            ];
-        }
-
-        my $result_class = $self->guess_result_class($table_name);
-        return $result_class->new(
-            table_name           => $table_name,
-            handler              => $self,
-            row_datas            => \@rows,
-            suppress_row_objects => $self->suppress_row_objects,
-        );
+sub _fetch_and_attach_relay_data {
+    my ($self, $relationships, $rows, $key, $prefetch) = @_;
+    my $relationship = $relationships->get($key);
+    unless ($relationship) {
+        croak "'$key' is not defined as relationship. (maybe possible typo?)";
     }
+    $relationship->fetcher($self)->execute($rows, $prefetch);
+}
 
-    sub execute {
-        my ($self, $sql, @bind) = @_;
-        my $sth = $self->use_prepare_cached ? $self->dbh->prepare_cached($sql) : $self->dbh->prepare($sql);
-        $self->_bind_to_sth($sth, \@bind);
-        eval {
-            $sth->execute();
-        };
-        if ($@) {
-            $self->handle_error($sql, \@bind, $@);
-        }
-        return $sth;
+sub select_named {
+    my ($self, $sql, $bind, $opt) = @_;
+    return $self->select_by_sql(bind_named($sql, $bind), $opt);
+}
+
+sub select_by_sql {
+    my ($self, $sql, $bind, $opt) = @_;
+    $opt //= {};
+
+    my $table_name = exists $opt->{table_name}  ? $opt->{table_name} : $self->_guess_table_name($sql);
+    my $columns    = exists $opt->{columns}     ? $opt->{columns}    : undef;
+    my $prefetch   = exists $opt->{prefetch}    ? $opt->{prefetch}      : [];
+       $prefetch   = [$prefetch] if ref $prefetch eq 'HASH';
+
+    my $prefetch_enabled_fg = @$prefetch && !$self->suppress_row_objects;
+    if ($prefetch_enabled_fg) {
+        my $txn; $txn = $self->txn_scope unless $self->in_txn;
+
+        my $sth = $self->execute($sql, @$bind);
+        my $result = $self->_fetch_by_sth($sth, $table_name, $columns);
+        $self->fetch_and_attach_relay_data($table_name, $prefetch, $result->rows);
+
+        $txn->rollback if defined $txn; ## for read only
+        return $result;
     }
-
-    sub _bind_sql_type_to_args {
-        my ($self, $table, $args) = @_;
-
-        my %bind_args;
-        for my $col (keys %{$args}) {
-            # if $args->{$col} is a ref, it is scalar ref or already
-            # sql type bined parameter. so ignored.
-            if (ref $args->{$col}) {
-                $bind_args{$col} = $args->{$col};
-            }
-            elsif (my $field = $table->get_field($col)) {
-                $bind_args{$col} = sql_type(\$args->{$col}, $field->sql_data_type);
-            }
-            else {
-                $bind_args{$col} = $args->{$col};
-            }
-        }
-
-        return \%bind_args;
+    else {
+        my $sth = $self->execute($sql, @$bind);
+        return $self->_fetch_by_sth($sth, $table_name, $columns);
     }
+}
 
-    sub _bind_to_sth {
-        my ($self, $sth, $bind) = @_;
-        for my $i (keys @$bind) {
-            my $v = $bind->[$i];
-            if (blessed $v && $v->isa('SQL::Maker::SQLType')) {
-                $sth->bind_param($i + 1, ${$v->value_ref}, $v->type);
-            } else {
-                $sth->bind_param($i + 1, $v);
-            }
-        }
-    }
+sub _fetch_by_sth {
+    my ($self, $sth, $table_name, $columns) = @_;
+    $columns //= $sth->{NAME};
+    $columns   = $sth->{NAME} if $columns == $WILDCARD_COLUMNS;
 
-    has _row_class_cache => (
-        is      => 'rw',
-        default => sub {
-            my $self = shift;
-            my %cache = map { $_->name => undef } $self->schema->get_tables();
-            return \%cache;
-        },
-    );
+    my @rows;
 
-    has _result_class_cache => (
-        is      => 'rw',
-        default => sub {
-            my $self = shift;
-            my %cache = map { $_->name => undef } $self->schema->get_tables();
-            return \%cache;
-        },
-    );
+    my %row;
+    $sth->bind_columns(\@row{@$columns});
+    push @rows => {%row} while $sth->fetch;
+    $sth->finish;
 
-    sub new_row_from_hashref {
-        my ($self, $table_name, $row_data) = @_;
-        return $row_data if $self->suppress_row_objects;
+    if ($self->suppress_result_objects) {
+        return \@rows if $self->suppress_row_objects;
 
         my $row_class = $self->guess_row_class($table_name);
-        return $row_class->new(
-            table_name => $table_name,
-            handler    => $self,
-            row_data   => $row_data,
-        );
+        return [
+            map {
+                $row_class->new(
+                    table_name => $table_name,
+                    handler    => $self,
+                    row_data   => $_,
+                )
+            } @rows
+        ];
     }
 
-    sub new_collection_from_arrayref {
-        my ($self, $table_name, $row_datas) = @_;
-        return $row_datas if $self->suppress_result_objects;
+    my $result_class = $self->guess_result_class($table_name);
+    return $result_class->new(
+        table_name           => $table_name,
+        handler              => $self,
+        row_datas            => \@rows,
+        suppress_row_objects => $self->suppress_row_objects,
+    );
+}
 
-        my $result_class = $self->guess_result_class($table_name);
-        return $result_class->new(
-            table_name           => $table_name,
-            handler              => $self,
-            row_datas            => $row_datas,
-            suppress_row_objects => $self->suppress_row_objects,
-        );
+sub execute {
+    my ($self, $sql, @bind) = @_;
+    my $sth = $self->use_prepare_cached ? $self->dbh->prepare_cached($sql) : $self->dbh->prepare($sql);
+    $self->_bind_to_sth($sth, \@bind);
+    eval {
+        $sth->execute();
+    };
+    if ($@) {
+        $self->handle_error($sql, \@bind, $@);
+    }
+    return $sth;
+}
+
+sub _bind_sql_type_to_args {
+    my ($self, $table, $args) = @_;
+
+    my %bind_args;
+    for my $col (keys %{$args}) {
+        # if $args->{$col} is a ref, it is scalar ref or already
+        # sql type bined parameter. so ignored.
+        if (ref $args->{$col}) {
+            $bind_args{$col} = $args->{$col};
+        }
+        elsif (my $field = $table->get_field($col)) {
+            $bind_args{$col} = sql_type(\$args->{$col}, $field->sql_data_type);
+        }
+        else {
+            $bind_args{$col} = $args->{$col};
+        }
     }
 
-    sub _guess_table_name {
-        my ($self, $sql) = @_;
-        return $2 if $sql =~ /\sfrom\s+(["`]?)([\w]+)\1\s*/sio;
-        return;
+    return \%bind_args;
+}
+
+sub _bind_to_sth {
+    my ($self, $sth, $bind) = @_;
+    for my $i (keys @$bind) {
+        my $v = $bind->[$i];
+        if (blessed $v && $v->isa('SQL::Maker::SQLType')) {
+            $sth->bind_param($i + 1, ${$v->value_ref}, $v->type);
+        } else {
+            $sth->bind_param($i + 1, $v);
+        }
     }
+}
 
-    # --------------------------------------------------
-    # last_insert_id
-    sub _fetch_last_insert_id_from_mysql { shift->dbh->{mysql_insertid} };
-    sub _fetch_last_insert_id_from_pg {
-        my ($self, $table_name, $column) = @_;
-        my $dbh = $self->dbh;
-        return $dbh->last_insert_id(undef, undef, $table_name, undef) unless defined $column;
+has _row_class_cache => (
+    is      => 'rw',
+    default => sub {
+        my $self = shift;
+        my %cache = map { $_->name => undef } $self->schema->get_tables();
+        return \%cache;
+    },
+);
 
-        my $sequence = join '_', $table_name, $column, 'seq';
-        return $dbh->last_insert_id(undef, undef, undef, undef, { sequence => $sequence });
-    }
-    sub _fetch_last_insert_id_from_sqlite { shift->dbh->sqlite_last_insert_rowid }
-    sub _fetch_last_insert_id_from_oracle { undef } ## XXX: Oracle haven't implement AUTO INCREMENT
+has _result_class_cache => (
+    is      => 'rw',
+    default => sub {
+        my $self = shift;
+        my %cache = map { $_->name => undef } $self->schema->get_tables();
+        return \%cache;
+    },
+);
 
-    # --------------------------------------------------
-    # for transaction
-    sub txn_manager  { shift->handler->txn_manager }
-    sub txn          { shift->handler->txn(@_)          }
-    sub in_txn       { shift->handler->in_txn(@_)       }
-    sub txn_scope    { shift->handler->txn_scope(@_)    }
-    sub txn_begin    { shift->handler->txn_begin(@_)    }
-    sub txn_rollback { shift->handler->txn_rollback(@_) }
-    sub txn_commit   { shift->handler->txn_commit(@_)   }
+sub new_row_from_hashref {
+    my ($self, $table_name, $row_data) = @_;
+    return $row_data if $self->suppress_row_objects;
 
-    # --------------------------------------------------
-    # error handling
-    sub handle_error {
-        my ($self, $sql, $bind, $e) = @_;
-        require Data::Dumper;
+    my $row_class = $self->guess_row_class($table_name);
+    return $row_class->new(
+        table_name => $table_name,
+        handler    => $self,
+        row_data   => $row_data,
+    );
+}
 
-        local $Data::Dumper::Maxdepth = 2;
-        $sql =~ s/\n/\n          /gm;
-        croak sprintf $self->exception_template, $e, $sql, Data::Dumper::Dumper($bind);
-    }
+sub new_collection_from_arrayref {
+    my ($self, $table_name, $row_datas) = @_;
+    return $row_datas if $self->suppress_result_objects;
 
-    sub exception_template {
-        return <<'__TRACE__';
+    my $result_class = $self->guess_result_class($table_name);
+    return $result_class->new(
+        table_name           => $table_name,
+        handler              => $self,
+        row_datas            => $row_datas,
+        suppress_row_objects => $self->suppress_row_objects,
+    );
+}
+
+sub _guess_table_name {
+    my ($self, $sql) = @_;
+    return $2 if $sql =~ /\sfrom\s+(["`]?)([\w]+)\1\s*/sio;
+    return;
+}
+
+# --------------------------------------------------
+# last_insert_id
+sub _fetch_last_insert_id_from_mysql { shift->dbh->{mysql_insertid} };
+sub _fetch_last_insert_id_from_pg {
+    my ($self, $table_name, $column) = @_;
+    my $dbh = $self->dbh;
+    return $dbh->last_insert_id(undef, undef, $table_name, undef) unless defined $column;
+
+    my $sequence = join '_', $table_name, $column, 'seq';
+    return $dbh->last_insert_id(undef, undef, undef, undef, { sequence => $sequence });
+}
+sub _fetch_last_insert_id_from_sqlite { shift->dbh->sqlite_last_insert_rowid }
+sub _fetch_last_insert_id_from_oracle { undef } ## XXX: Oracle haven't implement AUTO INCREMENT
+
+# --------------------------------------------------
+# for transaction
+sub txn_manager  { shift->handler->txn_manager }
+sub txn          { shift->handler->txn(@_)          }
+sub in_txn       { shift->handler->in_txn(@_)       }
+sub txn_scope    { shift->handler->txn_scope(@_)    }
+sub txn_begin    { shift->handler->txn_begin(@_)    }
+sub txn_rollback { shift->handler->txn_rollback(@_) }
+sub txn_commit   { shift->handler->txn_commit(@_)   }
+
+# --------------------------------------------------
+# error handling
+sub handle_error {
+    my ($self, $sql, $bind, $e) = @_;
+    require Data::Dumper;
+
+    local $Data::Dumper::Maxdepth = 2;
+    $sql =~ s/\n/\n          /gm;
+    croak sprintf $self->exception_template, $e, $sql, Data::Dumper::Dumper($bind);
+}
+
+sub exception_template {
+    return <<'__TRACE__';
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@ Aniki 's Exception @@@@@
 Reason  : %s
@@ -644,17 +646,14 @@ SQL     : %s
 BIND    : %s
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 __TRACE__
-    }
-
-    sub DEMOLISH {
-        my $self = shift;
-        $self->handler->disconnect();
-    }
-
-    __PACKAGE__->meta->make_immutable();
 }
 
-1;
+sub DEMOLISH {
+    my $self = shift;
+    $self->handler->disconnect();
+}
+
+__PACKAGE__->meta->make_immutable();
 __END__
 
 =encoding utf-8

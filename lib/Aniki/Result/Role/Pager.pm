@@ -1,4 +1,6 @@
 package Aniki::Result::Role::Pager;
+use 5.014002;
+
 use namespace::sweep;
 use Mouse::Role;
 use Mouse::Util::TypeConstraints qw/duck_type/;

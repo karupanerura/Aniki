@@ -1,45 +1,44 @@
-package Aniki::Schema::Table::PrimaryKey {
-    use namespace::sweep;
-    use Mouse v2.4.5;
-    use Aniki::Schema::Table::Field;
-    use Carp qw/croak/;
+package Aniki::Schema::Table::PrimaryKey;
+use 5.014002;
 
-    has _primary_key => (
-        is       => 'ro',
-        required => 1,
-    );
+use namespace::sweep;
+use Mouse v2.4.5;
+use Aniki::Schema::Table::Field;
+use Carp qw/croak/;
 
-    has _fields => (
-        is      => 'ro',
-        default => sub {
-            my $self = shift;
-            return [
-                map { Aniki::Schema::Table::Field->new($_) } $self->_primary_key->fields
-            ];
-        },
-    );
+has _primary_key => (
+    is       => 'ro',
+    required => 1,
+);
 
-    sub BUILDARGS {
-        my ($class, $primary_key) = @_;
-        return $class->SUPER::BUILDARGS(_primary_key => $primary_key);
-    }
-
-    sub fields { @{ shift->_fields } }
-
-    our $AUTOLOAD;
-    sub AUTOLOAD {
+has _fields => (
+    is      => 'ro',
+    default => sub {
         my $self = shift;
-        my $method = $AUTOLOAD =~ s/^.*://r;
-        if ($self->_primary_key->can($method)) {
-            return $self->_primary_key->$method(@_);
-        }
+        return [
+            map { Aniki::Schema::Table::Field->new($_) } $self->_primary_key->fields
+        ];
+    },
+);
 
-        my $class = ref $self;
-        croak qq{Can't locate object method "$method" via package "$class"};
+sub BUILDARGS {
+    my ($class, $primary_key) = @_;
+    return $class->SUPER::BUILDARGS(_primary_key => $primary_key);
+}
+
+sub fields { @{ shift->_fields } }
+
+our $AUTOLOAD;
+sub AUTOLOAD {
+    my $self = shift;
+    my $method = $AUTOLOAD =~ s/^.*://r;
+    if ($self->_primary_key->can($method)) {
+        return $self->_primary_key->$method(@_);
     }
 
-    __PACKAGE__->meta->make_immutable;
-};
+    my $class = ref $self;
+    croak qq{Can't locate object method "$method" via package "$class"};
+}
 
-1;
+__PACKAGE__->meta->make_immutable;
 __END__

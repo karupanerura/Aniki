@@ -1,102 +1,101 @@
+package Aniki::Plugin::SelectJoined;
 use 5.014002;
 
-package Aniki::Plugin::SelectJoined {
-    use namespace::sweep;
-    use Mouse::Role;
-    use Aniki::QueryBuilder;
-    use Aniki::Result::Collection::Joined;
-    use Carp qw/croak/;
+use namespace::sweep;
+use Mouse::Role;
+use Aniki::QueryBuilder;
+use Aniki::Result::Collection::Joined;
+use Carp qw/croak/;
 
-    requires qw/schema query_builder suppress_row_objects txn_manager execute/;
+requires qw/schema query_builder suppress_row_objects txn_manager execute/;
 
-    Aniki::QueryBuilder->load_plugin('JoinSelect');
+Aniki::QueryBuilder->load_plugin('JoinSelect');
 
-    sub select_joined {
-        my ($self, $base_table, $join_conditions, $where, $opt) = @_;
+sub select_joined {
+    my ($self, $base_table, $join_conditions, $where, $opt) = @_;
 
-        my @table_names = ($base_table);
-        for (my $i = 0; my $table = $join_conditions->[$i]; $i += 2) {
-            push @table_names => $table;
-        }
-        my @tables = map { $self->schema->get_table($_) } @table_names;
+    my @table_names = ($base_table);
+    for (my $i = 0; my $table = $join_conditions->[$i]; $i += 2) {
+        push @table_names => $table;
+    }
+    my @tables = map { $self->schema->get_table($_) } @table_names;
 
-        my $name_sep = $self->query_builder->name_sep;
-        my @columns;
-        for my $table (@tables) {
-            my $table_name = $table->name;
-            push @columns =>
-                map { "$table_name$name_sep$_" }
-                map { $_->name } $table->get_fields();
-        }
-
-        my ($sql, @bind) = $self->query_builder->join_select($base_table, $join_conditions, \@columns, $where, $opt);
-        return $self->select_joined_by_sql($sql, \@bind, {
-            table_names => \@table_names,
-            columns     => \@columns,
-            %$opt,
-        });
+    my $name_sep = $self->query_builder->name_sep;
+    my @columns;
+    for my $table (@tables) {
+        my $table_name = $table->name;
+        push @columns =>
+            map { "$table_name$name_sep$_" }
+            map { $_->name } $table->get_fields();
     }
 
-    sub select_joined_by_sql {
-        my ($self, $sql, $bind, $opt) = @_;
-        $opt //= {};
+    my ($sql, @bind) = $self->query_builder->join_select($base_table, $join_conditions, \@columns, $where, $opt);
+    return $self->select_joined_by_sql($sql, \@bind, {
+        table_names => \@table_names,
+        columns     => \@columns,
+        %$opt,
+    });
+}
 
-        my $table_names = $opt->{table_names} or croak 'table_names is required';
-        my $columns     = $opt->{columns}     or croak 'columns is required';
-        my $prefetch    = exists $opt->{prefetch} ? $opt->{prefetch} : {};
+sub select_joined_by_sql {
+    my ($self, $sql, $bind, $opt) = @_;
+    $opt //= {};
 
-        my $prefetch_enabled_fg = %$prefetch && !$self->suppress_row_objects;
-        if ($prefetch_enabled_fg) {
-            my $txn; $txn = $self->txn_scope unless $self->txn_manager->in_transaction;
+    my $table_names = $opt->{table_names} or croak 'table_names is required';
+    my $columns     = $opt->{columns}     or croak 'columns is required';
+    my $prefetch    = exists $opt->{prefetch} ? $opt->{prefetch} : {};
 
-            my $sth = $self->execute($sql, @$bind);
-            my $result = $self->_fetch_joined_by_sth($sth, $table_names, $columns);
+    my $prefetch_enabled_fg = %$prefetch && !$self->suppress_row_objects;
+    if ($prefetch_enabled_fg) {
+        my $txn; $txn = $self->txn_scope unless $self->txn_manager->in_transaction;
 
-            for my $table_name (@$table_names) {
-                my $rows  = $result->rows($table_name);
-                my $prefetch = $prefetch->{$table_name};
-                   $prefetch = [$prefetch] if ref $prefetch eq 'HASH';
-                $self->fetch_and_attach_relay_data($table_name, $prefetch, $rows);
-            }
+        my $sth = $self->execute($sql, @$bind);
+        my $result = $self->_fetch_joined_by_sth($sth, $table_names, $columns);
 
-            $txn->rollback if defined $txn; ## for read only
-            return $result;
-        }
-        else {
-            my $sth = $self->execute($sql, @$bind);
-            return $self->_fetch_joined_by_sth($sth, $table_names, $columns);
-        }
-    }
-
-    sub _fetch_joined_by_sth {
-        my ($self, $sth, $table_names, $columns) = @_;
-        my @rows;
-
-        my %row;
-        $sth->bind_columns(\@row{@$columns});
-        push @rows => $self->_seperate_rows(\%row) while $sth->fetch;
-        $sth->finish;
-
-        return Aniki::Result::Collection::Joined->new(
-            table_names => $table_names,
-            handler     => $self,
-            row_datas   => \@rows,
-        );
-    }
-
-    sub _seperate_rows {
-        my ($self, $row) = @_;
-
-        my $name_sep = quotemeta $self->query_builder->name_sep;
-
-        my %rows;
-        for my $full_named_column (keys %$row) {
-            my ($table_name, $column) = split /$name_sep/, $full_named_column, 2;
-            $rows{$table_name}{$column} = $row->{$full_named_column};
+        for my $table_name (@$table_names) {
+            my $rows  = $result->rows($table_name);
+            my $prefetch = $prefetch->{$table_name};
+               $prefetch = [$prefetch] if ref $prefetch eq 'HASH';
+            $self->fetch_and_attach_relay_data($table_name, $prefetch, $rows);
         }
 
-        return \%rows;
+        $txn->rollback if defined $txn; ## for read only
+        return $result;
     }
+    else {
+        my $sth = $self->execute($sql, @$bind);
+        return $self->_fetch_joined_by_sth($sth, $table_names, $columns);
+    }
+}
+
+sub _fetch_joined_by_sth {
+    my ($self, $sth, $table_names, $columns) = @_;
+    my @rows;
+
+    my %row;
+    $sth->bind_columns(\@row{@$columns});
+    push @rows => $self->_seperate_rows(\%row) while $sth->fetch;
+    $sth->finish;
+
+    return Aniki::Result::Collection::Joined->new(
+        table_names => $table_names,
+        handler     => $self,
+        row_datas   => \@rows,
+    );
+}
+
+sub _seperate_rows {
+    my ($self, $row) = @_;
+
+    my $name_sep = quotemeta $self->query_builder->name_sep;
+
+    my %rows;
+    for my $full_named_column (keys %$row) {
+        my ($table_name, $column) = split /$name_sep/, $full_named_column, 2;
+        $rows{$table_name}{$column} = $row->{$full_named_column};
+    }
+
+    return \%rows;
 }
 
 1;

@@ -1,13 +1,12 @@
+package Aniki::Plugin::WeightedRoundRobin;
 use 5.014002;
 
-package Aniki::Plugin::WeightedRoundRobin {
-    use namespace::sweep;
-    use Mouse::Role;
+use namespace::sweep;
+use Mouse::Role;
 
-    use Aniki::Handler::WeightedRoundRobin;
+use Aniki::Handler::WeightedRoundRobin;
 
-    sub handler_class { 'Aniki::Handler::WeightedRoundRobin' }
-}
+sub handler_class { 'Aniki::Handler::WeightedRoundRobin' }
 
 1;
 __END__

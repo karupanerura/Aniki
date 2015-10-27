@@ -1,54 +1,53 @@
-package Aniki::Result::Collection {
-    use namespace::sweep;
-    use Mouse v2.4.5;
-    extends qw/Aniki::Result/;
+package Aniki::Result::Collection;
+use 5.014002;
 
-    use overload
-        '@{}'    => sub { shift->rows },
-        fallback => 1;
+use namespace::sweep;
+use Mouse v2.4.5;
+extends qw/Aniki::Result/;
 
-    has row_datas => (
-        is       => 'ro',
-        required => 1,
-    );
+use overload
+    '@{}'    => sub { shift->rows },
+    fallback => 1;
 
-    has inflated_rows => (
-        is      => 'ro',
-        lazy    => 1,
-        builder => '_inflate',
-    );
+has row_datas => (
+    is       => 'ro',
+    required => 1,
+);
 
-    sub _inflate {
-        my $self = shift;
-        my $row_class  = $self->row_class;
-        my $table_name = $self->table_name;
-        my $handler    = $self->handler;
-        return [
-            map {
-                $row_class->new(
-                    table_name => $table_name,
-                    handler    => $handler,
-                    row_data   => $_
-                )
-            } @{ $self->row_datas }
-        ];
-    }
+has inflated_rows => (
+    is      => 'ro',
+    lazy    => 1,
+    builder => '_inflate',
+);
 
-    sub rows {
-        my $self = shift;
-        return $self->suppress_row_objects ? $self->row_datas : $self->inflated_rows;
-    }
+sub _inflate {
+    my $self = shift;
+    my $row_class  = $self->row_class;
+    my $table_name = $self->table_name;
+    my $handler    = $self->handler;
+    return [
+        map {
+            $row_class->new(
+                table_name => $table_name,
+                handler    => $handler,
+                row_data   => $_
+            )
+        } @{ $self->row_datas }
+    ];
+}
 
-    sub count { scalar @{ shift->rows(@_) } }
+sub rows {
+    my $self = shift;
+    return $self->suppress_row_objects ? $self->row_datas : $self->inflated_rows;
+}
 
-    sub first        { shift->rows(@_)->[0]  }
-    sub last :method { shift->rows(@_)->[-1] }
-    sub all          { @{ shift->rows(@_) }  }
+sub count { scalar @{ shift->rows(@_) } }
 
-    __PACKAGE__->meta->make_immutable();
-};
+sub first        { shift->rows(@_)->[0]  }
+sub last :method { shift->rows(@_)->[-1] }
+sub all          { @{ shift->rows(@_) }  }
 
-1;
+__PACKAGE__->meta->make_immutable();
 __END__
 
 =pod

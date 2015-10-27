@@ -1,7 +1,8 @@
 package Aniki::Schema::Relationship::Declare;
+use 5.014002;
+
 use strict;
 use warnings;
-use utf8;
 
 use B::Hooks::EndOfScope;
 use DBIx::Schema::DSL ();

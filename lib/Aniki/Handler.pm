@@ -1,55 +1,52 @@
+package Aniki::Handler;
 use 5.014002;
 
-package Aniki::Handler {
-    use namespace::sweep;
-    use Mouse;
+use namespace::sweep;
+use Mouse;
 
-    use DBIx::Handler;
+use DBIx::Handler;
 
-    has connect_info => (
-        is       => 'ro',
-        required => 1,
-    );
+has connect_info => (
+    is       => 'ro',
+    required => 1,
+);
 
-    has on_connect_do => (
-        is => 'ro',
-    );
+has on_connect_do => (
+    is => 'ro',
+);
 
-    has on_disconnect_do => (
-        is => 'ro',
-    );
+has on_disconnect_do => (
+    is => 'ro',
+);
 
-    has handler => (
-        is      => 'rw',
-        lazy    => 1,
-        builder => 'connect',
-        clearer => 'disconnect',
-    );
+has handler => (
+    is      => 'rw',
+    lazy    => 1,
+    builder => 'connect',
+    clearer => 'disconnect',
+);
 
-    sub connect :method {
-        my $self = shift;
-        my ($dsn, $user, $pass, $attr) = @{ $self->connect_info };
-        return DBIx::Handler->new($dsn, $user, $pass, $attr, {
-            on_connect_do    => $self->on_connect_do,
-            on_disconnect_do => $self->on_disconnect_do,
-        });
-    }
-
-    sub _proxy_methods { qw/dbh txn_manager txn in_txn txn_scope txn_begin txn_rollback txn_commit/ }
-
-    for my $name (__PACKAGE__->_proxy_methods) {
-        __PACKAGE__->meta->add_method($name => sub { shift->handler->$name(@_) });
-    }
-
-    sub DEMOLISH {
-        my $self = shift;
-        $self->disconnect();
-    }
-
-    __PACKAGE__->meta->make_immutable();
+sub connect :method {
+    my $self = shift;
+    my ($dsn, $user, $pass, $attr) = @{ $self->connect_info };
+    return DBIx::Handler->new($dsn, $user, $pass, $attr, {
+        on_connect_do    => $self->on_connect_do,
+        on_disconnect_do => $self->on_disconnect_do,
+    });
 }
 
-1;
+sub _proxy_methods { qw/dbh txn_manager txn in_txn txn_scope txn_begin txn_rollback txn_commit/ }
+
+for my $name (__PACKAGE__->_proxy_methods) {
+    __PACKAGE__->meta->add_method($name => sub { shift->handler->$name(@_) });
+}
+
+sub DEMOLISH {
+    my $self = shift;
+    $self->disconnect();
+}
+
+__PACKAGE__->meta->make_immutable();
 __END__
 
 =pod

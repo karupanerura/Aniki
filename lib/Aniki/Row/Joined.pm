@@ -1,44 +1,46 @@
-package Aniki::Row::Joined {
-    use strict;
-    use warnings;
+package Aniki::Row::Joined;
+use 5.014002;
 
-    use Carp qw/croak/;
+use strict;
+use warnings;
 
-    sub new {
-        my ($class, @rows) = @_;
-        my %rows = map { $_->table_name => $_ } @rows;
-        return bless \%rows => $class;
+use Carp qw/croak/;
+
+sub new {
+    my ($class, @rows) = @_;
+    my %rows = map { $_->table_name => $_ } @rows;
+    return bless \%rows => $class;
+}
+
+sub can {
+    my ($invocant, $method) = @_;
+    my $code = $invocant->SUPER::can($method);
+    return $code if defined $code;
+
+    if (ref $invocant) {
+        my $self       = $invocant;
+        my $table_name = $method;
+        return sub { $self->{$table_name} } if exists $self->{$table_name};
     }
 
-    sub can {
-        my ($invocant, $method) = @_;
-        my $code = $invocant->SUPER::can($method);
-        return $code if defined $code;
+    return undef; ## no critic
+}
 
-        if (ref $invocant) {
-            my $self       = $invocant;
-            my $table_name = $method;
-            return sub { $self->{$table_name} } if exists $self->{$table_name};
-        }
+our $AUTOLOAD;
+sub AUTOLOAD {
+    my $invocant = shift;
+    my $table_name = $AUTOLOAD =~ s/^.+://r;
 
-        return undef; ## no critic
+    if (ref $invocant) {
+        my $self = $invocant;
+        return $self->{$table_name} if exists $self->{$table_name};
     }
 
-    our $AUTOLOAD;
-    sub AUTOLOAD {
-        my $invocant = shift;
-        my $table_name = $AUTOLOAD =~ s/^.+://r;
+    my $msg = sprintf q{Can't locate object method "%s" via package "%s"}, $table_name, ref $invocant || $invocant;
+    croak $msg;
+}
 
-        if (ref $invocant) {
-            my $self = $invocant;
-            return $self->{$table_name} if exists $self->{$table_name};
-        }
-
-        my $msg = sprintf q{Can't locate object method "%s" via package "%s"}, $table_name, ref $invocant || $invocant;
-        croak $msg;
-    }
-
-    sub DESTROY {} # no autoload
-};
+sub DESTROY {} # no autoload
 
 1;
+__END__

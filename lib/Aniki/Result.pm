@@ -1,45 +1,44 @@
-package Aniki::Result {
-    use namespace::sweep;
-    use Mouse v2.4.5;
+package Aniki::Result;
+use 5.014002;
 
-    has table_name => (
-        is       => 'ro',
-        required => 1,
-    );
+use namespace::sweep;
+use Mouse v2.4.5;
 
-    has suppress_row_objects => (
-        is      => 'rw',
-        lazy    => 1,
-        default => sub { shift->handler->suppress_row_objects },
-    );
+has table_name => (
+    is       => 'ro',
+    required => 1,
+);
 
-    has row_class => (
-        is      => 'rw',
-        lazy    => 1,
-        default => sub {
-            my $self = shift;
-            $self->handler->guess_row_class($self->table_name);
-        },
-    );
+has suppress_row_objects => (
+    is      => 'rw',
+    lazy    => 1,
+    default => sub { shift->handler->suppress_row_objects },
+);
 
-    my %handler;
-
-    sub BUILD {
-        my ($self, $args) = @_;
-        $handler{0+$self} = delete $args->{handler};
-    }
-
-    sub handler { $handler{0+shift} }
-
-    sub DEMOLISH {
+has row_class => (
+    is      => 'rw',
+    lazy    => 1,
+    default => sub {
         my $self = shift;
-        delete $handler{0+$self};
-    }
+        $self->handler->guess_row_class($self->table_name);
+    },
+);
 
-    __PACKAGE__->meta->make_immutable();
-};
+my %handler;
 
-1;
+sub BUILD {
+    my ($self, $args) = @_;
+    $handler{0+$self} = delete $args->{handler};
+}
+
+sub handler { $handler{0+shift} }
+
+sub DEMOLISH {
+    my $self = shift;
+    delete $handler{0+$self};
+}
+
+__PACKAGE__->meta->make_immutable();
 __END__
 
 =pod

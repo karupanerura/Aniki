@@ -1,23 +1,22 @@
+package Aniki::Plugin::Count;
 use 5.014002;
 
-package Aniki::Plugin::Count {
-    use namespace::sweep;
-    use Mouse::Role;
+use namespace::sweep;
+use Mouse::Role;
 
-    requires qw/query_builder dbh/;
+requires qw/query_builder dbh/;
 
-    sub count {
-        my ($self, $table, $column, $where, $opt) = @_;
-        $column //= '*';
+sub count {
+    my ($self, $table, $column, $where, $opt) = @_;
+    $column //= '*';
 
-        if (ref $column) {
-            Carp::croak('Do not pass HashRef/ArrayRef to second argument. Usage: $db->count($table[, $column[, $where[, $opt]]])');
-        }
-
-        my ($sql, @binds) = $self->query_builder->select($table, [\"COUNT($column)"], $where, $opt);
-        my ($count) = $self->dbh->selectrow_array($sql, undef, @binds);
-        return $count;
+    if (ref $column) {
+        Carp::croak('Do not pass HashRef/ArrayRef to second argument. Usage: $db->count($table[, $column[, $where[, $opt]]])');
     }
+
+    my ($sql, @binds) = $self->query_builder->select($table, [\"COUNT($column)"], $where, $opt);
+    my ($count) = $self->dbh->selectrow_array($sql, undef, @binds);
+    return $count;
 }
 
 1;
