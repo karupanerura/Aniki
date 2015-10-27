@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.81 2015-10-27T03:20:57Z
+
+   - switch to old style package declation syntax for some old static code analyzers
+
 0.08 2015-10-26T12:39:36Z
 
    - Split handler class from main class.
