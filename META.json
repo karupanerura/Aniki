@@ -84,6 +84,7 @@
             "Mouse::Util" : "0",
             "Test::Builder::Module" : "0",
             "Test::More" : "0.98",
+            "Test::Requires" : "0",
             "feature" : "0"
          }
       }
@@ -100,7 +101,10 @@
          "web" : "https://github.com/karupanerura/Aniki"
       }
    },
-   "version" : "0.81",
+   "version" : "0.82",
    "x_authority" : "cpan:KARUPA",
+   "x_contributors" : [
+      "Syohei YOSHIDA <syohex@gmail.com>"
+   ],
    "x_serialization_backend" : "JSON::PP version 2.27300"
 }

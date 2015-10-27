@@ -12,7 +12,7 @@ use Aniki::Schema;
 use Aniki::QueryBuilder;
 use Aniki::QueryBuilder::Canonical;
 
-our $VERSION = '0.81';
+our $VERSION = '0.82';
 
 use SQL::Maker::SQLType qw/sql_type/;
 use DBIx::Handler;
