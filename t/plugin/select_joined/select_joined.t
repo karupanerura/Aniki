@@ -3,15 +3,12 @@ use warnings;
 use utf8;
 
 use Test::More;
+use Test::Requires qw(SQL::Maker::Plugin::JoinSelect);
 
 use File::Spec;
 use lib File::Spec->catfile('t', 'lib');
 use Mouse::Util;
 use t::Util;
-
-if (!eval { require SQL::Maker::Plugin::JoinSelect; 1 }) {
-    plan skip_all => 'SQL::Maker::Plugin::JoinSelect is required for SelectJoined';
-}
 
 my $db = t::Util->db;
 Mouse::Util::apply_all_roles($db, 'Aniki::Plugin::SelectJoined');

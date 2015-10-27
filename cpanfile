@@ -35,6 +35,7 @@ on test => sub {
     requires 'Mouse::Util';
     requires 'Test::Builder::Module';
     requires 'Test::More', '0.98';
+    requires 'Test::Requires';
     requires 'feature';
 };
 
