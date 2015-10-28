@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.83 2015-10-28T03:20:40Z
+
+   - Follow `0` and NULL in default value on insert_and_emulate_row method.
+
 0.82 2015-10-27T15:38:40Z
 
    - Use Test::Requires for checking the modules installed (syohex)
