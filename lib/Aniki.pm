@@ -310,8 +310,8 @@ sub insert_and_emulate_row {
         if (exists $row->{$field->name}) {
             $row_data{$field->name} = $row->{$field->name};
         }
-        elsif (my $default_value = $field->default_value) {
-            $row_data{$field->name} = $default_value;
+        elsif (defined(my $default_value = $field->default_value)) {
+            $row_data{$field->name} = ref $default_value eq 'SCALAR' ? undef : $default_value;
         }
         elsif ($field->is_auto_increment) {
             $row_data{$field->name} = $self->last_insert_id($table_name, $field->name);
