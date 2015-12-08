@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.84 2015-12-08T02:22:09Z
+
+   - Fixed generated class name by install-aniki
+
 0.83 2015-10-28T03:20:40Z
 
    - Follow `0` and NULL in default value on insert_and_emulate_row method.
