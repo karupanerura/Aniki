@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.85 2015-12-10T10:31:33Z
+
+   - Fixed no disconnect if caught not a connect error at retring in Aniki::Handler::RoundRobin
+
 0.84 2015-12-08T02:22:09Z
 
    - Fixed generated class name by install-aniki

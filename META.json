@@ -101,7 +101,7 @@
          "web" : "https://github.com/karupanerura/Aniki"
       }
    },
-   "version" : "0.84",
+   "version" : "0.85",
    "x_authority" : "cpan:KARUPA",
    "x_contributors" : [
       "Syohei YOSHIDA <syohex@gmail.com>"
