@@ -86,9 +86,9 @@ for my $name (__PACKAGE__->_proxy_methods) {
 
         if (my $e = $@) {
             my $key = refaddr($self->connect_info);
-            my $in_txn = !$self->handler->in_txn;
-            $self->disconnect;
-            if ($self->is_connect_error($e) && $in_txn) {
+            if ($self->is_connect_error($e) && !$self->handler->in_txn) {
+                $self->disconnect;
+
                 # retry
                 my $guard = $self->rr->save;
                 $self->rr->remove($key);
