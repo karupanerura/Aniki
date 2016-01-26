@@ -650,7 +650,7 @@ __TRACE__
 
 sub DEMOLISH {
     my $self = shift;
-    $self->handler->disconnect();
+    $self->handler->disconnect() if $self->handler;
 }
 
 __PACKAGE__->meta->make_immutable();
