@@ -2,6 +2,11 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.86 2016-01-26T02:39:43Z
+
+   - Split Aniki::Plugin::PagerInjector
+   - Added Aniki::Plugin::SQLPager
+
 0.85 2015-12-10T10:31:33Z
 
    - Fixed no disconnect if caught not a connect error at retring in Aniki::Handler::RoundRobin

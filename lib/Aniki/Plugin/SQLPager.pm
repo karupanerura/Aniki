@@ -42,6 +42,8 @@ __END__
 
 =pod
 
+=for stopwords sql
+
 =encoding utf-8
 
 =head1 NAME
