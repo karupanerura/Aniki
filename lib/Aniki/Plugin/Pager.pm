@@ -3,10 +3,9 @@ use 5.014002;
 
 use namespace::sweep;
 use Mouse::Role;
-use Data::Page::NoTotalEntries;
-use Aniki::Result::Role::Pager;
 
-requires qw/select guess_result_class/;
+requires qw/select/;
+with qw/Aniki::Plugin::PagerInjector/;
 
 sub select_with_pager {
     my ($self, $table_name, $where, $opt) = @_;
@@ -20,32 +19,12 @@ sub select_with_pager {
         offset => $rows * ($page - 1),
     });
 
-    my $has_next = $rows < $result->count ? 1 : 0;
-    if ($has_next) {
-        $result = $self->guess_result_class($table_name)->new(
-            table_name           => $table_name,
-            handler              => $self,
-            row_datas            => [@{$result->row_datas}[0..$result->count-2]],
-            !$result->suppress_row_objects ? (
-                inflated_rows    => [@{$result->inflated_rows}[0..$result->count-2]],
-            ) : (),
-            suppress_row_objects => $result->suppress_row_objects,
-            row_class            => $result->row_class,
-        );
-    }
-
-    my $pager = Data::Page::NoTotalEntries->new(
-        entries_per_page     => $rows,
-        current_page         => $page,
-        has_next             => $has_next,
-        entries_on_this_page => $result->count,
-    );
-    $result->meta->does_role('Aniki::Result::Role::Pager')
-        or Mouse::Util::apply_all_roles($result, 'Aniki::Result::Role::Pager');
-    $result->pager($pager);
-
-    return $result;
+    return $self->inject_pager_to_result($result => {
+        rows => $rows,
+        page => $page,
+    });
 }
+
 
 1;
 __END__
