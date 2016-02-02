@@ -389,9 +389,6 @@ sub select :method {
     my ($self, $table_name, $where, $opt) = @_;
     $opt //= {};
 
-    local $self->{suppress_row_objects}    = 1 if $opt->{suppress_row_objects};
-    local $self->{suppress_result_objects} = 1 if $opt->{suppress_result_objects};
-
     my $table = $self->schema->get_table($table_name);
 
     my $columns = exists $opt->{columns} ? $opt->{columns}
@@ -403,11 +400,9 @@ sub select :method {
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
     my ($sql, @bind) = $self->query_builder->select($table_name, $columns, $where, $opt);
     return $self->select_by_sql($sql, \@bind, {
+        %$opt,
         table_name => $table_name,
         columns    => $columns,
-        exists $opt->{prefetch} ? (
-            prefetch => $opt->{prefetch},
-        ) : (),
     });
 }
 
@@ -448,6 +443,9 @@ sub select_named {
 sub select_by_sql {
     my ($self, $sql, $bind, $opt) = @_;
     $opt //= {};
+
+    local $self->{suppress_row_objects}    = 1 if $opt->{suppress_row_objects};
+    local $self->{suppress_result_objects} = 1 if $opt->{suppress_result_objects};
 
     my $table_name = exists $opt->{table_name}  ? $opt->{table_name} : $self->_guess_table_name($sql);
     my $columns    = exists $opt->{columns}     ? $opt->{columns}    : undef;
