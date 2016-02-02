@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.87 2016-02-02T01:33:39Z
+
+   - Allow to enable `suppress_(row|result)_objects` on select_by_sql and select_named.
+
 0.86 2016-01-26T02:39:43Z
 
    - Split Aniki::Plugin::PagerInjector
