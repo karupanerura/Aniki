@@ -8,9 +8,10 @@ perl:
   - "5.20"
   - "5.22"
 
+env:
+  AUTHOR_TESTING: 1
 before_install:
   - cpanm --quiet --notest --skip-satisfied Devel::Cover Devel::Cover::Report::Codecov
-  - cpanm --quiet --notest --skip-satisfied DBD::mysql
   - cpanm --quiet --notest --skip-satisfied --installdeps --with-recommend .
   - cover -delete
 script:
