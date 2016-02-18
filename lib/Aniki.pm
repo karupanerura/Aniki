@@ -5,6 +5,7 @@ use namespace::sweep;
 use Mouse v2.4.5;
 
 use Module::Load ();
+use Aniki::Filter;
 use Aniki::Handler;
 use Aniki::Row;
 use Aniki::Result::Collection;
@@ -16,6 +17,7 @@ our $VERSION = '0.87';
 
 use SQL::Maker::SQLType qw/sql_type/;
 use DBIx::Handler;
+use Class::Inspector;
 use Carp qw/croak confess/;
 use Try::Tiny;
 use Scalar::Util qw/blessed/;
@@ -87,7 +89,7 @@ sub setup {
 
     # schema
     if (my $schema_class = $args{schema}) {
-        Module::Load::load($schema_class);
+        Module::Load::load($schema_class) unless Class::Inspector->loaded($schema_class);
 
         my $schema = Aniki::Schema->new(schema_class => $schema_class);
         $class->meta->add_method(schema => sub { $schema });
@@ -98,7 +100,7 @@ sub setup {
 
     # filter
     if (my $filter_class = $args{filter}) {
-        Module::Load::load($filter_class);
+        Module::Load::load($filter_class) unless Class::Inspector->loaded($filter_class);
 
         my $filter = $filter_class->instance();
         $class->meta->add_method(filter => sub { $filter });
@@ -110,7 +112,7 @@ sub setup {
 
     # handler
     if (my $handler_class = $args{handler}) {
-        Module::Load::load($handler_class);
+        Module::Load::load($handler_class) unless Class::Inspector->loaded($handler_class);
         $class->meta->add_method(handler_class => sub { $handler_class });
     }
 
@@ -125,7 +127,7 @@ sub setup {
     {
         my $query_builder_class = $class->use_prepare_cached ? 'Aniki::QueryBuilder::Canonical' : 'Aniki::QueryBuilder';
         if ($args{query_builder}) {
-            Module::Load::load($args{query_builder});
+            Module::Load::load($args{query_builder}) unless Class::Inspector->loaded($args{query_builder});
             $query_builder_class = $args{query_builder};
         }
         my $driver        = $class->_database2driver($class->schema->database);
@@ -138,7 +140,7 @@ sub setup {
         my $root_row_class = 'Aniki::Row';
         my $guess_row_class = sub { $root_row_class };
         if ($args{row}) {
-            Module::Load::load($args{row});
+            Module::Load::load($args{row}) unless Class::Inspector->loaded($args{row});
             $root_row_class = $args{row};
 
             my %table_row_class;
@@ -163,7 +165,7 @@ sub setup {
         my $root_result_class = 'Aniki::Result::Collection';
         my $guess_result_class = sub { $root_result_class };
         if ($args{result}) {
-            Module::Load::load($args{result});
+            Module::Load::load($args{result}) unless Class::Inspector->loaded($args{result});
             $root_result_class = $args{result};
 
             my %table_result_class;
