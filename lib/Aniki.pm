@@ -369,6 +369,9 @@ sub insert_multi {
 
     my @values = map { $self->filter_on_insert($table_name, $_) } @$values;
     if (exists $opts->{update}) {
+        if ($self->schema->database ne 'MySQL') {
+            Carp::croak 'Cannot use insert_multi with update option (unsupported without MySQL)';
+        }
         $opts->{update} = $self->filter_on_update($table_name, $opts->{update});
     }
 
