@@ -345,6 +345,10 @@ sub insert_and_emulate_row {
 
 sub insert_on_duplicate {
     my ($self, $table_name, $insert, $update) = @_;
+    if ($self->schema->database ne 'MySQL') {
+        Carp::croak 'Cannot use insert_on_duplicate (unsupported without MySQL)';
+    }
+
     $insert = $self->filter_on_insert($table_name, $insert);
     $update = $self->filter_on_update($table_name, $update);
 
