@@ -1,5 +1,5 @@
 package t::DB;
-use 5.14.2;
+use 5.014002;
 use Mouse v2.4.5;
 extends qw/Aniki/;
 

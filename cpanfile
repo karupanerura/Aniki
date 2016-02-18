@@ -1,7 +1,12 @@
 requires 'B::Hooks::EndOfScope';
+requires 'Class::Inspector';
+requires 'DBI';
 requires 'DBIx::Handler';
 requires 'DBIx::Schema::DSL';
 requires 'Data::Page::NoTotalEntries';
+requires 'Data::Section::Simple';
+requires 'File::Path';
+requires 'Getopt::Long';
 requires 'Hash::Util::FieldHash';
 requires 'Lingua::EN::Inflect';
 requires 'List::MoreUtils';
@@ -33,14 +38,18 @@ on test => sub {
     requires 'DBD::SQLite';
     requires 'List::Util';
     requires 'Mouse::Util';
+    requires 'Test::Builder';
     requires 'Test::Builder::Module';
     requires 'Test::More', '0.98';
     requires 'Test::Requires';
     requires 'feature';
+    recommends 'DBD::mysql';
+    recommends 'Test::mysqld';
+    recommends 'DBD::Pg';
+    recommends 'Test::postgresql';
 };
 
 on develop => sub {
-    requires 'DBI';
     requires 'DBIx::Class::Core';
     requires 'DBIx::Class::Schema';
     requires 'Teng';

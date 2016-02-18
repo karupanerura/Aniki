@@ -4,7 +4,7 @@
       "karupanerura <karupa@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.0.1, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Minilla/v3.0.1, CPAN::Meta::Converter version 2.150001",
    "license" : [
       "perl_5"
    ],
@@ -33,7 +33,6 @@
       },
       "develop" : {
          "requires" : {
-            "DBI" : "0",
             "DBIx::Class::Core" : "0",
             "DBIx::Class::Schema" : "0",
             "Teng" : "0",
@@ -53,9 +52,14 @@
          },
          "requires" : {
             "B::Hooks::EndOfScope" : "0",
+            "Class::Inspector" : "0",
+            "DBI" : "0",
             "DBIx::Handler" : "0",
             "DBIx::Schema::DSL" : "0",
             "Data::Page::NoTotalEntries" : "0",
+            "Data::Section::Simple" : "0",
+            "File::Path" : "0",
+            "Getopt::Long" : "0",
             "Hash::Util::FieldHash" : "0",
             "Lingua::EN::Inflect" : "0",
             "List::MoreUtils" : "0",
@@ -78,10 +82,17 @@
          }
       },
       "test" : {
+         "recommends" : {
+            "DBD::Pg" : "0",
+            "DBD::mysql" : "0",
+            "Test::mysqld" : "0",
+            "Test::postgresql" : "0"
+         },
          "requires" : {
             "DBD::SQLite" : "0",
             "List::Util" : "0",
             "Mouse::Util" : "0",
+            "Test::Builder" : "0",
             "Test::Builder::Module" : "0",
             "Test::More" : "0.98",
             "Test::Requires" : "0",
@@ -105,6 +116,5 @@
    "x_authority" : "cpan:KARUPA",
    "x_contributors" : [
       "Syohei YOSHIDA <syohex@gmail.com>"
-   ],
-   "x_serialization_backend" : "JSON::PP version 2.27300"
+   ]
 }
