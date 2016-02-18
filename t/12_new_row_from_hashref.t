@@ -9,8 +9,9 @@ use lib File::Spec->catfile('t', 'lib');
 use t::Util;
 
 run_on_database {
-    db->insert(author => { name => 'MOZNION' });
-    is db->select(author => {}, { limit => 1 })->count, 1, 'created.';
+    my $karupa = db->new_row_from_hashref(author => { name => 'KARUPA' });
+    isa_ok $karupa, 't::DB::Row::Author';
+    is $karupa->name, 'KARUPA';
 };
 
 done_testing();

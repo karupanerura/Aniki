@@ -10,8 +10,9 @@ use lib File::Spec->catfile('t', 'lib');
 use Mouse::Util;
 use t::Util;
 
-my $db = t::Util->db;
-Mouse::Util::apply_all_roles($db, 'Aniki::Plugin::WeightedRoundRobin');
-is $db->handler_class, 'Aniki::Handler::WeightedRoundRobin';
+run_on_database {
+    Mouse::Util::apply_all_roles(db, 'Aniki::Plugin::WeightedRoundRobin');
+    is db->handler_class, 'Aniki::Handler::WeightedRoundRobin';
+};
 
 done_testing();

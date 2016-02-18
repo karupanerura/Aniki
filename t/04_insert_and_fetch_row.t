@@ -8,16 +8,16 @@ use File::Spec;
 use lib File::Spec->catfile('t', 'lib');
 use t::Util;
 
-my $db = t::Util->db;
+run_on_database {
+    my $row = db->insert_and_fetch_row(author => { name => 'MOZNION' });
+    ok defined $row, 'row is defined.';
+    ok $row->is_new, 'new row.';
 
-my $row = $db->insert_and_fetch_row(author => { name => 'MOZNION' });
-ok defined $row, 'row is defined.';
-ok $row->is_new, 'new row.';
-
-is_deeply $row->get_columns, {
-    id      => $row->id,
-    name    => 'MOZNION',
-    message => 'hello',
-}, 'Data is valid.';
+    is_deeply $row->get_columns, {
+        id      => $row->id,
+        name    => 'MOZNION',
+        message => 'hello',
+    }, 'Data is valid.';
+};
 
 done_testing();
