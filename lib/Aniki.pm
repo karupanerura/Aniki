@@ -201,7 +201,14 @@ sub preload_all_result_classes {
     }
 }
 
-sub dbh { shift->handler->dbh }
+sub dbh {
+    my $self = shift;
+    # (for mysql)
+    # XXX: `DBIx::Handler#dbh` send a ping to mysql.
+    #      But, It removes `$dbh->{mysql_insertid}`.
+    return $self->{_context} if exists $self->{_context};
+    return $self->handler->dbh;
+}
 
 sub insert {
     my ($self, $table_name, $row, $opt) = @_;
@@ -271,6 +278,7 @@ sub insert_and_fetch_id {
     my $self = shift;
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
+    local $self->{_context} = $self->dbh;
     $self->insert(@_);
     return unless defined wantarray;
 
@@ -286,6 +294,8 @@ sub insert_and_fetch_row {
     my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
 
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+    local $self->{_context} = $self->dbh;
+
     $self->insert($table_name, $row_data, @_);
     return unless defined wantarray;
 
@@ -302,6 +312,8 @@ sub insert_and_emulate_row {
     my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
 
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+    local $self->{_context} = $self->dbh;
+
     $row = $self->filter_on_insert($table_name, $row) unless $opt->{no_filter};
 
     $self->insert($table_name, $row, { %$opt, no_filter => 1 });
@@ -604,7 +616,7 @@ sub _guess_table_name {
 
 # --------------------------------------------------
 # last_insert_id
-sub _fetch_last_insert_id_from_mysql { shift->dbh->{mysql_insertid} };
+sub _fetch_last_insert_id_from_mysql { shift->dbh->{mysql_insertid} }
 sub _fetch_last_insert_id_from_pg {
     my ($self, $table_name, $column) = @_;
     my $dbh = $self->dbh;
