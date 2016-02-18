@@ -383,8 +383,16 @@ sub insert_multi {
         }
     }
 
-    my ($sql, @bind) = $self->query_builder->insert_multi($table_name, \@values, $opts);
-    $self->execute($sql, @bind);
+    if ($self->schema->database eq 'MySQL') {
+        my ($sql, @bind) = $self->query_builder->insert_multi($table_name, \@values, $opts);
+        $self->execute($sql, @bind);
+    }
+    else {
+        $self->txn(sub {
+            local $self->{_context} = shift;
+            $self->insert($table_name, $_, $opts) for @values;
+        });
+    }
     return;
 }
 
