@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.88 2016-02-19T08:42:25Z
+
+   - [BUGFIX] fixed `last_insert_id` on MySQL. (`DBIx::Handler#dbh` send a ping to mysql. But, It removes `$dbh->{mysql_insertid}`.)
+
 0.87 2016-02-02T01:33:39Z
 
    - Allow to enable `suppress_(row|result)_objects` on select_by_sql and select_named.
