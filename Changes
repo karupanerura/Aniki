@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.89 2016-02-21T03:17:18Z
+
+   - fixed pod syntax
+
 0.88 2016-02-19T08:42:25Z
 
    - [BUGFIX] fixed `last_insert_id` on MySQL. (`DBIx::Handler#dbh` send a ping to mysql. But, It removes `$dbh->{mysql_insertid}`.)
