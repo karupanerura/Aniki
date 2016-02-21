@@ -215,11 +215,11 @@ Initialize and customize Aniki class.
 #### Arguments
 
 - schema : ClassName
-=item handler : ClassName
-=item filter : ClassName
-=item row : ClassName
-=item result : ClassName
-=item query\_builder : ClassName
+- handler : ClassName
+- filter : ClassName
+- row : ClassName
+- result : ClassName
+- query\_builder : ClassName
 
 ### `use_prepare_cached`
 
@@ -267,7 +267,7 @@ Create instance of Aniki.
     Auguments for [DBI](https://metacpan.org/pod/DBI)'s connect method.
 
 - on\_connect\_do : CodeRef|ArrayRef\[Str\]|Str
-=item on\_disconnect\_do : CodeRef|ArrayRef\[Str\]|Str
+- on\_disconnect\_do : CodeRef|ArrayRef\[Str\]|Str
 
     Execute SQL or CodeRef when connected/disconnected.
 

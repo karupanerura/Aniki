@@ -907,10 +907,15 @@ C<schema> is required. Others are optional.
 =over 4
 
 =item schema : ClassName
+
 =item handler : ClassName
+
 =item filter : ClassName
+
 =item row : ClassName
+
 =item result : ClassName
+
 =item query_builder : ClassName
 
 =back
@@ -963,6 +968,7 @@ If this argument is given, not required to give C<connect_info> for arguments.
 Auguments for L<DBI>'s connect method.
 
 =item on_connect_do : CodeRef|ArrayRef[Str]|Str
+
 =item on_disconnect_do : CodeRef|ArrayRef[Str]|Str
 
 Execute SQL or CodeRef when connected/disconnected.
