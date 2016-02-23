@@ -54,7 +54,7 @@
             "B::Hooks::EndOfScope" : "0",
             "Class::Inspector" : "0",
             "DBI" : "0",
-            "DBIx::Handler" : "0",
+            "DBIx::Handler" : "0.12",
             "DBIx::Schema::DSL" : "0",
             "Data::Page::NoTotalEntries" : "0",
             "Data::Section::Simple" : "0",

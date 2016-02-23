@@ -271,6 +271,16 @@ Create instance of Aniki.
 
     Execute SQL or CodeRef when connected/disconnected.
 
+- trace\_query : Bool
+
+    Enables to inject a caller information as SQL comment.
+    SEE ALSO: [DBIx::Handler](https://metacpan.org/pod/DBIx::Handler)
+
+- trace\_ignore\_if : CodeRef
+
+    Ignore to inject sql comment when trace\_ignore\_if's return value is true.
+    SEE ALSO: [DBIx::Handler](https://metacpan.org/pod/DBIx::Handler)
+
 - `suppress_row_objects : Bool`
 
     If this option is true, no create row objects.
