@@ -16,13 +16,14 @@ use Aniki::QueryBuilder::Canonical;
 our $VERSION = '0.90';
 
 use SQL::Maker::SQLType qw/sql_type/;
-use DBIx::Handler;
 use Class::Inspector;
 use Carp qw/croak confess/;
 use Try::Tiny;
 use Scalar::Util qw/blessed/;
 use String::CamelCase qw/camelize/;
 use SQL::NamedPlaceholder qw/bind_named/;
+
+sub _noop {}
 
 around BUILDARGS => sub {
     my $orig  = shift;
@@ -33,10 +34,14 @@ around BUILDARGS => sub {
         my $connect_info     = delete $args{connect_info} or confess 'Attribute (connect_info) is required';
         my $on_connect_do    = delete $args{on_connect_do};
         my $on_disconnect_do = delete $args{on_disconnect_do};
+        my $trace_query      = delete $args{trace_query} || 0;
+        my $trace_ignore_if  = delete $args{trace_ignore_if} || \&_noop;
         $args{handler} = $class->handler_class->new(
             connect_info     => $connect_info,
             on_connect_do    => $on_connect_do,
             on_disconnect_do => $on_disconnect_do,
+            trace_query      => $trace_query,
+            trace_ignore_if  => $trace_ignore_if,
         );
     }
 
@@ -536,6 +541,8 @@ sub _fetch_by_sth {
 
 sub execute {
     my ($self, $sql, @bind) = @_;
+    $sql = $self->handler->trace_query_set_comment($sql);
+
     my $sth = $self->use_prepare_cached ? $self->dbh->prepare_cached($sql) : $self->dbh->prepare($sql);
     $self->_bind_to_sth($sth, \@bind);
     eval {
@@ -544,6 +551,7 @@ sub execute {
     if ($@) {
         $self->handle_error($sql, \@bind, $@);
     }
+
     return $sth;
 }
 
@@ -972,6 +980,16 @@ Auguments for L<DBI>'s connect method.
 =item on_disconnect_do : CodeRef|ArrayRef[Str]|Str
 
 Execute SQL or CodeRef when connected/disconnected.
+
+=item trace_query : Bool
+
+Enables to inject a caller information as SQL comment.
+SEE ALSO: L<DBIx::Handler>
+
+=item trace_ignore_if : CodeRef
+
+Ignore to inject sql comment when trace_ignore_if's return value is true.
+SEE ALSO: L<DBIx::Handler>
 
 =item C<suppress_row_objects : Bool>
 

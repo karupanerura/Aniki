@@ -65,26 +65,36 @@ sub disconnect {
     $self->SUPER::disconnect();
 }
 
-for my $name (__PACKAGE__->_proxy_methods) {
-    __PACKAGE__->meta->add_around_method_modifier($name => sub {
-        my $orig = shift;
+my %NO_OVERRIDE_PROXY_METHODS = (
+    trace_query_set_comment => 1,
+    in_txn                  => 1,
+);
+
+for my $name (grep { !$NO_OVERRIDE_PROXY_METHODS{$_} } __PACKAGE__->_proxy_methods) {
+    # override
+    __PACKAGE__->meta->add_method($name => sub {
         my $self = shift;
-        my @args = @_;
+        my $wantarray = wantarray;
 
         # context proxy
         my @ret;
-        my $wantarray = wantarray;
-        if (not defined $wantarray) {
-            eval { $self->$orig(@args) };
-        }
-        elsif ($wantarray) {
-            @ret = eval { $self->$orig(@args) };
-        }
-        else {
-            $ret[0] = eval { $self->$orig(@args) };
-        }
+        my $e = do {
+            local $@;
 
-        if (my $e = $@) {
+            if (not defined $wantarray) {
+                eval { $self->handler->$name(@_) };
+            }
+            elsif ($wantarray) {
+                @ret = eval { $self->handler->$name(@_) };
+            }
+            else {
+                $ret[0] = eval { $self->handler->$name(@_) };
+            }
+
+            $@;
+        };
+
+        if ($e) {
             my $key = refaddr($self->connect_info);
             if ($self->is_connect_error($e) && !$self->handler->in_txn) {
                 $self->disconnect;

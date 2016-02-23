@@ -4,7 +4,7 @@ use 5.014002;
 use namespace::sweep;
 use Mouse;
 
-use DBIx::Handler;
+use DBIx::Handler 0.12;
 
 has connect_info => (
     is       => 'ro',
@@ -19,6 +19,16 @@ has on_disconnect_do => (
     is => 'ro',
 );
 
+has trace_query => (
+    is      => 'ro',
+    default => 0,
+);
+
+has trace_ignore_if => (
+    is      => 'ro',
+    default => sub { \&_noop },
+);
+
 has handler => (
     is      => 'rw',
     lazy    => 1,
@@ -26,19 +36,27 @@ has handler => (
     clearer => 'disconnect',
 );
 
+sub _noop {}
+
 sub connect :method {
     my $self = shift;
     my ($dsn, $user, $pass, $attr) = @{ $self->connect_info };
+    my $trace_ignore_if = $self->trace_ignore_if;
     return DBIx::Handler->new($dsn, $user, $pass, $attr, {
         on_connect_do    => $self->on_connect_do,
         on_disconnect_do => $self->on_disconnect_do,
+        trace_query      => $self->trace_query,
+        trace_ignore_if  => sub { $_[0]->isa('Aniki') || $_[0]->isa('Aniki::Handler') || $trace_ignore_if->(@_) },
     });
 }
 
-sub _proxy_methods { qw/dbh run txn_manager txn in_txn txn_scope txn_begin txn_rollback txn_commit/ }
+sub _proxy_methods { qw/dbh trace_query_set_comment run txn_manager txn in_txn txn_scope txn_begin txn_rollback txn_commit/ }
 
 for my $name (__PACKAGE__->_proxy_methods) {
-    __PACKAGE__->meta->add_method($name => sub { shift->handler->$name(@_) });
+    __PACKAGE__->meta->add_method($name => sub {
+        my $handler = $_[0] = $_[0]->handler;
+        goto $handler->can($name);
+    });
 }
 
 sub DEMOLISH {
@@ -142,6 +160,10 @@ You can override it in your custom handler class.
 =item C<on_connect_do : CodeRef|ArrayRef[Str]|Str>
 
 =item C<on_disconnect_do : CodeRef|ArrayRef[Str]|Str>
+
+=item trace_query : Bool
+
+=item trace_ignore_if : CodeRef
 
 =item C<dbh : DBI::db>
 

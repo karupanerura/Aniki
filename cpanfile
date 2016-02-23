@@ -1,7 +1,7 @@
 requires 'B::Hooks::EndOfScope';
 requires 'Class::Inspector';
 requires 'DBI';
-requires 'DBIx::Handler';
+requires 'DBIx::Handler', '0.12';
 requires 'DBIx::Schema::DSL';
 requires 'Data::Page::NoTotalEntries';
 requires 'Data::Section::Simple';
