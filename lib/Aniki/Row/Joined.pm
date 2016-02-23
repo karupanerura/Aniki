@@ -20,7 +20,7 @@ sub can {
     if (ref $invocant) {
         my $self       = $invocant;
         my $table_name = $method;
-        return sub { $self->{$table_name} } if exists $self->{$table_name};
+        return sub { shift->{$table_name} } if exists $self->{$table_name};
     }
 
     return undef; ## no critic
