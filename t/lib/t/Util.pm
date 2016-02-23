@@ -4,17 +4,19 @@ use warnings;
 use feature qw/state/;
 
 use parent qw/Test::Builder::Module/;
-our @EXPORT = qw/db run_on_database run_on_each_databases run_on_all_databases query_count/;
+our @EXPORT = qw/db target_databases run_on_database run_on_each_databases run_on_all_databases query_count/;
 
 use t::DB;
 
 our $DB;
 sub db () { $DB } ## no critic
 
+sub target_databases { $ENV{AUTHOR_TESTING} ? t::DB->all_databases : qw/SQLite/ }
+
 sub run_on_database (&) {## no critic
     my $code = shift;
 
-    my @databases = $ENV{AUTHOR_TESTING} ? t::DB->all_databases : qw/SQLite/;
+    my @databases = target_databases();
     t::DB->run_on_each_databases(\@databases => sub {
         my $class = shift;
         local $DB = $class->new();
