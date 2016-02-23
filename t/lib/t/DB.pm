@@ -63,8 +63,12 @@ sub prepare_testing {
     my ($class, $schema_class) = @_;
     my $ddl = $schema_class->output;
     if ($schema_class->context->db eq 'MySQL') {
-        require DBD::mysql;
-        require Test::mysqld;
+        eval {
+            require DBD::mysql;
+            require Test::mysqld;
+        };
+        t::DB::Exception->throw(message => $@) if $@;
+
         Test::Builder->new->note('launch mysqld ...');
         my $mysqld = Test::mysqld->new(
             my_cnf => {
@@ -89,8 +93,11 @@ sub prepare_testing {
         });
     }
     elsif ($schema_class->context->db eq 'PostgreSQL') {
-        require DBD::Pg;
-        require Test::postgresql;
+        eval {
+            require DBD::Pg;
+            require Test::postgresql;
+        };
+        t::DB::Exception->throw(message => $@) if $@;
 
         Test::Builder->new->note('launch postgresql ...');
         my $pgsql = Test::postgresql->new();
