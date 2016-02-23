@@ -278,7 +278,7 @@ Create instance of Aniki.
 
 - trace\_ignore\_if : CodeRef
 
-    Ignore to inject sql comment when trace\_ignore\_if's return value is true.
+    Ignore to inject the SQL comment when trace\_ignore\_if's return value is true.
     SEE ALSO: [DBIx::Handler](https://metacpan.org/pod/DBIx::Handler)
 
 - `suppress_row_objects : Bool`

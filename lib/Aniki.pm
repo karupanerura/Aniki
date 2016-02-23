@@ -988,7 +988,7 @@ SEE ALSO: L<DBIx::Handler>
 
 =item trace_ignore_if : CodeRef
 
-Ignore to inject sql comment when trace_ignore_if's return value is true.
+Ignore to inject the SQL comment when trace_ignore_if's return value is true.
 SEE ALSO: L<DBIx::Handler>
 
 =item C<suppress_row_objects : Bool>
