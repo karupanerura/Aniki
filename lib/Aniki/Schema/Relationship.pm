@@ -48,12 +48,9 @@ has name => (
     default  => \&_guess_name,
 );
 
-has _fetcher => (
+has fetcher => (
     is      => 'ro',
-    default => sub {
-        fieldhash my %cache;
-        return \%cache
-    },
+    default => sub { Aniki::Schema::Relationship::Fetcher->new(relationship => $_[0]) },
 );
 
 sub _guess_name {
@@ -77,12 +74,6 @@ sub _to_plural {
     my $sep = join '|', map quotemeta, @WORD_SEPARATORS;
     return $words =~ s/(?<=$sep)(.+?)$/PL($1)/er if $words =~ /$sep/;
     return PL($words);
-}
-
-sub fetcher {
-    my ($self, $handler) = @_;
-    return $self->_fetcher->{$handler} if exists $self->_fetcher->{$handler};
-    return $self->_fetcher->{$handler} = Aniki::Schema::Relationship::Fetcher->new(relationship => $self, handler => $handler);
 }
 
 sub get_inverse_relationships {

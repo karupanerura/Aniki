@@ -461,7 +461,7 @@ sub _fetch_and_attach_relay_data {
     unless ($relationship) {
         croak "'$key' is not defined as relationship. (maybe possible typo?)";
     }
-    $relationship->fetcher($self)->execute($rows, $prefetch);
+    $relationship->fetcher->execute($self, $rows, $prefetch);
 }
 
 sub select_named {

@@ -4,12 +4,6 @@ use 5.014002;
 use namespace::sweep;
 use Mouse v2.4.5;
 
-has handler => (
-    is       => 'ro',
-    weak_ref => 1,
-    required => 1,
-);
-
 has relationship => (
     is       => 'ro',
     weak_ref => 1,
@@ -21,7 +15,7 @@ use List::UtilsBy qw/partition_by/;
 use SQL::QueryMaker;
 
 sub execute {
-    my ($self, $rows, $prefetch) = @_;
+    my ($self, $handler, $rows, $prefetch) = @_;
     return unless @$rows;
 
     my $relationship = $self->relationship;
@@ -35,7 +29,7 @@ sub execute {
         my $src_column  = $src_columns[0];
         my $dest_column = $dest_columns[0];
 
-        my @related_rows = $self->handler->select($table_name => {
+        my @related_rows = $handler->select($table_name => {
             $dest_column => sql_in([grep defined, map { $_->get_column($src_column) } @$rows])
         }, { prefetch => $prefetch })->all;
 
@@ -52,7 +46,6 @@ sub execute {
     }
     else {
         # follow slow case...
-        my $handler = $self->handler;
         for my $row (@$rows) {
             next if notall { defined $row->get_column($_) } @src_columns;
             my @related_rows = $handler->select($table_name => {
