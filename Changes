@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.91 2016-02-23T06:24:26Z
+
+   - support `trace_query` option
+
 0.90 2016-02-23T02:11:26Z
 
    - follow unique indices for `has_many`
