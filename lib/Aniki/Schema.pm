@@ -61,6 +61,11 @@ sub has_many {
         my @related_fields = grep { $field{$_} } @field_names;
         return !!0 if @field_names == @related_fields;
     }
+    for my $index (grep { $_->type eq UNIQUE } $table->get_indices) {
+        my @field_names    = $index->fields;
+        my @related_fields = grep { $field{$_} } @field_names;
+        return !!0 if @field_names == @related_fields;
+    }
     return !!1;
 }
 
