@@ -18,6 +18,20 @@ sub execute {
     my ($self, $handler, $rows, $prefetch) = @_;
     return unless @$rows;
 
+    my %where;
+    if (ref $prefetch eq 'HASH') {
+        my %prefetch;
+        for my $key (keys %$prefetch) {
+            if ($key =~ s/^\.//) {
+                $where{$key} = $prefetch->{$key};
+            }
+            else {
+                $prefetch{$key} = $prefetch->{$key};
+            }
+        }
+        $prefetch = \%prefetch;
+    }
+
     my $relationship = $self->relationship;
     my $name         = $relationship->name;
     my $table_name   = $relationship->dest_table_name;
@@ -30,7 +44,8 @@ sub execute {
         my $dest_column = $dest_columns[0];
 
         my @related_rows = $handler->select($table_name => {
-            $dest_column => sql_in([grep defined, map { $_->get_column($src_column) } @$rows])
+            %where,
+            $dest_column => sql_in([grep defined, map { $_->get_column($src_column) } @$rows]),
         }, { prefetch => $prefetch })->all;
 
         my %related_rows_map = partition_by { $_->get_column($dest_column) } @related_rows;
@@ -49,6 +64,7 @@ sub execute {
         for my $row (@$rows) {
             next if notall { defined $row->get_column($_) } @src_columns;
             my @related_rows = $handler->select($table_name => {
+                %where,
                 pairwise { $a => $row->get_column($b) } @dest_columns, @src_columns
             }, { prefetch => $prefetch })->all;
             $row->relay_data->{$name} = $has_many ? \@related_rows : $related_rows[0];
