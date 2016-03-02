@@ -69,11 +69,11 @@ sub _execute_inverse {
 
         my $src_keygen = sub {
             my $src_row = shift;
-            return join '|', map { quotemeta $src_row->get_column($_) } @src_columns;
+            return join '|', map { defined $_ ? quotemeta $_ : '(NULL)' } map { $src_row->get_column($_) } @src_columns;
         };
         my $dest_keygen = sub {
             my $dest_row = shift;
-            return join '|', map { quotemeta $dest_row->get_column($_) } @dest_columns;
+            return join '|', map { defined $_ ? quotemeta $_ : '(NULL)' } map { $dest_row->get_column($_) } @dest_columns;
         };
 
         my %dest_rows_map = partition_by { $dest_keygen->($_) } @$dest_rows;
