@@ -36,6 +36,50 @@ sub _inflate {
     ];
 }
 
+sub sort :method {
+    my ($self, $callback) = @_;
+    if ($self->suppress_row_objects) {
+        @{ $self->row_datas } = sort { &{$callback} } @{ $self->row_datas };
+    }
+    else {
+        @{ $self->inflated_rows } = sort { &{$callback} } @{ $self->inflated_rows };
+    }
+    return $self;
+}
+
+sub grep :method {
+    my ($self, $callback) = @_;
+    if ($self->suppress_row_objects) {
+        @{ $self->row_datas } = grep { &{$callback} } @{ $self->row_datas };
+    }
+    else {
+        @{ $self->inflated_rows } = grep { &{$callback} } @{ $self->inflated_rows };
+    }
+    return $self;
+}
+
+sub limit {
+    my ($self, $limit) = @_;
+    my $edge = $#{ $self->row_datas };
+    splice @{ $self->row_datas }, $limit, $edge;
+    return $self if $self->suppress_row_objects || not exists $self->{inflated_rows};
+    splice @{ $self->inflated_rows }, $limit, $edge;
+    return $self;
+}
+
+sub offset {
+    my ($self, $offset) = @_;
+    splice @{ $self->row_datas }, 0, $offset - 1;
+    return $self if $self->suppress_row_objects || not exists $self->{inflated_rows};
+    splice @{ $self->inflated_rows }, 0, $offset - 1;
+    return $self;
+}
+
+sub prefetch {
+    my ($self, @prefetch) = @_;
+    $self->handler->fetch_and_attach_relay_data($self->table_name, \@prefetch, $self->inflated_rows);
+}
+
 sub rows {
     my $self = shift;
     return $self->suppress_row_objects ? $self->row_datas : $self->inflated_rows;
@@ -90,6 +134,10 @@ Returns last row.
 =head2 C<all()>
 
 Returns rows as array.
+
+=head2 C<prefetch(@prefetch)>
+
+Pre-fetch related rows by rows of collection.
 
 =head1 ACCESSORS
 

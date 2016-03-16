@@ -48,6 +48,14 @@ sub row_classes {
     return map { $self->handler->guess_row_class($_) } @{ $self->table_names };
 }
 
+sub prefetch {
+    my ($self, %prefetch) = @_;
+    for my $table_name (keys %prefetch) {
+        my $prefetch = $prefetch{$table_name};
+        $self->handler->fetch_and_attach_relay_data($table_name, $prefetch, $self->subresult($table_name)->inflated_rows);
+    }
+}
+
 sub rows {
     my $self = shift;
     if (@_ == 1) {
