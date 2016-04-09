@@ -24,7 +24,7 @@ run_on_database {
     );
 
     db->insert_multi(version => [map {
-        +{ name => '0.01', module_id => $_ }
+        +{ name => '0.01', module_id => $_ },
     } @moznion_module_ids, @karupa_module_ids]);
 
     subtest 'shallow' => sub {
@@ -157,6 +157,39 @@ run_on_database {
             };
             is $queries, 9;
         };
+    };
+
+    db->insert_multi(version => [map {
+        +{ name => '0.02', module_id => $_ },
+    } @moznion_module_ids, @karupa_module_ids]);
+
+    subtest 'extra where conditions' => sub {
+        my $queries = query_count {
+            my $rows = db->select(author => {}, { prefetch => { modules => { versions => { '.name' => '0.02' } } } });
+            isa_ok $rows, 'Aniki::Result::Collection';
+            is $rows->count, 2;
+
+            my %modules = map {
+                $_->name => +{
+                    map {
+                        $_->name => [map { $_->name } $_->versions],
+                    } $_->modules
+                }
+            } $rows->all;
+            is_deeply \%modules, {
+                MOZNION => +{
+                    'Perl::Lint'             => ['0.02'],
+                    'Regexp::Lexer'          => ['0.02'],
+                    'Test::JsonAPI::Autodoc' => ['0.02'],
+                },
+                KARUPA  => {
+                    'Plack::App::Vhost'  => ['0.02'],
+                    'TOML::Parser'       => ['0.02'],
+                    'Test::SharedObject' => ['0.02'],
+                },
+            } or diag explain \%modules;
+        };
+        is $queries, 3;
     };
 };
 
