@@ -22,8 +22,9 @@ sub execute {
     if (ref $prefetch eq 'HASH') {
         my %prefetch;
         for my $key (keys %$prefetch) {
-            if ($key =~ s/^\.//) {
-                $where{$key} = $prefetch->{$key};
+            if ($key =~ /^\./) {
+                my $column = $key =~ s/^\.//r;
+                $where{$column} = $prefetch->{$key};
             }
             else {
                 $prefetch{$key} = $prefetch->{$key};
