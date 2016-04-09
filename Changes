@@ -2,6 +2,11 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.93 2016-04-09T03:22:49Z
+
+   - set empty value if not found reletad rows for preformance
+   - [EXPERIMENTAL] allows extra where condition with prefetch
+
 0.92 2016-03-02T03:29:01Z
 
    - follow the null values in relationship

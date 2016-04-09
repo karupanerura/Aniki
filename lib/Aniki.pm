@@ -13,7 +13,7 @@ use Aniki::Schema;
 use Aniki::QueryBuilder;
 use Aniki::QueryBuilder::Canonical;
 
-our $VERSION = '0.92';
+our $VERSION = '0.93';
 
 use SQL::Maker::SQLType qw/sql_type/;
 use Class::Inspector;
