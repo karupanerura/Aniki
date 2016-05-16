@@ -12,6 +12,7 @@ has relationship => (
 
 use List::MoreUtils qw/pairwise notall/;
 use List::UtilsBy qw/partition_by/;
+use Scalar::Util qw/weaken/;
 use SQL::QueryMaker;
 
 sub execute {
@@ -111,6 +112,7 @@ sub _execute_inverse {
             next if notall { defined $src_row->get_column($_) } @src_columns;
             my $dest_rows = $dest_rows_map{$src_keygen->($src_row)};
             $src_row->relay_data->{$name} = $has_many ? $dest_rows : $dest_rows->[0];
+            weaken($src_row->relay_data->{$name});
         }
     }
 }
