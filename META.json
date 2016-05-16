@@ -112,10 +112,11 @@
          "web" : "https://github.com/karupanerura/Aniki"
       }
    },
-   "version" : "0.93",
+   "version" : "0.94",
    "x_authority" : "cpan:KARUPA",
    "x_contributors" : [
-      "Syohei YOSHIDA <syohex@gmail.com>"
+      "Syohei YOSHIDA <syohex@gmail.com>",
+      "Pine Mizune <pinemz@gmail.com>"
    ],
    "x_serialization_backend" : "JSON::PP version 2.27300"
 }

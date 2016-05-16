@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+0.94 2016-05-16T09:22:14Z
+
+   - fixed circular reference problem
+
 0.93 2016-04-09T03:22:49Z
 
    - set empty value if not found reletad rows for preformance
