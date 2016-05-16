@@ -42,7 +42,7 @@ sub connect :method {
     my $self = shift;
     my ($dsn, $user, $pass, $attr) = @{ $self->connect_info };
     my $trace_ignore_if = $self->trace_ignore_if;
-    return DBIx::Handler->new($dsn, $user, $pass, $attr, {
+    return $self->_handler_class->new($dsn, $user, $pass, $attr, {
         on_connect_do    => $self->on_connect_do,
         on_disconnect_do => $self->on_disconnect_do,
         trace_query      => $self->trace_query,
@@ -50,12 +50,14 @@ sub connect :method {
     });
 }
 
+sub _handler_class { 'DBIx::Handler' }
 sub _proxy_methods { qw/dbh trace_query_set_comment run txn_manager txn in_txn txn_scope txn_begin txn_rollback txn_commit/ }
 
 for my $name (__PACKAGE__->_proxy_methods) {
+    my $code = __PACKAGE__->_handler_class->can($name);
     __PACKAGE__->meta->add_method($name => sub {
-        my $handler = $_[0] = $_[0]->handler;
-        goto $handler->can($name);
+        @_ = (shift->handler, @_);
+        goto $code;
     });
 }
 
