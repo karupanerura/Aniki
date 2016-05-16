@@ -488,7 +488,7 @@ sub select_by_sql {
 
     my $prefetch_enabled_fg = @$prefetch && !$self->suppress_row_objects;
     if ($prefetch_enabled_fg) {
-        my $txn; $txn = $self->txn_scope unless $self->in_txn;
+        my $txn; $txn = $self->txn_scope(caller => [caller]) unless $self->in_txn;
 
         my $sth = $self->execute($sql, @$bind);
         my $result = $self->_fetch_by_sth($sth, $table_name, $columns);
