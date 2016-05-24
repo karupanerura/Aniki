@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+1.00 2016-05-24T05:10:36Z
+
+   - no execute any query if empty values is passed to insert_multi
+
 0.94 2016-05-16T09:22:14Z
 
    - fixed circular reference problem
