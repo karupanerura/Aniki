@@ -370,6 +370,8 @@ sub insert_on_duplicate {
 
 sub insert_multi {
     my ($self, $table_name, $values, $opts) = @_;
+    return unless @$values;
+
     $opts = defined $opts ? {%$opts} : {};
 
     my @values = map { $self->filter_on_insert($table_name, $_) } @$values;
