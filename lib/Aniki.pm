@@ -241,6 +241,8 @@ sub update {
     }
     else {
         my ($table_name, $row, $where) = @_;
+        croak '(Aniki#update) `where` condition must be a reference.' unless ref $where;
+
         $row = $self->filter_on_update($table_name, $row);
 
         my $table = $self->schema->get_table($table_name);
@@ -262,6 +264,7 @@ sub delete :method {
     }
     else {
         my ($table_name, $where, $opt) = @_;
+        croak '(Aniki#delete) `where` condition must be a reference.' unless ref $where;
 
         my $table = $self->schema->get_table($table_name);
         if ($table) {
@@ -423,7 +426,10 @@ my $WILDCARD_COLUMNS = ['*'];
 
 sub select :method {
     my ($self, $table_name, $where, $opt) = @_;
+    $where //= {};
     $opt //= {};
+
+    croak '(Aniki#select) `where` condition must be a reference.' unless ref $where;
 
     my $table = $self->schema->get_table($table_name);
 

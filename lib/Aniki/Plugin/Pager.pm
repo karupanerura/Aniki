@@ -4,12 +4,17 @@ use 5.014002;
 use namespace::sweep;
 use Mouse::Role;
 
+use Carp qw/croak/;
+
 requires qw/select/;
 with qw/Aniki::Plugin::PagerInjector/;
 
 sub select_with_pager {
     my ($self, $table_name, $where, $opt) = @_;
+    $where //= {};
     $opt //= {};
+
+    croak '(Aniki::Plugin::Pager#select_with_pager) `where` condition must be a reference.' unless ref $where;
 
     my $page = $opt->{page} or Carp::croak("required parameter: page");
     my $rows = $opt->{rows} or Carp::croak("required parameter: rows");
