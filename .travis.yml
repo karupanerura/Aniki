@@ -17,4 +17,6 @@ before_install:
 script:
   - perl Build.PL
   - ./Build build
-  - cover -test -report codecov
+  - cover -test
+after_success:
+  - cover -report codecov

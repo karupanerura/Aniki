@@ -13,6 +13,7 @@ Aniki::QueryBuilder->load_plugin('JoinSelect');
 
 sub select_joined {
     my ($self, $base_table, $join_conditions, $where, $opt) = @_;
+    croak '(Aniki::Plugin::SelectJoined#select_joined) `where` condition must be a reference.' unless ref $where;
 
     my @table_names = ($base_table);
     for (my $i = 0; my $table = $join_conditions->[$i]; $i += 2) {

@@ -5,6 +5,7 @@ extends qw/Aniki/;
 
 use Test::Builder;
 use t::DB::Exception;
+use List::Util qw/shuffle/;
 
 my %CONFIG = (
     schema   => 't::DB::Schema::%s',
@@ -12,7 +13,7 @@ my %CONFIG = (
     row      => 't::DB::Row',
 );
 
-sub all_databases { qw/SQLite MySQL PostgreSQL/ }
+sub all_databases { shuffle qw/SQLite MySQL PostgreSQL/ }
 
 sub run_on_all_databases {
     my $class = shift;
