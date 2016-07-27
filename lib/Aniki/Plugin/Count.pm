@@ -4,14 +4,19 @@ use 5.014002;
 use namespace::sweep;
 use Mouse::Role;
 
+use Carp qw/croak/;
+
 requires qw/query_builder dbh/;
 
 sub count {
     my ($self, $table, $column, $where, $opt) = @_;
+    $where //= {};
     $column //= '*';
 
+    croak '(Aniki::Plugin::Count#count) `where` condition must be a reference.' unless ref $where;
+
     if (ref $column) {
-        Carp::croak('Do not pass HashRef/ArrayRef to second argument. Usage: $db->count($table[, $column[, $where[, $opt]]])');
+        croak 'Do not pass HashRef/ArrayRef to second argument. Usage: $db->count($table[, $column[, $where[, $opt]]])';
     }
 
     my ($sql, @binds) = $self->query_builder->select($table, [\"COUNT($column)"], $where, $opt);

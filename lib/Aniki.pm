@@ -13,7 +13,7 @@ use Aniki::Schema;
 use Aniki::QueryBuilder;
 use Aniki::QueryBuilder::Canonical;
 
-our $VERSION = '0.92';
+our $VERSION = '1.00';
 
 use SQL::Maker::SQLType qw/sql_type/;
 use Class::Inspector;
@@ -241,6 +241,8 @@ sub update {
     }
     else {
         my ($table_name, $row, $where) = @_;
+        croak '(Aniki#update) `where` condition must be a reference.' unless ref $where;
+
         $row = $self->filter_on_update($table_name, $row);
 
         my $table = $self->schema->get_table($table_name);
@@ -262,6 +264,7 @@ sub delete :method {
     }
     else {
         my ($table_name, $where, $opt) = @_;
+        croak '(Aniki#delete) `where` condition must be a reference.' unless ref $where;
 
         my $table = $self->schema->get_table($table_name);
         if ($table) {
@@ -370,6 +373,8 @@ sub insert_on_duplicate {
 
 sub insert_multi {
     my ($self, $table_name, $values, $opts) = @_;
+    return unless @$values;
+
     $opts = defined $opts ? {%$opts} : {};
 
     my @values = map { $self->filter_on_insert($table_name, $_) } @$values;
@@ -421,7 +426,10 @@ my $WILDCARD_COLUMNS = ['*'];
 
 sub select :method {
     my ($self, $table_name, $where, $opt) = @_;
+    $where //= {};
     $opt //= {};
+
+    croak '(Aniki#select) `where` condition must be a reference.' unless ref $where;
 
     my $table = $self->schema->get_table($table_name);
 
@@ -488,7 +496,7 @@ sub select_by_sql {
 
     my $prefetch_enabled_fg = @$prefetch && !$self->suppress_row_objects;
     if ($prefetch_enabled_fg) {
-        my $txn; $txn = $self->txn_scope unless $self->in_txn;
+        my $txn; $txn = $self->txn_scope(caller => [caller]) unless $self->in_txn;
 
         my $sth = $self->execute($sql, @$bind);
         my $result = $self->_fetch_by_sth($sth, $table_name, $columns);

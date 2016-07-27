@@ -6,7 +6,6 @@ use Mouse;
 extends qw/Aniki::Handler/;
 
 use DBI ();
-use DBIx::Handler;
 use Data::WeightedRoundRobin;
 use Scalar::Util qw/refaddr/;
 
