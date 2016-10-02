@@ -63,6 +63,11 @@ has suppress_result_objects => (
     default => 0,
 );
 
+has enable_deflate_where_cond => (
+    is      => 'rw',
+    default => 0,
+);
+
 sub _database2driver {
     my ($class, $database) = @_;
     state $map = {
@@ -249,6 +254,7 @@ sub update {
         if ($table) {
             $row   = $self->_bind_sql_type_to_args($table, $row);
             $where = $self->_bind_sql_type_to_args($table, $where);
+            $where = $self->_deflate_where_cond($table, $where);
         }
 
         my ($sql, @bind) = $self->query_builder->update($table_name, $row, $where);
@@ -269,6 +275,7 @@ sub delete :method {
         my $table = $self->schema->get_table($table_name);
         if ($table) {
             $where = $self->_bind_sql_type_to_args($table, $where);
+            $where = $self->_deflate_where_cond($table, $where);
         }
 
         my ($sql, @bind) = $self->query_builder->delete($table_name, $where, $opt);
@@ -438,6 +445,7 @@ sub select :method {
                 : $WILDCARD_COLUMNS;
 
     $where = $self->_bind_sql_type_to_args($table, $where) if defined $table;
+    $where = $self->_deflate_where_cond($table, $where)    if defined $table;
 
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
     my ($sql, @bind) = $self->query_builder->select($table_name, $columns, $where, $opt);
@@ -582,6 +590,87 @@ sub _bind_sql_type_to_args {
     }
 
     return \%bind_args;
+}
+
+{
+    # TODO: pull-req
+    use SQL::QueryMaker;
+
+    {
+        my $super = \&SQL::QueryMaker::_new;
+        no warnings qw/redefine/;
+        *SQL::QueryMaker::_new = sub {
+            use warnings qw/redefine/;
+            my $self = $super->(@_);
+            $self->{bind_filters} = [];
+            return $self;
+        }
+    }
+    sub SQL::QueryMaker::add_bind_filter {
+        my ($self, $cb) = @_;
+        push @{$self->{bind_filters}} => $cb;
+    }
+
+    {
+        my $super = \&SQL::QueryMaker::bind;
+        no warnings qw/redefine/;
+        *SQL::QueryMaker::bind = sub {
+            use warnings qw/redefine/;
+            my $self = shift;
+            my @bind = $self->$super(@_);
+            for my $cb (@{ $self->{bind_filters} }) {
+                @bind = $cb->(@bind);
+            }
+            return @bind;
+        }
+    }
+}
+
+sub _deflate_where_cond {
+    my ($self, $table, $where) = @_;
+    return $where unless $self->enable_deflate_where_cond;
+    unless ($self->use_strict_query_builder) {
+        warn q{Cannot effect `enable_deflate_where_cond` option when disabled `use_strict_query_builder`};
+        return $where;
+    }
+
+    return $where unless $where;
+
+    if (ref $where eq 'ARRAY') {
+        my @where;
+        for (my $i = 0; $i < $#{$where}; $i += 2) {
+            my $column = $where->[$i];
+            my $value  = $where->[$i+1];
+            $value = $self->_deflate_where_column($table->name, $column, $value);;
+            push @where => $column, $value;
+        }
+        return \@where;
+    }
+    elsif (ref $where eq 'HASH') {
+        my %where;
+        for my $column (keys %$where) {
+            my $value = $where->{$column};
+            $value = $self->_deflate_where_column($table->name, $column, $value);
+            $where{$column} = $value;
+        }
+        return \%where;
+    }
+
+    die "Unknown where cond: $where (@{[ ref $where ]})";
+}
+
+sub _deflate_where_column {
+    my ($self, $table_name, $column, $value) = @_;
+
+    if (ref $value eq 'SQL::QueryMaker') {
+        my $query = $value;
+        $query->add_bind_filter(sub {
+            map { scalar $self->filter->deflate_column($table_name, $column, $_) } @_
+        });
+        return $query;
+    }
+
+    return $self->filter->deflate_column($table_name, $column, $value);
 }
 
 sub _bind_to_sth {
