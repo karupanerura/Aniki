@@ -494,7 +494,7 @@ sub select_by_sql {
     my $prefetch   = exists $opt->{prefetch}    ? $opt->{prefetch}      : [];
        $prefetch   = [$prefetch] if ref $prefetch eq 'HASH';
 
-    my $prefetch_enabled_fg = @$prefetch && !$self->suppress_row_objects;
+    my $prefetch_enabled_fg = @$prefetch && !$self->suppress_row_objects && defined wantarray;
     if ($prefetch_enabled_fg) {
         my $txn; $txn = $self->txn_scope(caller => [caller]) unless $self->in_txn;
 
@@ -505,10 +505,17 @@ sub select_by_sql {
         $txn->rollback if defined $txn; ## for read only
         return $result;
     }
-    else {
-        my $sth = $self->execute($sql, @$bind);
-        return $self->_fetch_by_sth($sth, $table_name, $columns);
+
+    my $sth = $self->execute($sql, @$bind);
+
+    # When the return value is never used, should not create object
+    # case example: use `FOR UPDATE` query for global locking
+    unless (defined wantarray) {
+        $sth->finish();
+        return;
     }
+
+    return $self->_fetch_by_sth($sth, $table_name, $columns);
 }
 
 sub _fetch_by_sth {
