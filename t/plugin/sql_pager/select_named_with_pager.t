@@ -34,6 +34,16 @@ run_on_database {
     isa_ok $rows->pager, 'Data::Page::NoTotalEntries';
     is $rows->pager->current_page, 2;
     ok !$rows->pager->has_next;
+
+    $rows = db->select_named_with_pager('SELECT * FROM author WHERE id > :id ORDER BY id', { id => 2 }, { rows => 2, page => 2, no_offset => 1 });
+    isa_ok $rows, 'Aniki::Result::Collection';
+    ok $rows->meta->does_role('Aniki::Result::Role::Pager');
+    is $rows->count, 1;
+    is $rows->first->id, 3;
+
+    isa_ok $rows->pager, 'Data::Page::NoTotalEntries';
+    is $rows->pager->current_page, 2;
+    ok !$rows->pager->has_next;
 };
 
 done_testing();
