@@ -1,108 +1,110 @@
-[![Build Status](https://travis-ci.org/karupanerura/Aniki.svg?branch=master)](https://travis-ci.org/karupanerura/Aniki) [![Coverage Status](http://codecov.io/github/karupanerura/Aniki/coverage.svg?branch=master)](https://codecov.io/github/karupanerura/Aniki?branch=master)
+[![Build Status](https://travis-ci.org/karupanerura/Aniki.svg?branch=master)](https://travis-ci.org/karupanerura/Aniki) [![Coverage Status](http://codecov.io/github/karupanerura/Aniki/coverage.svg?branch=master)](https://codecov.io/github/karupanerura/Aniki?branch=master) [![MetaCPAN Release](https://badge.fury.io/pl/Aniki.svg)](https://metacpan.org/release/Aniki)
 # NAME
 
 Aniki - The ORM as our great brother.
 
 # SYNOPSIS
 
-    use 5.014002;
-    package MyProj::DB::Schema {
-        use DBIx::Schema::DSL;
+```perl
+use 5.014002;
+package MyProj::DB::Schema {
+    use DBIx::Schema::DSL;
 
-        create_table 'module' => columns {
-            integer 'id', primary_key, auto_increment;
-            varchar 'name';
-            integer 'author_id';
+    create_table 'module' => columns {
+        integer 'id', primary_key, auto_increment;
+        varchar 'name';
+        integer 'author_id';
 
-            add_index 'author_id_idx' => ['author_id'];
+        add_index 'author_id_idx' => ['author_id'];
 
-            belongs_to 'author';
+        belongs_to 'author';
+    };
+
+    create_table 'author' => columns {
+        integer 'id', primary_key, auto_increment;
+        varchar 'name', unique;
+    };
+};
+
+package MyProj::DB::Filter {
+    use Aniki::Filter::Declare;
+    use Scalar::Util qw/blessed/;
+    use Time::Moment;
+
+    # define inflate/deflate filters in table context.
+    table author => sub {
+        inflate name => sub {
+            my $name = shift;
+            return uc $name;
         };
 
-        create_table 'author' => columns {
-            integer 'id', primary_key, auto_increment;
-            varchar 'name', unique;
+        deflate name => sub {
+            my $name = shift;
+            return lc $name;
         };
     };
 
-    package MyProj::DB::Filter {
-        use Aniki::Filter::Declare;
-        use Scalar::Util qw/blessed/;
-        use Time::Moment;
-
-        # define inflate/deflate filters in table context.
-        table author => sub {
-            inflate name => sub {
-                my $name = shift;
-                return uc $name;
-            };
-
-            deflate name => sub {
-                my $name = shift;
-                return lc $name;
-            };
-        };
-
-        inflate qr/_at$/ => sub {
-            my $datetime = shift;
-            $datetime =~ tr/ /T/;
-            $datetime .= 'Z';
-            return Time::Moment->from_string($datetime);
-        };
-
-        deflate qr/_at$/ => sub {
-            my $datetime = shift;
-            return $datetime->at_utc->strftime('%F %T') if blessed $datetime and $datetime->isa('Time::Moment');
-            return $datetime;
-        };
+    inflate qr/_at$/ => sub {
+        my $datetime = shift;
+        $datetime =~ tr/ /T/;
+        $datetime .= 'Z';
+        return Time::Moment->from_string($datetime);
     };
 
-    package MyProj::DB {
-        use Mouse v2.4.5;
-        extends qw/Aniki/;
-
-        __PACKAGE__->setup(
-            schema => 'MyProj::DB::Schema',
-            filter => 'MyProj::DB::Filter',
-            row    => 'MyProj::DB::Row',
-        );
+    deflate qr/_at$/ => sub {
+        my $datetime = shift;
+        return $datetime->at_utc->strftime('%F %T') if blessed $datetime and $datetime->isa('Time::Moment');
+        return $datetime;
     };
+};
 
-    package main {
-        my $db = MyProj::DB->new(connect_info => ["dbi:SQLite:dbname=:memory:", "", ""]);
-        $db->execute($_) for split /;/, MyProj::DB::Schema->output;
+package MyProj::DB {
+    use Mouse v2.4.5;
+    extends qw/Aniki/;
 
-        my $author_id = $db->insert_and_fetch_id(author => { name => 'songmu' });
+    __PACKAGE__->setup(
+        schema => 'MyProj::DB::Schema',
+        filter => 'MyProj::DB::Filter',
+        row    => 'MyProj::DB::Row',
+    );
+};
 
-        $db->insert(module => {
-            name      => 'DBIx::Schema::DSL',
-            author_id => $author_id,
-        });
-        $db->insert(module => {
-            name      => 'Riji',
-            author_id => $author_id,
-        });
+package main {
+    my $db = MyProj::DB->new(connect_info => ["dbi:SQLite:dbname=:memory:", "", ""]);
+    $db->execute($_) for split /;/, MyProj::DB::Schema->output;
 
-        my $module = $db->select(module => {
-            name => 'Riji',
-        }, {
-            limit => 1,
-        })->first;
-        say '$module->name:         ', $module->name;         ## Riji
-        say '$module->author->name: ', $module->author->name; ## SONGMU
+    my $author_id = $db->insert_and_fetch_id(author => { name => 'songmu' });
 
-        my $author = $db->select(author => {
-            name => 'songmu',
-        }, {
-            limit    => 1,
-            prefetch => [qw/modules/],
-        })->first;
+    $db->insert(module => {
+        name      => 'DBIx::Schema::DSL',
+        author_id => $author_id,
+    });
+    $db->insert(module => {
+        name      => 'Riji',
+        author_id => $author_id,
+    });
 
-        say '$author->name:   ', $author->name;                 ## SONGMU
-        say 'modules[]->name: ', $_->name for $author->modules; ## DBIx::Schema::DSL, Riji
-    };
+    my $module = $db->select(module => {
+        name => 'Riji',
+    }, {
+        limit => 1,
+    })->first;
+    say '$module->name:         ', $module->name;         ## Riji
+    say '$module->author->name: ', $module->author->name; ## SONGMU
 
-    1;
+    my $author = $db->select(author => {
+        name => 'songmu',
+    }, {
+        limit    => 1,
+        prefetch => [qw/modules/],
+    })->first;
+
+    say '$author->name:   ', $author->name;                 ## SONGMU
+    say 'modules[]->name: ', $_->name for $author->modules; ## DBIx::Schema::DSL, Riji
+};
+
+1;
+```
 
 # DESCRIPTION
 
@@ -154,52 +156,64 @@ Extracts relationship from schema class.
 
 Example:
 
-    use 5.014002;
-    package MyProj::DB::Schema {
-        use DBIx::Schema::DSL;
+```perl
+use 5.014002;
+package MyProj::DB::Schema {
+    use DBIx::Schema::DSL;
 
-        create_table 'module' => columns {
-            integer 'id', primary_key, auto_increment;
-            varchar 'name';
-            integer 'author_id';
+    create_table 'module' => columns {
+        integer 'id', primary_key, auto_increment;
+        varchar 'name';
+        integer 'author_id';
 
-            add_index 'author_id_idx' => ['author_id'];
+        add_index 'author_id_idx' => ['author_id'];
 
-            belongs_to 'author';
-        };
-
-        create_table 'author' => columns {
-            integer 'id', primary_key, auto_increment;
-            varchar 'name', unique;
-        };
+        belongs_to 'author';
     };
+
+    create_table 'author' => columns {
+        integer 'id', primary_key, auto_increment;
+        varchar 'name', unique;
+    };
+};
+```
 
 A `author` has many `modules`.
 So you can access `author` row object to `modules`.
 
-    my $author = $db->select(author => { name => 'songmu' })->first;
-    say 'modules[]->name: ', $_->name for $author->modules; ## DBIx::Schema::DSL, Riji
+```perl
+my $author = $db->select(author => { name => 'songmu' })->first;
+say 'modules[]->name: ', $_->name for $author->modules; ## DBIx::Schema::DSL, Riji
+```
 
 Also `module` has a `author`.
 So you can access `module` row object to `author` also.
 
-    my $module = $db->select(module => { name => 'Riji' })->first;
-    say "Riji's author is ", $module->author->name; ## SONGMU
+```perl
+my $module = $db->select(module => { name => 'Riji' })->first;
+say "Riji's author is ", $module->author->name; ## SONGMU
+```
 
 And you can pre-fetch related rows.
 
-    my @modules = $db->select(module => {}, { prefetch => [qw/author/] });
-    say $_->name, "'s author is ", $_->author->name for @modules;
+```perl
+my @modules = $db->select(module => {}, { prefetch => [qw/author/] });
+say $_->name, "'s author is ", $_->author->name for @modules;
+```
 
 # SETUP
 
 Install Aniki from CPAN:
 
-    cpanm Aniki
+```
+cpanm Aniki
+```
 
 And run `install-aniki` command.
 
-    install-aniki --lib=./lib MyApp::DB
+```
+install-aniki --lib=./lib MyApp::DB
+```
 
 `install-aniki` creates skeleton modules.
 
@@ -297,9 +311,11 @@ Create instance of Aniki.
 
 Execute `SELECT` query by generated SQL, and returns result object.
 
-    my $result = $db->select(foo => { id => 1 }, { limit => 1 });
-    # stmt: SELECT FROM foo WHERE id = ? LIMIT 1
-    # bind: [1]
+```perl
+my $result = $db->select(foo => { id => 1 }, { limit => 1 });
+# stmt: SELECT FROM foo WHERE id = ? LIMIT 1
+# bind: [1]
+```
 
 #### Options
 
@@ -333,9 +349,11 @@ And you can use there options:
 
 Execute `SELECT` query by specified SQL, and returns result object.
 
-    my $result = $db->select_by_sql('SELECT FROM foo WHERE id = ? LIMIT 1', [1]);
-    # stmt: SELECT FROM foo WHERE id = ? LIMIT 1
-    # bind: [1]
+```perl
+my $result = $db->select_by_sql('SELECT FROM foo WHERE id = ? LIMIT 1', [1]);
+# stmt: SELECT FROM foo WHERE id = ? LIMIT 1
+# bind: [1]
+```
 
 #### Options
 
@@ -358,33 +376,41 @@ You can use there options:
 
 Execute `INSERT INTO` query.
 
-    $db->insert(foo => { bar => 1 });
-    # stmt: INSERT INTO foo (bar) VALUES (?)
-    # bind: [1]
+```perl
+$db->insert(foo => { bar => 1 });
+# stmt: INSERT INTO foo (bar) VALUES (?)
+# bind: [1]
+```
 
 ### `insert_and_fetch_id($table_name, \%values, \%opt)`
 
 Execute `INSERT INTO` query, and returns `last_insert_id`.
 
-    my $id = $db->insert_and_fetch_id(foo => { bar => 1 });
-    # stmt: INSERT INTO foo (bar) VALUES (?)
-    # bind: [1]
+```perl
+my $id = $db->insert_and_fetch_id(foo => { bar => 1 });
+# stmt: INSERT INTO foo (bar) VALUES (?)
+# bind: [1]
+```
 
 ### `insert_and_fetch_row($table_name, \%values, \%opt)`
 
 Execute `INSERT INTO` query, and `SELECT` it, and returns row object.
 
-    my $row = $db->insert_and_fetch_row(foo => { bar => 1 });
-    # stmt: INSERT INTO foo (bar) VALUES (?)
-    # bind: [1]
+```perl
+my $row = $db->insert_and_fetch_row(foo => { bar => 1 });
+# stmt: INSERT INTO foo (bar) VALUES (?)
+# bind: [1]
+```
 
 ### `insert_and_emulate_row($table_name, \%values, \%opt)`
 
 Execute `INSERT INTO` query, and returns row object created by `$row` and schema definition.
 
-    my $row = $db->insert_and_fetch_row(foo => { bar => 1 });
-    # stmt: INSERT INTO foo (bar) VALUES (?)
-    # bind: [1]
+```perl
+my $row = $db->insert_and_fetch_row(foo => { bar => 1 });
+# stmt: INSERT INTO foo (bar) VALUES (?)
+# bind: [1]
+```
 
 This method is faster than `insert_and_fetch_row`.
 
@@ -397,9 +423,11 @@ In this case, you should use `insert_and_fetch_row` instead of this method.
 
 Execute `INSERT ... ON DUPLICATE KEY UPDATE` query for MySQL.
 
-    my $row = $db->insert_on_duplicate(foo => { bar => 1 }, { bar => \'VALUE(bar) + 1' });
-    # stmt: INSERT INTO foo (bar) VALUES (?) ON DUPLICATE KEY UPDATE bar = VALUE(bar) + 1
-    # bind: [1]
+```perl
+my $row = $db->insert_on_duplicate(foo => { bar => 1 }, { bar => \'VALUE(bar) + 1' });
+# stmt: INSERT INTO foo (bar) VALUES (?) ON DUPLICATE KEY UPDATE bar = VALUE(bar) + 1
+# bind: [1]
+```
 
 SEE ALSO: [INSERT ... ON DUPLICATE KEY UPDATE Syntax](https://dev.mysql.com/doc/refman/5.6/en/insert-on-duplicate.html)
 
@@ -408,9 +436,11 @@ SEE ALSO: [INSERT ... ON DUPLICATE KEY UPDATE Syntax](https://dev.mysql.com/doc/
 Execute `INSERT INTO ... (...) VALUES (...), (...), ...` query for MySQL.
 Insert multiple rows at once.
 
-    my $row = $db->insert_multi(foo => [{ bar => 1 }, { bar => 2 }, { bar => 3 }]);
-    # stmt: INSERT INTO foo (bar) VALUES (?),(?),(?)
-    # bind: [1, 2, 3]
+```perl
+my $row = $db->insert_multi(foo => [{ bar => 1 }, { bar => 2 }, { bar => 3 }]);
+# stmt: INSERT INTO foo (bar) VALUES (?),(?),(?)
+# bind: [1, 2, 3]
+```
 
 SEE ALSO: [INSERT Syntax](https://dev.mysql.com/doc/refman/5.6/en/insert.html)
 
@@ -418,35 +448,43 @@ SEE ALSO: [INSERT Syntax](https://dev.mysql.com/doc/refman/5.6/en/insert.html)
 
 Execute `UPDATE` query, and returns changed rows count.
 
-    my $count = $db->update(foo => { bar => 2 }, { id => 1 });
-    # stmt: UPDATE foo SET bar = ? WHERE id = ?
-    # bind: [2, 1]
+```perl
+my $count = $db->update(foo => { bar => 2 }, { id => 1 });
+# stmt: UPDATE foo SET bar = ? WHERE id = ?
+# bind: [2, 1]
+```
 
 ### `update($row, \%set)`
 
 Execute `UPDATE` query, and returns changed rows count.
 
-    my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
-    my $count = $db->update($row => { bar => 2 });
-    # stmt: UPDATE foo SET bar = ? WHERE id = ?
-    # bind: [2, 1]
+```perl
+my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
+my $count = $db->update($row => { bar => 2 });
+# stmt: UPDATE foo SET bar = ? WHERE id = ?
+# bind: [2, 1]
+```
 
 ### `delete($table_name, \%where)`
 
 Execute `DELETE` query, and returns changed rows count.
 
-    my $count = $db->delete(foo => { id => 1 });
-    # stmt: DELETE FROM foo WHERE id = ?
-    # bind: [1]
+```perl
+my $count = $db->delete(foo => { id => 1 });
+# stmt: DELETE FROM foo WHERE id = ?
+# bind: [1]
+```
 
 ### `delete($row)`
 
 Execute `DELETE` query, and returns changed rows count.
 
-    my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
-    my $count = $db->delete($row);
-    # stmt: DELETE foo WHERE id = ?
-    # bind: [1]
+```perl
+my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
+my $count = $db->delete($row);
+# stmt: DELETE foo WHERE id = ?
+# bind: [1]
+```
 
 ## ACCESSORS
 
@@ -478,4 +516,4 @@ it under the same terms as Perl itself.
 
 # AUTHOR
 
-karupanerura &lt;karupa@cpan.org>
+karupanerura <karupa@cpan.org>
