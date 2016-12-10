@@ -2,6 +2,11 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+1.01 2016-12-10T07:07:27Z
+
+   - added lower/upper option for Aniki::Plugin::Pager
+   - added no_offset option for Aniki::Plugin::SQLPager
+
 1.00 2016-05-24T05:10:36Z
 
    - no execute any query if empty values is passed to insert_multi
