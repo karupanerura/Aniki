@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use utf8;
 
-use FindBin::libs;
 use Test::More;
 
 use File::Spec;
