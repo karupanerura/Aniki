@@ -4,8 +4,13 @@ use 5.014002;
 use namespace::sweep;
 use Mouse::Role;
 
-use Carp qw/croak/;
+use Carp qw/carp croak/;
 use SQL::QueryMaker qw/sql_gt sql_lt/;
+
+sub make_range_condtion {
+    carp '[INCOMPATIBLE CHANGE Aniki@1.02] This method is renamed to make_range_condition. the old method is removed at 1.03.';
+    shift->make_range_condition(@_);
+}
 
 sub make_range_condition {
     my ($self, $range) = @_;
