@@ -17,7 +17,7 @@ sub select_with_pager {
 
     croak '(Aniki::Plugin::Pager#select_with_pager) `where` condition must be a reference.' unless ref $where;
 
-    my $range_condition = $self->make_range_condtion($opt);
+    my $range_condition = $self->make_range_condition($opt);
     if ($range_condition) {
         ref $where eq 'HASH'
             or croak "where condition *MUST* be HashRef when using range codition.";

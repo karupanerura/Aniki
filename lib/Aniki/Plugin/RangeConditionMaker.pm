@@ -7,7 +7,7 @@ use Mouse::Role;
 use Carp qw/croak/;
 use SQL::QueryMaker qw/sql_gt sql_lt/;
 
-sub make_range_condtion {
+sub make_range_condition {
     my ($self, $range) = @_;
 
     my %total_range_condition;
@@ -52,7 +52,7 @@ Aniki::Plugin::RangeConditionMaker - range condition maker
     package MyDB;
     use Mouse v2.4.5;
     extends qw/Aniki/;
-    with qw/Aniki::Plugin::PagerInjector/;
+    with qw/Aniki::Plugin::RangeConditionMaker/;
 
     package main;
     my $db = MyDB->new(...);
