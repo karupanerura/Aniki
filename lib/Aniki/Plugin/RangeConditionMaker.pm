@@ -11,14 +11,14 @@ sub make_range_condtion {
     my ($self, $range) = @_;
 
     my %total_range_condition;
-    for my $type (qw/lower upper/) {
+    for my $type (qw/lower upper gt lt/) {
         next unless exists $range->{$type};
 
         ref $range->{$type} eq 'HASH'
             or croak "$type condition *MUST* be HashRef.";
 
-        my $func = $type eq 'lower' ? \&sql_gt
-                 : $type eq 'upper' ? \&sql_lt
+        my $func = $type eq 'lower' || $type eq 'gt' ? \&sql_gt
+                 : $type eq 'upper' || $type eq 'lt' ? \&sql_lt
                  : die "Unknown type: $type";
 
         my $range_condition = $range->{$type};
