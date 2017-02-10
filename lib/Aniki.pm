@@ -1228,6 +1228,18 @@ Copyright (C) karupanerura.
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
+=head1 CONTRIBUTORS
+
+=over 2
+
+=item watanabe-yocihi
+
+=item Pine Mizune
+
+=item Syohei YOSHIDA
+
+=back
+
 =head1 AUTHOR
 
 karupanerura E<lt>karupa@cpan.orgE<gt>
