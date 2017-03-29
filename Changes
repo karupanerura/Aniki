@@ -2,6 +2,10 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+1.03 2017-03-29T11:24:39Z
+
+   - [EXPERIMENTAL] x_static_install=1 (no feature changes)
+
 1.02 2017-02-10T06:14:56Z
 
    - added lt/gt alias option for lower/upper (watanabe-yoichi)
