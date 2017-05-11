@@ -37,6 +37,11 @@ run_on_database {
         my $result = db->select('author', $where);
         is scalar (map { $_->{id} < 4 } @{ $result->row_datas }), 3;
     }
+
+    my $where  = db->make_range_condition({ lower => { id => 1 }, upper => { id => 3 } });
+    my $result = db->select('author', $where);
+    is scalar @{$result->row_datas}, 1;
+    is $result->row_datas->[0]->{id}, 2;
 };
 
 done_testing();

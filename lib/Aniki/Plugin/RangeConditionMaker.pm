@@ -5,7 +5,7 @@ use namespace::sweep;
 use Mouse::Role;
 
 use Carp qw/carp croak/;
-use SQL::QueryMaker qw/sql_gt sql_lt/;
+use SQL::QueryMaker qw/sql_gt sql_lt sql_and/;
 
 sub make_range_condtion {
     carp '[INCOMPATIBLE CHANGE Aniki@1.02] This method is renamed to make_range_condition. the old method is removed at 1.03.';
@@ -33,7 +33,7 @@ sub make_range_condition {
 
             my $condition = $func->($range_condition->{$column});
             $total_range_condition{$column} =
-                exists $total_range_condition{$column} ? [-and => $total_range_condition{$column}, $condition]
+                exists $total_range_condition{$column} ? sql_and([$total_range_condition{$column}, $condition])
                                                        : $condition;
         }
     }
