@@ -1,7 +1,7 @@
 package Aniki::Plugin::RangeConditionMaker;
 use 5.014002;
 
-use namespace::sweep;
+use namespace::autoclean;
 use Mouse::Role;
 
 use Carp qw/carp croak/;

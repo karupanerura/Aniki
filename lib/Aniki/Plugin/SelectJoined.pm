@@ -1,7 +1,7 @@
 package Aniki::Plugin::SelectJoined;
 use 5.014002;
 
-use namespace::sweep;
+use namespace::autoclean;
 use Mouse::Role;
 use Aniki::QueryBuilder;
 use Aniki::Result::Collection::Joined;

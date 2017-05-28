@@ -1,7 +1,7 @@
 package Aniki::Schema::Table;
 use 5.014002;
 
-use namespace::sweep;
+use namespace::autoclean;
 use Mouse v2.4.5;
 use Carp qw/croak/;
 use Aniki::Schema::Relationships;

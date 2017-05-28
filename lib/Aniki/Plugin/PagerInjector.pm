@@ -1,7 +1,7 @@
 package Aniki::Plugin::PagerInjector;
 use 5.014002;
 
-use namespace::sweep;
+use namespace::autoclean;
 use Mouse::Role;
 use Data::Page::NoTotalEntries;
 use Aniki::Result::Role::Pager;

@@ -1,7 +1,7 @@
 package Aniki::Plugin::SQLPager;
 use 5.014002;
 
-use namespace::sweep;
+use namespace::autoclean;
 use Mouse::Role;
 
 requires qw/select_by_sql select_named/;

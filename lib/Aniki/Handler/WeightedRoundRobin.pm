@@ -1,7 +1,7 @@
 package Aniki::Handler::WeightedRoundRobin;
 use 5.014002;
 
-use namespace::sweep;
+use namespace::autoclean;
 use Mouse;
 extends qw/Aniki::Handler/;
 

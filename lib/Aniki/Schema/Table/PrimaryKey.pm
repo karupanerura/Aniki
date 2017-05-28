@@ -1,7 +1,7 @@
 package Aniki::Schema::Table::PrimaryKey;
 use 5.014002;
 
-use namespace::sweep;
+use namespace::autoclean;
 use Mouse v2.4.5;
 use Aniki::Schema::Table::Field;
 use Carp qw/croak/;

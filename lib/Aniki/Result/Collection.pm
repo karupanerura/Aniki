@@ -1,7 +1,7 @@
 package Aniki::Result::Collection;
 use 5.014002;
 
-use namespace::sweep;
+use namespace::autoclean;
 use Mouse v2.4.5;
 extends qw/Aniki::Result/;
 

@@ -23,7 +23,7 @@ requires 'SQL::Translator::Schema::Constants';
 requires 'Scalar::Util';
 requires 'String::CamelCase';
 requires 'Try::Tiny';
-requires 'namespace::sweep';
+requires 'namespace::autoclean';
 requires 'parent';
 requires 'perl', '5.014002';
 

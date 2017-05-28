@@ -1,7 +1,7 @@
 package Aniki::Handler;
 use 5.014002;
 
-use namespace::sweep;
+use namespace::autoclean;
 use Mouse;
 
 use DBIx::Handler 0.12;
