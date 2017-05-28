@@ -7,11 +7,6 @@ use Mouse::Role;
 use Carp qw/carp croak/;
 use SQL::QueryMaker qw/sql_gt sql_lt sql_and/;
 
-sub make_range_condtion {
-    carp '[INCOMPATIBLE CHANGE Aniki@1.02] This method is renamed to make_range_condition. the old method is removed at 1.03.';
-    shift->make_range_condition(@_);
-}
-
 sub make_range_condition {
     my ($self, $range) = @_;
 
