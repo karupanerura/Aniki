@@ -236,12 +236,12 @@ sub filter_on_insert {
 sub update {
     my $self = shift;
     if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
-        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
         return $self->update($_[0]->table_name, $_[1], $self->_where_row_cond($_[0]->table, $_[0]->row_data));
     }
     else {
         my ($table_name, $row, $where) = @_;
-        croak '(Aniki#update) `where` condition must be a reference.' unless ref $where;
+        croak '(Aniki#update) `row` is required for update ("SET" parameter)' unless $row && %$row;
+        croak '(Aniki#update) `where` condition must be a reference' unless ref $where;
 
         $row = $self->filter_on_update($table_name, $row);
 
@@ -259,12 +259,11 @@ sub update {
 sub delete :method {
     my $self = shift;
     if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
-        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
         return $self->delete($_[0]->table_name, $self->_where_row_cond($_[0]->table, $_[0]->row_data), @_);
     }
     else {
         my ($table_name, $where, $opt) = @_;
-        croak '(Aniki#delete) `where` condition must be a reference.' unless ref $where;
+        croak '(Aniki#delete) `where` condition must be a reference' unless ref $where;
 
         my $table = $self->schema->get_table($table_name);
         if ($table) {
@@ -284,7 +283,6 @@ sub filter_on_update {
 
 sub insert_and_fetch_id {
     my $self = shift;
-    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
     local $self->{_context} = $self->dbh;
     $self->insert(@_);
@@ -301,7 +299,6 @@ sub insert_and_fetch_row {
 
     my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
 
-    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
     local $self->{_context} = $self->dbh;
 
     $self->insert($table_name, $row_data, @_);
@@ -319,7 +316,6 @@ sub insert_and_emulate_row {
 
     my $table = $self->schema->get_table($table_name) or croak "$table_name is not defined in schema.";
 
-    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
     local $self->{_context} = $self->dbh;
 
     $row = $self->filter_on_insert($table_name, $row) unless $opt->{no_filter};

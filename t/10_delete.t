@@ -25,6 +25,10 @@ run_on_database {
     db->delete($row);
 
     is db->select(author => {})->count, 0;
+
+    my ($line, $file);
+    eval { db->delete(author => 'id = 1') }; ($line, $file) = (__LINE__, __FILE__);
+    like $@, qr/^\Q(Aniki#delete) `where` condition must be a reference at $file line $line/, 'croak with no set parameters';
 };
 
 done_testing();
