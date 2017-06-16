@@ -471,7 +471,7 @@ Execute `UPDATE` query, and `SELECT` it, and returns row object.
 
 ```perl
 my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
-my $count = $db->update_and_fetch_row($row => { bar => 2 });
+my $new_row = $db->update_and_fetch_row($row => { bar => 2 });
 # stmt: UPDATE foo SET bar = ? WHERE id = ?
 # bind: [2, 1]
 ```
@@ -482,7 +482,7 @@ Execute `UPDATE` query, and returns row object created by `$row` and `%set`.
 
 ```perl
 my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
-my $count = $db->update_and_emulate_row($row => { bar => 2 });
+my $new_row = $db->update_and_emulate_row($row => { bar => 2 });
 # stmt: UPDATE foo SET bar = ? WHERE id = ?
 # bind: [2, 1]
 ```
