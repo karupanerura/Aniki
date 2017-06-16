@@ -283,15 +283,16 @@ sub update_and_emulate_row {
 
         $self->update($_[0], $_[1]);
 
-        my $row_data = $_[0]->get_columns;
-        $row_data->{$_} = $_[1]->{$_} for keys %{$_[1]};
+        my $row = $_[0]->get_columns;
+        $row->{$_} = $_[1]->{$_} for keys %{$_[1]};
 
-        return $row_data if $self->suppress_row_objects;
+        $row = $self->filter_on_update($_[0]->table_name, $row);
+
+        return $row if $self->suppress_row_objects;
         return $self->guess_row_class($_[0]->table_name)->new(
             table_name => $_[0]->table_name,
             handler    => $self,
-            row_data   => $row_data,
-            is_new     => 1,
+            row_data   => $row,
         );
     }
     else {

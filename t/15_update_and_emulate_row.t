@@ -30,6 +30,21 @@ run_on_database {
         db->update_and_emulate_row($rows, +{ name => 'MACKEE' });
     };
     like $@, qr/update_and_emulate_row/m;
+
+    subtest 'inflate deflate' => sub {
+
+        is $row->inflate_message, 'inflate hello';
+        is $row->deflate_message, 'hello';
+
+        is $new_row->inflate_message, 'inflate hello';
+        is $new_row->deflate_message, 'deflate hello';
+
+        $new_row = db->update_and_emulate_row($new_row, +{ inflate_message => 'hello Aniki', deflate_message => 'hello Aniki' });
+        isa_ok $new_row, 'Aniki::Row';
+        is $new_row->name, 'KARUPA';
+        is $new_row->inflate_message, 'inflate hello Aniki';
+        is $new_row->deflate_message, 'deflate hello Aniki';
+    };
 };
 
 done_testing();
