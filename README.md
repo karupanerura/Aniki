@@ -465,6 +465,35 @@ my $count = $db->update($row => { bar => 2 });
 # bind: [2, 1]
 ```
 
+### `update_and_fetch_row($row, \%set)`
+
+Execute `UPDATE` query, and `SELECT` it, and returns row object.
+
+```perl
+my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
+my $count = $db->update_and_fetch_row($row => { bar => 2 });
+# stmt: UPDATE foo SET bar = ? WHERE id = ?
+# bind: [2, 1]
+```
+
+### `update_and_emulate_row($row, \%set)`
+
+Execute `UPDATE` query, and returns row object created by `$row` and `%set`.
+
+```perl
+my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
+my $count = $db->update_and_emulate_row($row => { bar => 2 });
+# stmt: UPDATE foo SET bar = ? WHERE id = ?
+# bind: [2, 1]
+```
+
+This method is faster than `update_and_fetch_row`.
+
+#### WARNING
+
+If you use SQL `TRIGGER` or `AutoCommit`, this method don't return the correct value, maybe.
+In this case, you should use `update_and_fetch_row` instead of this method.
+
 ### `delete($table_name, \%where)`
 
 Execute `DELETE` query, and returns changed rows count.

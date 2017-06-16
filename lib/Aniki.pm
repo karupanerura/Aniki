@@ -1206,6 +1206,31 @@ Execute C<UPDATE> query, and returns changed rows count.
     # stmt: UPDATE foo SET bar = ? WHERE id = ?
     # bind: [2, 1]
 
+=head3 C<update_and_fetch_row($row, \%set)>
+
+Execute C<UPDATE> query, and C<SELECT> it, and returns row object.
+
+    my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
+    my $count = $db->update_and_fetch_row($row => { bar => 2 });
+    # stmt: UPDATE foo SET bar = ? WHERE id = ?
+    # bind: [2, 1]
+
+=head3 C<update_and_emulate_row($row, \%set)>
+
+Execute C<UPDATE> query, and returns row object created by C<$row> and C<%set>.
+
+    my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
+    my $count = $db->update_and_emulate_row($row => { bar => 2 });
+    # stmt: UPDATE foo SET bar = ? WHERE id = ?
+    # bind: [2, 1]
+
+This method is faster than C<update_and_fetch_row>.
+
+=head4 WARNING
+
+If you use SQL C<TRIGGER> or C<AutoCommit>, this method don't return the correct value, maybe.
+In this case, you should use C<update_and_fetch_row> instead of this method.
+
 =head3 C<delete($table_name, \%where)>
 
 Execute C<DELETE> query, and returns changed rows count.
