@@ -257,14 +257,14 @@ sub update {
 }
 
 sub update_and_fetch_row {
-    my $self = shift;
+    my ($self, $row, $set) = @_;
 
-    if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
+    if (blessed $row && $row->isa('Aniki::Row')) {
         local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
-        $self->update($_[0], $_[1]);
+        $self->update($row, $set);
 
-        my $row = $self->select($_[0]->table_name, $self->_where_row_cond($_[0]->table, $_[0]->row_data), { limit => 1, suppress_result_objects => 1 })->[0];
+        $row = $self->select($row->table_name, $self->_where_row_cond($row->table, $row->row_data), { limit => 1, suppress_result_objects => 1 })->[0];
         return $row if $self->suppress_row_objects;
 
         $row->is_new(1);
@@ -276,23 +276,23 @@ sub update_and_fetch_row {
 }
 
 sub update_and_emulate_row {
-    my $self = shift;
+    my ($self, $row, $set) = @_;
 
-    if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
+    if (blessed $row && $row->isa('Aniki::Row')) {
         local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
-        $self->update($_[0], $_[1]);
+        $self->update($row, $set);
 
-        my $row = $_[0]->get_columns;
-        $row->{$_} = $_[1]->{$_} for keys %{$_[1]};
+        my $row_data = $row->get_columns;
+        $row_data->{$_} = $set->{$_} for keys %$set;
 
-        $row = $self->filter_on_update($_[0]->table_name, $row);
+        $row_data = $self->filter_on_update($row->table_name, $row_data);
 
         return $row if $self->suppress_row_objects;
-        return $self->guess_row_class($_[0]->table_name)->new(
-            table_name => $_[0]->table_name,
+        return $self->guess_row_class($row->table_name)->new(
+            table_name => $row->table_name,
             handler    => $self,
-            row_data   => $row,
+            row_data   => $row_data,
         );
     }
     else {
