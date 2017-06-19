@@ -270,11 +270,7 @@ sub update_and_fetch_row {
 
     $row_data = $self->filter_on_update($row->table_name, $row_data);
 
-    $row = $self->select($row->table_name, $self->_where_row_cond($row->table, $row_data), { limit => 1, suppress_result_objects => 1 })->[0];
-    return $row if $self->suppress_row_objects;
-
-    $row->is_new(1);
-    return $row;
+    return $self->select($row->table_name, $self->_where_row_cond($row->table, $row_data), { limit => 1, suppress_result_objects => 1 })->[0];
 }
 
 sub update_and_emulate_row {
@@ -291,7 +287,6 @@ sub update_and_emulate_row {
 
     $row_data = $self->filter_on_update($row->table_name, $row_data);
 
-    return $row if $self->suppress_row_objects;
     return $self->guess_row_class($row->table_name)->new(
         table_name => $row->table_name,
         handler    => $self,
