@@ -259,45 +259,39 @@ sub update {
 sub update_and_fetch_row {
     my ($self, $row, $set) = @_;
 
-    if (blessed $row && $row->isa('Aniki::Row')) {
-        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+    croak '(Aniki#update_and_fetch_row) condition must be a Aniki::Row object.' unless blessed $row && $row->isa('Aniki::Row');
 
-        $self->update($row, $set);
+    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
-        $row = $self->select($row->table_name, $self->_where_row_cond($row->table, $row->row_data), { limit => 1, suppress_result_objects => 1 })->[0];
-        return $row if $self->suppress_row_objects;
+    $self->update($row, $set);
 
-        $row->is_new(1);
-        return $row;
-    }
-    else {
-        croak '(Aniki#update_and_fetch_row) condition must be a Aniki::Row object.';
-    }
+    $row = $self->select($row->table_name, $self->_where_row_cond($row->table, $row->row_data), { limit => 1, suppress_result_objects => 1 })->[0];
+    return $row if $self->suppress_row_objects;
+
+    $row->is_new(1);
+    return $row;
 }
 
 sub update_and_emulate_row {
     my ($self, $row, $set) = @_;
 
-    if (blessed $row && $row->isa('Aniki::Row')) {
-        local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+    croak '(Aniki#update_and_emulate_row) condition must be a Aniki::Row object.' unless blessed $row && $row->isa('Aniki::Row');
 
-        $self->update($row, $set);
+    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
-        my $row_data = $row->get_columns;
-        $row_data->{$_} = $set->{$_} for keys %$set;
+    $self->update($row, $set);
 
-        $row_data = $self->filter_on_update($row->table_name, $row_data);
+    my $row_data = $row->get_columns;
+    $row_data->{$_} = $set->{$_} for keys %$set;
 
-        return $row if $self->suppress_row_objects;
-        return $self->guess_row_class($row->table_name)->new(
-            table_name => $row->table_name,
-            handler    => $self,
-            row_data   => $row_data,
-        );
-    }
-    else {
-        croak '(Aniki#update_and_emulate_row) condition must be a Aniki::Row object.';
-    }
+    $row_data = $self->filter_on_update($row->table_name, $row_data);
+
+    return $row if $self->suppress_row_objects;
+    return $self->guess_row_class($row->table_name)->new(
+        table_name => $row->table_name,
+        handler    => $self,
+        row_data   => $row_data,
+    );
 }
 
 sub delete :method {
