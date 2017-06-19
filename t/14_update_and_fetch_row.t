@@ -26,6 +26,11 @@ run_on_database {
     is $new_row->name, 'KARUPA';
     is $new_row->message, 'hello Aniki';
 
+    $new_row = db->update_and_fetch_row($row, +{ id => $row->id + 1 });
+    isa_ok $new_row, 'Aniki::Row';
+    is $new_row->name, 'KARUPA';
+    is $new_row->message, 'hello Aniki';
+
     eval {
         db->update_and_fetch_row($rows, +{ name => 'MACKEE' });
     };

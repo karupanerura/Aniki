@@ -265,7 +265,12 @@ sub update_and_fetch_row {
 
     $self->update($row, $set);
 
-    $row = $self->select($row->table_name, $self->_where_row_cond($row->table, $row->row_data), { limit => 1, suppress_result_objects => 1 })->[0];
+    my $row_data = $row->get_columns;
+    $row_data->{$_} = $set->{$_} for keys %$set;
+
+    $row_data = $self->filter_on_update($row->table_name, $row_data);
+
+    $row = $self->select($row->table_name, $self->_where_row_cond($row->table, $row_data), { limit => 1, suppress_result_objects => 1 })->[0];
     return $row if $self->suppress_row_objects;
 
     $row->is_new(1);
