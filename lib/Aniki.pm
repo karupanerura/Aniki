@@ -287,6 +287,7 @@ sub update_and_emulate_row {
 
     $row_data = $self->filter_on_update($row->table_name, $row_data);
 
+    return $row_data if $self->suppress_row_objects;
     return $self->guess_row_class($row->table_name)->new(
         table_name => $row->table_name,
         handler    => $self,
