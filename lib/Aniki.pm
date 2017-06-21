@@ -258,41 +258,36 @@ sub update {
 
 sub update_and_fetch_row {
     my ($self, $row, $set) = @_;
+    croak '(Aniki#update_and_fetch_row) condition must be a Aniki::Row object.'
+        unless blessed $row && $row->isa('Aniki::Row');
 
-    croak '(Aniki#update_and_fetch_row) condition must be a Aniki::Row object.' unless blessed $row && $row->isa('Aniki::Row');
+    my $emulated_row_data = $self->_update_and_emulate_row_data($row, $set);
 
-    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-
-    $self->update($row, $set);
-
-    my $row_data = $row->get_columns;
-    $row_data->{$_} = $set->{$_} for keys %$set;
-
-    $row_data = $self->filter_on_update($row->table_name, $row_data);
-
-    return $self->select($row->table_name, $self->_where_row_cond($row->table, $row_data), { limit => 1, suppress_result_objects => 1 })->[0];
+    my $where = $self->_where_row_cond($row->table, $emulated_row_data);
+    return $self->select($row->table_name, $where, { limit => 1, suppress_result_objects => 1 })->[0];
 }
 
 sub update_and_emulate_row {
     my ($self, $row, $set) = @_;
-
     croak '(Aniki#update_and_emulate_row) condition must be a Aniki::Row object.' unless blessed $row && $row->isa('Aniki::Row');
 
-    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+    my $emulated_row_data = $self->_update_and_emulate_row_data($row, $set);
+    return $emulated_row_data if $self->suppress_row_objects;
 
-    $self->update($row, $set);
-
-    my $row_data = $row->get_columns;
-    $row_data->{$_} = $set->{$_} for keys %$set;
-
-    $row_data = $self->filter_on_update($row->table_name, $row_data);
-
-    return $row_data if $self->suppress_row_objects;
     return $self->guess_row_class($row->table_name)->new(
         table_name => $row->table_name,
         handler    => $self,
-        row_data   => $row_data,
+        row_data   => $emulated_row_data,
     );
+}
+
+sub _update_and_emulate_row_data {
+    my ($self, $row, $set) = @_;
+    $self->update($row, $set);
+    return {
+        %{ $row->get_columns },
+        %{ $self->filter->deflate_row($row->table_name, $set) },
+    };
 }
 
 sub delete :method {
