@@ -9,6 +9,8 @@ create_table 'author' => columns {
     integer 'id', primary_key, auto_increment, extra => { auto_increment_type => 'monotonic' };
     varchar 'name';
     varchar 'message', default => 'hello';
+    varchar 'inflate_message', default => 'hello';
+    varchar 'deflate_message', default => 'hello';
 
     add_unique_index 'name_uniq_in_author' => ['name'];
 

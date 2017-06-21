@@ -14,9 +14,11 @@ run_on_database {
     ok $row->is_new, 'new row.';
 
     is_deeply $row->get_columns, {
-        id      => $row->id,
-        name    => 'MOZNION',
-        message => 'hello',
+        id              => $row->id,
+        name            => 'MOZNION',
+        message         => 'hello',
+        inflate_message => 'hello',
+        deflate_message => 'hello',
     }, 'Data is valid.';
 };
 
