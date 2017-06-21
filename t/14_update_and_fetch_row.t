@@ -25,9 +25,9 @@ run_on_database {
         like $@, qr/^\Q(Aniki#update_and_fetch_row) condition must be a Aniki::Row object. at $file line $line/m, 'croak from update_and_fetch_row';
 
         eval {
-            ($line, $file) = (__LINE__, __FILE__); db->update_and_fetch_row($row, undef);
+            ($line, $file) = (__LINE__, __FILE__); db->update_and_fetch_row($row, {});
         };
-        like $@, qr/^\Q(Aniki#update) `row` is required for update ("SET" parameter) at $file line $line/m, 'croak from update';
+        like $@, qr/^\Q(Aniki#update) `set` is required for update ("SET" parameter) at $file line $line/m, 'croak from update';
     };
 
     subtest 'emulate new row' => sub {

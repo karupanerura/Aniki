@@ -234,26 +234,30 @@ sub filter_on_insert {
 }
 
 sub update {
-    my $self = shift;
-    if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
-        return $self->update($_[0]->table_name, $_[1], $self->_where_row_cond($_[0]->table, $_[0]->row_data));
+    my ($self, $table_name, $set, $where, $opt) = @_;
+
+    # migrate for ($self, $row, $set, $opt)
+    if (blessed $_[1] && $_[1]->isa('Aniki::Row')) {
+        my $row = $_[1];
+        $table_name = $row->table_name;
+        $set = $_[2];
+        $where = $self->_where_row_cond($row->table, $row->row_data);
+        $opt = $_[3];
     }
-    else {
-        my ($table_name, $row, $where) = @_;
-        croak '(Aniki#update) `row` is required for update ("SET" parameter)' unless $row && %$row;
-        croak '(Aniki#update) `where` condition must be a reference' unless ref $where;
 
-        $row = $self->filter_on_update($table_name, $row);
+    croak '(Aniki#update) `set` is required for update ("SET" parameter)' unless $set && %$set;
+    croak '(Aniki#update) `where` condition must be a reference' unless ref $where;
 
-        my $table = $self->schema->get_table($table_name);
-        if ($table) {
-            $row   = $self->_bind_sql_type_to_args($table, $row);
-            $where = $self->_bind_sql_type_to_args($table, $where);
-        }
+    $set = $self->filter_on_update($table_name, $set) unless $opt->{no_filter};
 
-        my ($sql, @bind) = $self->query_builder->update($table_name, $row, $where);
-        return $self->execute($sql, @bind)->rows;
+    my $table = $self->schema->get_table($table_name);
+    if ($table) {
+        $set   = $self->_bind_sql_type_to_args($table, $set);
+        $where = $self->_bind_sql_type_to_args($table, $where);
     }
+
+    my ($sql, @bind) = $self->query_builder->update($table_name, $set, $where);
+    return $self->execute($sql, @bind)->rows;
 }
 
 sub update_and_fetch_row {
@@ -283,10 +287,11 @@ sub update_and_emulate_row {
 
 sub _update_and_emulate_row_data {
     my ($self, $row, $set) = @_;
-    $self->update($row, $set);
+    $set = $self->filter_on_update($row->table_name, $set);
+    $self->update($row, $set, { no_filter => 1 });
     return {
-        %{ $row->get_columns },
-        %{ $self->filter->deflate_row($row->table_name, $set) },
+        %{ $row->row_data },
+        %$set,
     };
 }
 
