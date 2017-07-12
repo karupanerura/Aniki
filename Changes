@@ -2,6 +2,14 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+1.04_02 2017-06-21T07:00:32Z
+
+   - fixed packaging
+
+1.04_01 2017-06-21T06:55:28Z
+
+   - added update_and_(fetch|emulate)_row method (mamimumemoomoo)
+
 1.04 2017-05-28T13:03:12Z
 
    - fixed range condition maker (thanks mamimumemoomoo)

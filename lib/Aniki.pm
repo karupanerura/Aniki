@@ -13,7 +13,7 @@ use Aniki::Schema;
 use Aniki::QueryBuilder;
 use Aniki::QueryBuilder::Canonical;
 
-our $VERSION = '1.04';
+our $VERSION = '1.04_02';
 
 use SQL::Maker::SQLType qw/sql_type/;
 use Class::Inspector;
@@ -234,26 +234,65 @@ sub filter_on_insert {
 }
 
 sub update {
-    my $self = shift;
-    if (blessed $_[0] && $_[0]->isa('Aniki::Row')) {
-        return $self->update($_[0]->table_name, $_[1], $self->_where_row_cond($_[0]->table, $_[0]->row_data));
+    my ($self, $table_name, $set, $where, $opt) = @_;
+
+    # migrate for ($self, $row, $set, $opt)
+    if (blessed $_[1] && $_[1]->isa('Aniki::Row')) {
+        my $row = $_[1];
+        $table_name = $row->table_name;
+        $set = $_[2];
+        $where = $self->_where_row_cond($row->table, $row->row_data);
+        $opt = $_[3];
     }
-    else {
-        my ($table_name, $row, $where) = @_;
-        croak '(Aniki#update) `row` is required for update ("SET" parameter)' unless $row && %$row;
-        croak '(Aniki#update) `where` condition must be a reference' unless ref $where;
 
-        $row = $self->filter_on_update($table_name, $row);
+    croak '(Aniki#update) `set` is required for update ("SET" parameter)' unless $set && %$set;
+    croak '(Aniki#update) `where` condition must be a reference' unless ref $where;
 
-        my $table = $self->schema->get_table($table_name);
-        if ($table) {
-            $row   = $self->_bind_sql_type_to_args($table, $row);
-            $where = $self->_bind_sql_type_to_args($table, $where);
-        }
+    $set = $self->filter_on_update($table_name, $set) unless $opt->{no_filter};
 
-        my ($sql, @bind) = $self->query_builder->update($table_name, $row, $where);
-        return $self->execute($sql, @bind)->rows;
+    my $table = $self->schema->get_table($table_name);
+    if ($table) {
+        $set   = $self->_bind_sql_type_to_args($table, $set);
+        $where = $self->_bind_sql_type_to_args($table, $where);
     }
+
+    my ($sql, @bind) = $self->query_builder->update($table_name, $set, $where);
+    return $self->execute($sql, @bind)->rows;
+}
+
+sub update_and_fetch_row {
+    my ($self, $row, $set) = @_;
+    croak '(Aniki#update_and_fetch_row) condition must be a Aniki::Row object.'
+        unless blessed $row && $row->isa('Aniki::Row');
+
+    my $emulated_row_data = $self->_update_and_emulate_row_data($row, $set);
+
+    my $where = $self->_where_row_cond($row->table, $emulated_row_data);
+    return $self->select($row->table_name, $where, { limit => 1, suppress_result_objects => 1 })->[0];
+}
+
+sub update_and_emulate_row {
+    my ($self, $row, $set) = @_;
+    croak '(Aniki#update_and_emulate_row) condition must be a Aniki::Row object.' unless blessed $row && $row->isa('Aniki::Row');
+
+    my $emulated_row_data = $self->_update_and_emulate_row_data($row, $set);
+    return $emulated_row_data if $self->suppress_row_objects;
+
+    return $self->guess_row_class($row->table_name)->new(
+        table_name => $row->table_name,
+        handler    => $self,
+        row_data   => $emulated_row_data,
+    );
+}
+
+sub _update_and_emulate_row_data {
+    my ($self, $row, $set) = @_;
+    $set = $self->filter_on_update($row->table_name, $set);
+    $self->update($row, $set, { no_filter => 1 });
+    return {
+        %{ $row->row_data },
+        %$set,
+    };
 }
 
 sub delete :method {
@@ -1162,6 +1201,31 @@ Execute C<UPDATE> query, and returns changed rows count.
     my $count = $db->update($row => { bar => 2 });
     # stmt: UPDATE foo SET bar = ? WHERE id = ?
     # bind: [2, 1]
+
+=head3 C<update_and_fetch_row($row, \%set)>
+
+Execute C<UPDATE> query, and C<SELECT> it, and returns row object.
+
+    my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
+    my $new_row = $db->update_and_fetch_row($row => { bar => 2 });
+    # stmt: UPDATE foo SET bar = ? WHERE id = ?
+    # bind: [2, 1]
+
+=head3 C<update_and_emulate_row($row, \%set)>
+
+Execute C<UPDATE> query, and returns row object created by C<$row> and C<%set>.
+
+    my $row = $db->select(foo => { id => 1 }, { limit => 1 })->first;
+    my $new_row = $db->update_and_emulate_row($row => { bar => 2 });
+    # stmt: UPDATE foo SET bar = ? WHERE id = ?
+    # bind: [2, 1]
+
+This method is faster than C<update_and_fetch_row>.
+
+=head4 WARNING
+
+If you use SQL C<TRIGGER> or C<AutoCommit>, this method don't return the correct value, maybe.
+In this case, you should use C<update_and_fetch_row> instead of this method.
 
 =head3 C<delete($table_name, \%where)>
 
