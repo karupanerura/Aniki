@@ -23,6 +23,8 @@ run_on_database {
         db->insert_and_fetch_id(module => { name => 'Test::SharedObject',  author_id => $karupa_id }),
     );
 
+    my $mamimu_id = db->insert_and_fetch_id(author => { name => 'MAMIMU' });
+
     db->insert_multi(version => [map {
         +{ name => '0.01', module_id => $_ },
     } @moznion_module_ids, @karupa_module_ids]);
@@ -32,12 +34,14 @@ run_on_database {
             my $queries = query_count {
                 my $rows = db->select(author => {}, { prefetch => [qw/modules/] });
                 isa_ok $rows, 'Aniki::Result::Collection';
-                is $rows->count, 2;
+                is $rows->count, 3;
+                is $_->is_prefetched('modules'), 1 for $rows->all;
 
                 my %modules = map { $_->name => [sort map { $_->name } $_->modules] } $rows->all;
                 is_deeply \%modules, {
                     MOZNION => [qw/Perl::Lint Regexp::Lexer Test::JsonAPI::Autodoc/],
                     KARUPA  => [qw/Plack::App::Vhost TOML::Parser Test::SharedObject/],
+                    MAMIMU  => [],
                 };
             };
             is $queries, 2;
@@ -47,15 +51,17 @@ run_on_database {
             my $queries = query_count {
                 my $rows = db->select(author => {});
                 isa_ok $rows, 'Aniki::Result::Collection';
-                is $rows->count, 2;
+                is $rows->count, 3;
+                is $_->is_prefetched('modules'), 0 for $rows->all;
 
                 my %modules = map { $_->name => [sort map { $_->name } $_->modules] } $rows->all;
                 is_deeply \%modules, {
                     MOZNION => [qw/Perl::Lint Regexp::Lexer Test::JsonAPI::Autodoc/],
                     KARUPA  => [qw/Plack::App::Vhost TOML::Parser Test::SharedObject/],
+                    MAMIMU  => [],
                 };
             };
-            is $queries, 3;
+            is $queries, 4;
         };
     };
 
@@ -64,7 +70,11 @@ run_on_database {
             my $queries = query_count {
                 my $rows = db->select(author => {}, { prefetch => { modules => [qw/versions/] } });
                 isa_ok $rows, 'Aniki::Result::Collection';
-                is $rows->count, 2;
+                is $rows->count, 3;
+                for my $row ($rows->all) {
+                    is $row->is_prefetched('modules'), 1;
+                    is $_->is_prefetched('versions'), 1 for $row->modules;
+                }
 
                 my %modules = map {
                     $_->name => +{
@@ -79,10 +89,12 @@ run_on_database {
                         'Regexp::Lexer'          => ['0.01'],
                         'Test::JsonAPI::Autodoc' => ['0.01'],
                     },
-                    KARUPA  => {
+                    KARUPA  => +{
                         'Plack::App::Vhost'  => ['0.01'],
                         'TOML::Parser'       => ['0.01'],
                         'Test::SharedObject' => ['0.01'],
+                    },
+                    MAMIMU  => +{
                     },
                 };
             };
@@ -93,7 +105,11 @@ run_on_database {
             my $queries = query_count {
                 my $rows = db->select(author => {});
                 isa_ok $rows, 'Aniki::Result::Collection';
-                is $rows->count, 2;
+                is $rows->count, 3;
+                for my $row ($rows->all) {
+                    is $row->is_prefetched('modules'), 0;
+                    is $_->is_prefetched('versions'), 0 for $row->modules;
+                }
 
                 my %modules = map {
                     $_->name => +{
@@ -108,14 +124,16 @@ run_on_database {
                         'Regexp::Lexer'          => ['0.01'],
                         'Test::JsonAPI::Autodoc' => ['0.01'],
                     },
-                    KARUPA  => {
+                    KARUPA  => +{
                         'Plack::App::Vhost'  => ['0.01'],
                         'TOML::Parser'       => ['0.01'],
                         'Test::SharedObject' => ['0.01'],
                     },
+                    MAMIMU  => +{
+                    },
                 };
             };
-            is $queries, 9;
+            is $queries, 10;
         };
     };
 
@@ -124,7 +142,11 @@ run_on_database {
             my $queries = query_count {
                 my $rows = db->select(author => {}, { prefetch => { modules => [qw/versions/] } });
                 isa_ok $rows, 'Aniki::Result::Collection';
-                is $rows->count, 2;
+                is $rows->count, 3;
+                for my $row ($rows->all) {
+                    is $row->is_prefetched('modules'), 1;
+                    is $_->is_prefetched('versions'), 1 for $row->modules;
+                }
 
                 my %modules = map { $_->versions->[0]->module->name => [$_->author->name, map { $_->name } @{ $_->versions }] } map { $_->modules } $rows->all;
                 is_deeply \%modules, {
@@ -143,7 +165,11 @@ run_on_database {
             my $queries = query_count {
                 my $rows = db->select(author => {});
                 isa_ok $rows, 'Aniki::Result::Collection';
-                is $rows->count, 2;
+                is $rows->count, 3;
+                for my $row ($rows->all) {
+                    is $row->is_prefetched('modules'), 0;
+                    is $_->is_prefetched('versions'), 0 for $row->modules;
+                }
 
                 my %modules = map { $_->versions->[0]->module->name => [$_->author->name, map { $_->name } @{ $_->versions }] } map { $_->modules } $rows->all;
                 is_deeply \%modules, {
@@ -155,7 +181,7 @@ run_on_database {
                     'Test::SharedObject'     => ['KARUPA',  '0.01'],
                 } or diag explain \%modules;
             };
-            is $queries, 9;
+            is $queries, 10;
         };
     };
 
@@ -167,7 +193,11 @@ run_on_database {
         my $queries = query_count {
             my $rows = db->select(author => {}, { prefetch => { modules => { versions => { '.name' => '0.02' } } } });
             isa_ok $rows, 'Aniki::Result::Collection';
-            is $rows->count, 2;
+            is $rows->count, 3;
+            for my $row ($rows->all) {
+                is $row->is_prefetched('modules'), 1;
+                is $_->is_prefetched('versions'), 1 for $row->modules;
+            }
 
             my %modules = map {
                 $_->name => +{
@@ -182,10 +212,12 @@ run_on_database {
                     'Regexp::Lexer'          => ['0.02'],
                     'Test::JsonAPI::Autodoc' => ['0.02'],
                 },
-                KARUPA  => {
+                KARUPA  => +{
                     'Plack::App::Vhost'  => ['0.02'],
                     'TOML::Parser'       => ['0.02'],
                     'Test::SharedObject' => ['0.02'],
+                },
+                MAMIMU  => +{
                 },
             } or diag explain \%modules;
         };

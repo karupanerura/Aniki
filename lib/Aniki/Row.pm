@@ -69,6 +69,16 @@ sub relay_fetch {
     return $self->relay_data->{$key};
 }
 
+sub is_prefetched {
+    my ($self, $key) = @_;
+
+    unless (exists $self->relay_data->{$key}) {
+        return 0;
+    }
+
+    return 1;
+}
+
 sub get_column {
     my ($self, $column) = @_;
     return undef unless exists $self->row_data->{$column}; ## no critic
@@ -190,6 +200,10 @@ If not yet cached, call C<relay_fetch>.
 =head2 C<relay_fetch($name)>
 
 Fetch related data, and returns related data.
+
+=head2 C<is_prefetched($name)>
+
+If a pre-fetch has been executed, it return a true value.
 
 =head2 C<get_column($column)>
 
