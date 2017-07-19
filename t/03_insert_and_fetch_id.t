@@ -14,9 +14,11 @@ run_on_database {
 
     my $row = db->select(author => { id => $id }, { limit => 1 })->first;
     is_deeply $row->get_columns, {
-        id      => $id,
-        name    => 'MOZNION',
-        message => 'hello',
+        id              => $id,
+        name            => 'MOZNION',
+        message         => 'hello',
+        inflate_message => 'hello',
+        deflate_message => 'hello',
     }, 'Data is valid.';
 };
 

@@ -28,10 +28,10 @@ run_on_database {
 
     my ($line, $file);
     eval { db->update($row) }; ($line, $file) = (__LINE__, __FILE__);
-    like $@, qr/^\Q(Aniki#update) `row` is required for update ("SET" parameter) at $file line $line/, 'croak with no set parameters';
+    like $@, qr/^\Q(Aniki#update) `set` is required for update ("SET" parameter) at $file line $line/, 'croak with no set parameters';
 
     eval { db->update($row => {}) }; ($line, $file) = (__LINE__, __FILE__);
-    like $@, qr/^\Q(Aniki#update) `row` is required for update ("SET" parameter) at $file line $line/, 'croak with empty set parameters';
+    like $@, qr/^\Q(Aniki#update) `set` is required for update ("SET" parameter) at $file line $line/, 'croak with empty set parameters';
 
     eval { db->update(author => { name => 'MOZNION3' }, 'id = 1') }; ($line, $file) = (__LINE__, __FILE__);
     like $@, qr/^\Q(Aniki#update) `where` condition must be a reference at $file line $line/, 'croak with invalid where parameters';
