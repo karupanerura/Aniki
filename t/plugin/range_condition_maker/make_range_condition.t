@@ -16,20 +16,30 @@ run_on_database {
         +{ name => $_ }
     } qw/MOZNION KARUPA PAPIX MACKEE/]);
 
+    my ($where, $result);
+
     for my $type (qw/lower gt/) {
-        my $where  = db->make_range_condition({ $type => { id => 2 } });
-        my $result = db->select('author', $where);
+        $where  = db->make_range_condition({ $type => { id => 2 } });
+        $result = db->select('author', $where);
         is scalar (map { $_->{id} > 2 } @{ $result->row_datas }), 2;
     }
 
     for my $type (qw/upper lt/) {
-        my $where  = db->make_range_condition({ $type => { id => 4 } });
-        my $result = db->select('author', $where);
+        $where  = db->make_range_condition({ $type => { id => 4 } });
+        $result = db->select('author', $where);
         is scalar (map { $_->{id} < 4 } @{ $result->row_datas }), 3;
     }
 
-    my $where  = db->make_range_condition({ lower => { id => 1 }, upper => { id => 3 } });
-    my $result = db->select('author', $where);
+    $where  = db->make_range_condition({ ge => { id => 2 } });
+    $result = db->select('author', $where);
+    is scalar (map { $_->{id} >= 2 } @{ $result->row_datas }), 3;
+
+    $where  = db->make_range_condition({ le => { id => 4 } });
+    $result = db->select('author', $where);
+    is scalar (map { $_->{id} <= 4 } @{ $result->row_datas }), 4;
+
+    $where  = db->make_range_condition({ lower => { id => 1 }, upper => { id => 3 } });
+    $result = db->select('author', $where);
     is scalar @{$result->row_datas}, 1;
     is $result->row_datas->[0]->{id}, 2;
 };

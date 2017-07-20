@@ -5,21 +5,33 @@ use namespace::autoclean;
 use Mouse::Role;
 
 use Carp qw/carp croak/;
-use SQL::QueryMaker qw/sql_gt sql_lt sql_and/;
+use SQL::QueryMaker qw/sql_gt sql_lt sql_ge sql_le sql_and/;
 
 sub make_range_condition {
     my ($self, $range) = @_;
 
     my %total_range_condition;
-    for my $type (qw/lower upper gt lt/) {
+    for my $type (qw/lower upper gt lt ge le/) {
         next unless exists $range->{$type};
 
         ref $range->{$type} eq 'HASH'
             or croak "$type condition *MUST* be HashRef.";
 
-        my $func = $type eq 'lower' || $type eq 'gt' ? \&sql_gt
-                 : $type eq 'upper' || $type eq 'lt' ? \&sql_lt
-                 : die "Unknown type: $type";
+        my $func;
+        if ($type eq 'lower' || $type eq 'gt') {
+            $func = \&sql_gt;
+        }
+        elsif ($type eq 'upper' || $type eq 'lt') {
+            $func = \&sql_lt;
+        }
+        elsif ($type eq 'ge') {
+            $func = \&sql_ge;
+        }
+        elsif ($type eq 'le') {
+            $func = \&sql_le;
+        }
+
+        die "Unknown type: $type" unless $func;
 
         my $range_condition = $range->{$type};
         for my $column (keys %$range_condition) {
@@ -61,6 +73,10 @@ Aniki::Plugin::RangeConditionMaker - range condition maker
     # => { id => { '<' => 10 } }
     $where = $db->make_range_condition({ lower => { id => 0 } });
     # => { id => { '>' =>  0 } }
+    $where = $db->make_range_condition({ le => { id => 10 } });
+    # => { id => { '<=' =>  10 } }
+    $where = $db->make_range_condition({ ge => { id => 0 } });
+    # => { id => { '>=' =>  0 } }
     $where = $db->make_range_condition({ upper => { id => 10 }, lower => { id => 0 } });
     # => { id => [-and => { '>' => 0 }, { '<' => 10 }] }
 
