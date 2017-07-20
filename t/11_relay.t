@@ -35,7 +35,7 @@ run_on_database {
                 my $rows = db->select(author => {}, { prefetch => [qw/modules/] });
                 isa_ok $rows, 'Aniki::Result::Collection';
                 is $rows->count, 3;
-                is $_->is_prefetched('modules'), 1 for $rows->all;
+                ok $_->is_prefetched('modules') for $rows->all;
 
                 my %modules = map { $_->name => [sort map { $_->name } $_->modules] } $rows->all;
                 is_deeply \%modules, {
@@ -52,7 +52,7 @@ run_on_database {
                 my $rows = db->select(author => {});
                 isa_ok $rows, 'Aniki::Result::Collection';
                 is $rows->count, 3;
-                is $_->is_prefetched('modules'), 0 for $rows->all;
+                ok !$_->is_prefetched('modules') for $rows->all;
 
                 my %modules = map { $_->name => [sort map { $_->name } $_->modules] } $rows->all;
                 is_deeply \%modules, {
@@ -72,8 +72,8 @@ run_on_database {
                 isa_ok $rows, 'Aniki::Result::Collection';
                 is $rows->count, 3;
                 for my $row ($rows->all) {
-                    is $row->is_prefetched('modules'), 1;
-                    is $_->is_prefetched('versions'), 1 for $row->modules;
+                    ok $row->is_prefetched('modules');
+                    ok $_->is_prefetched('versions') for $row->modules;
                 }
 
                 my %modules = map {
@@ -107,8 +107,8 @@ run_on_database {
                 isa_ok $rows, 'Aniki::Result::Collection';
                 is $rows->count, 3;
                 for my $row ($rows->all) {
-                    is $row->is_prefetched('modules'), 0;
-                    is $_->is_prefetched('versions'), 0 for $row->modules;
+                    ok !$row->is_prefetched('modules');
+                    ok !$_->is_prefetched('versions') for $row->modules;
                 }
 
                 my %modules = map {
@@ -144,8 +144,8 @@ run_on_database {
                 isa_ok $rows, 'Aniki::Result::Collection';
                 is $rows->count, 3;
                 for my $row ($rows->all) {
-                    is $row->is_prefetched('modules'), 1;
-                    is $_->is_prefetched('versions'), 1 for $row->modules;
+                    ok $row->is_prefetched('modules');
+                    ok $_->is_prefetched('versions') for $row->modules;
                 }
 
                 my %modules = map { $_->versions->[0]->module->name => [$_->author->name, map { $_->name } @{ $_->versions }] } map { $_->modules } $rows->all;
@@ -167,8 +167,8 @@ run_on_database {
                 isa_ok $rows, 'Aniki::Result::Collection';
                 is $rows->count, 3;
                 for my $row ($rows->all) {
-                    is $row->is_prefetched('modules'), 0;
-                    is $_->is_prefetched('versions'), 0 for $row->modules;
+                    ok !$row->is_prefetched('modules');
+                    ok !$_->is_prefetched('versions') for $row->modules;
                 }
 
                 my %modules = map { $_->versions->[0]->module->name => [$_->author->name, map { $_->name } @{ $_->versions }] } map { $_->modules } $rows->all;
@@ -195,8 +195,8 @@ run_on_database {
             isa_ok $rows, 'Aniki::Result::Collection';
             is $rows->count, 3;
             for my $row ($rows->all) {
-                is $row->is_prefetched('modules'), 1;
-                is $_->is_prefetched('versions'), 1 for $row->modules;
+                ok $row->is_prefetched('modules');
+                ok $_->is_prefetched('versions') for $row->modules;
             }
 
             my %modules = map {

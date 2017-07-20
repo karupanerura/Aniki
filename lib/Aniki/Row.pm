@@ -71,12 +71,7 @@ sub relay_fetch {
 
 sub is_prefetched {
     my ($self, $key) = @_;
-
-    unless (exists $self->relay_data->{$key}) {
-        return 0;
-    }
-
-    return 1;
+    return exists $self->relay_data->{$key};
 }
 
 sub get_column {
