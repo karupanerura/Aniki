@@ -2,6 +2,11 @@ Revision history for Perl extension Aniki
 
 {{$NEXT}}
 
+1.06 2017-07-20T04:56:58Z
+
+   - added Aniki::Row@is_prefetched method (mamimumemoomoo)
+   - added option ue/le for RangeConditionMaker (mamimumemoomoo)
+
 1.05 2017-07-14T06:10:50Z
 
    - makes 1.04_02 as normal(non-developer) release

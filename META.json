@@ -112,7 +112,7 @@
          "web" : "https://github.com/karupanerura/Aniki"
       }
    },
-   "version" : "1.05",
+   "version" : "1.06",
    "x_authority" : "cpan:KARUPA",
    "x_contributors" : [
       "Pine Mizune <pinemz@gmail.com>",
