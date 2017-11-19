@@ -249,6 +249,12 @@ So you need to disable [SQL::Maker](https://metacpan.org/pod/SQL::Maker)'s stric
 
 SEE ALSO: [The JSON SQL Injection Vulnerability](http://blog.kazuhooku.com/2014/07/the-json-sql-injection-vulnerability.html)
 
+### `use_implicitly_relationship_traversing`
+
+If this method returns true value, Aniki enables relationship traversing without pre-fetching.
+Implicitly relationship traversing makes faster for development, but it hides N+1 query problem often.
+So you need to disable implicitly relationship traversing, override it and return false value.
+
 ### `preload_all_row_classes`
 
 Preload all row classes.
