@@ -44,7 +44,7 @@ on test => sub {
     requires 'Test::Requires';
     requires 'feature';
     recommends 'DBD::mysql';
-    recommends 'Test::mysqld';
+    recommends 'Test::mysqld', '0.21';
     recommends 'DBD::Pg';
     recommends 'Test::postgresql';
 };

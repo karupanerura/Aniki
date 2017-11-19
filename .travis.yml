@@ -22,3 +22,5 @@ script:
   - cover -test
 after_success:
   - cover -report codecov
+services:
+  - mysql

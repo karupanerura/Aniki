@@ -88,6 +88,7 @@ sub handler_class       { 'Aniki::Handler' }
 # You can override this method on your application.
 sub use_prepare_cached       { 1 }
 sub use_strict_query_builder { 1 }
+sub use_implicitly_relationship_traversing { 1 }
 
 sub setup {
     my ($class, %args) = @_;
@@ -568,6 +569,8 @@ sub _fetch_by_sth {
     if ($self->suppress_result_objects) {
         return \@rows if $self->suppress_row_objects;
 
+        my $query_executed_code_point = $self->_detect_query_executed_code_point;
+
         my $row_class = $self->guess_row_class($table_name);
         return [
             map {
@@ -575,10 +578,13 @@ sub _fetch_by_sth {
                     table_name => $table_name,
                     handler    => $self,
                     row_data   => $_,
+                    query_executed_code_point => $query_executed_code_point,
                 )
             } @rows
         ];
     }
+
+    my $query_executed_code_point = $self->_detect_query_executed_code_point;
 
     my $result_class = $self->guess_result_class($table_name);
     return $result_class->new(
@@ -586,7 +592,27 @@ sub _fetch_by_sth {
         handler              => $self,
         row_datas            => \@rows,
         suppress_row_objects => $self->suppress_row_objects,
+        query_executed_code_point => $query_executed_code_point,
     );
+}
+
+sub _detect_query_executed_code_point {
+    my $self = shift;
+
+    my $i = 2;
+    while (my @caller = caller($i++)) {
+        next if $caller[0]->isa(__PACKAGE__);
+        next if $caller[0]->isa('Aniki::Row');
+        return {
+            file => $caller[1],
+            line => $caller[2],
+        };
+    }
+
+    return {
+        file => '(undef)',
+        line => '(undef)',
+    };
 }
 
 sub execute {
@@ -991,6 +1017,12 @@ This method returns true value default.
 So you need to disable L<SQL::Maker>'s strict mode, override it and return false value.
 
 SEE ALSO: L<The JSON SQL Injection Vulnerability|http://blog.kazuhooku.com/2014/07/the-json-sql-injection-vulnerability.html>
+
+=head3 C<use_implicitly_relationship_traversing>
+
+If this method returns true value, Aniki enables relationship traversing without pre-fetching.
+Implicitly relationship traversing makes faster for development, but it hides N+1 query problem often.
+So you need to disable implicitly relationship traversing, override it and return false value.
 
 =head3 C<preload_all_row_classes>
 

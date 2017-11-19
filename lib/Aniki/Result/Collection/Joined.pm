@@ -108,6 +108,7 @@ sub _compress {
 sub _inflate {
     my $self = shift;
     my $handler = $self->handler;
+    my $query_executed_code_point = $self->query_executed_code_point;
 
     my @table_names = @{ $self->table_names };
     my %row_class = map { $_ => $handler->guess_row_class($_) } @table_names;
@@ -124,6 +125,9 @@ sub _inflate {
                 table_name => $table_name,
                 handler    => $handler,
                 row_data   => $row_data,
+                $query_executed_code_point ? (
+                    query_executed_code_point => $query_executed_code_point,
+                ) : (),
             );
         }
 

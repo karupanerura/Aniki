@@ -185,6 +185,49 @@ run_on_database {
         };
     };
 
+    subtest 'disabled' => sub {
+        no warnings qw/once/;
+        local *t::DB::use_implicitly_relationship_traversing = sub { 0 };
+        use warnings qw/once/;
+
+        subtest 'prefetch' => sub {
+            my $queries = query_count {
+                my $rows = db->select(author => {}, { prefetch => { modules => [qw/versions/] } });
+                isa_ok $rows, 'Aniki::Result::Collection';
+                is $rows->count, 3;
+                for my $row ($rows->all) {
+                    ok $row->is_prefetched('modules');
+                    ok $_->is_prefetched('versions') for $row->modules;
+                }
+
+                my %modules = map { $_->versions->[0]->module->name => [$_->author->name, map { $_->name } @{ $_->versions }] } map { $_->modules } $rows->all;
+                is_deeply \%modules, {
+                    'Perl::Lint'             => ['MOZNION', '0.01'],
+                    'Regexp::Lexer'          => ['MOZNION', '0.01'],
+                    'Test::JsonAPI::Autodoc' => ['MOZNION', '0.01'],
+                    'Plack::App::Vhost'      => ['KARUPA',  '0.01'],
+                    'TOML::Parser'           => ['KARUPA',  '0.01'],
+                    'Test::SharedObject'     => ['KARUPA',  '0.01'],
+                } or diag explain \%modules;
+            };
+            is $queries, 3;
+        };
+
+        subtest 'lazy' => sub {
+            my $queries = query_count {
+                my $rows = db->select(author => {});  my ($file, $line) = (__FILE__, __LINE__);
+                isa_ok $rows, 'Aniki::Result::Collection';
+                is $rows->count, 3;
+                for my $row ($rows->all) {
+                    ok !$row->is_prefetched('modules');
+                    eval { $row->modules };
+                    like $@, qr/^\Qshould use `prefetch` option for modules at $file line $line. author.modules is not pre-fetched/;
+                }
+            };
+            is $queries, 1;
+        };
+    };
+
     db->insert_multi(version => [map {
         +{ name => '0.02', module_id => $_ },
     } @moznion_module_ids, @karupa_module_ids]);

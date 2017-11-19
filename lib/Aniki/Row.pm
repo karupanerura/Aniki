@@ -3,7 +3,7 @@ use 5.014002;
 
 use namespace::autoclean;
 use Mouse v2.4.5;
-use Carp qw/croak/;
+use Carp qw/croak confess/;
 
 has table_name => (
     is       => 'ro',
@@ -23,6 +23,11 @@ has is_new => (
 has relay_data => (
     is      => 'ro',
     default => sub { +{} },
+);
+
+has query_executed_code_point => (
+    is      => 'ro',
+    default => sub { +{ file => '(undef)', line => '(undef)' } },
 );
 
 my %handler;
@@ -65,6 +70,14 @@ sub relay {
 
 sub relay_fetch {
     my ($self, $key) = @_;
+    unless ($self->handler->use_implicitly_relationship_traversing) {
+        my $relationships = $self->table->get_relationships;
+        if ($relationships && $relationships->get($key)) {
+            my ($file, $line) = @{$self->query_executed_code_point}{qw/file line/};
+            croak "should use \`prefetch\` option for $key at $file line $line. @{[ $self->table_name ]}.$key is not pre-fetched";
+        }
+        croak "@{[ $self->table_name ]}.$key is not valid relationship rule.";
+    }
     $self->handler->fetch_and_attach_relay_data($self->table_name, [$key], [$self]);
     return $self->relay_data->{$key};
 }
