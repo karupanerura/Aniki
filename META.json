@@ -4,7 +4,7 @@
       "karupanerura <karupa@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.0.12, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Minilla/v3.0.13, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -85,7 +85,7 @@
          "recommends" : {
             "DBD::Pg" : "0",
             "DBD::mysql" : "0",
-            "Test::mysqld" : "0",
+            "Test::mysqld" : "0.21",
             "Test::postgresql" : "0"
          },
          "requires" : {
