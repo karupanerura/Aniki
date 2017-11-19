@@ -20,17 +20,30 @@ has inflated_rows => (
     builder => '_inflate',
 );
 
+has query_executed_code_point => (
+    is => 'ro',
+);
+
 sub _inflate {
     my $self = shift;
+
+    # required parameters
     my $row_class  = $self->row_class;
     my $table_name = $self->table_name;
     my $handler    = $self->handler;
+
+    # optional parameters
+    my $query_executed_code_point = $self->query_executed_code_point;
+
     return [
         map {
             $row_class->new(
                 table_name => $table_name,
                 handler    => $handler,
-                row_data   => $_
+                row_data   => $_,
+                $query_executed_code_point ? (
+                    query_executed_code_point => $query_executed_code_point,
+                ) : (),
             )
         } @{ $self->row_datas }
     ];
