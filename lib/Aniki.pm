@@ -753,6 +753,8 @@ Aniki - The ORM as our great brother.
     package MyProj::DB::Schema {
         use DBIx::Schema::DSL;
 
+        database 'SQLite';
+
         create_table 'module' => columns {
             integer 'id', primary_key, auto_increment;
             varchar 'name';
@@ -808,7 +810,6 @@ Aniki - The ORM as our great brother.
         __PACKAGE__->setup(
             schema => 'MyProj::DB::Schema',
             filter => 'MyProj::DB::Filter',
-            row    => 'MyProj::DB::Row',
         );
     };
 

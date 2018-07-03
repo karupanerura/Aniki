@@ -66,7 +66,7 @@ package MyProj::DB {
 
     __PACKAGE__->setup(
         schema => 'MyProj::DB::Schema',
-        filter => 'MyProj::DB::Filter'
+        filter => 'MyProj::DB::Filter',
     );
 };
 
