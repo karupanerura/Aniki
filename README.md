@@ -10,6 +10,8 @@ use 5.014002;
 package MyProj::DB::Schema {
     use DBIx::Schema::DSL;
 
+    database 'SQLite';
+
     create_table 'module' => columns {
         integer 'id', primary_key, auto_increment;
         varchar 'name';
@@ -65,7 +67,6 @@ package MyProj::DB {
     __PACKAGE__->setup(
         schema => 'MyProj::DB::Schema',
         filter => 'MyProj::DB::Filter',
-        row    => 'MyProj::DB::Row',
     );
 };
 
