@@ -8,7 +8,7 @@ jobs:
     steps:
       - checkout
       - run: echo 'export PATH="$PWD/local/bin:$PATH"' >> $BASH_ENV
-      - run: apt update && apt install -y postgresql mysql-server # XXX: workaround
+      - run: apt update && env PATH="/usr/bin:$PATH" apt install -y postgresql mysql-server # XXX: workaround
       - run: perl -Mlib=$PWD/local/lib/perl5 -E 'say "export PERL5LIB=", join ":", grep /^\E$ENV{PWD}/, @INC' >> $BASH_ENV
       - restore_cache:
          keys:
