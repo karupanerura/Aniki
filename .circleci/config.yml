@@ -20,5 +20,5 @@ jobs:
             - "local"
       - run: perl Build.PL
       - run: ./Build build
-      - run: cover -test +ignore local
+      - run: cover -test +ignore '^local/lib/perl5'
       - run: cover -report codecov
