@@ -1,0 +1,24 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: karupanerura/perl-rdbms:latest
+    environments:
+      AUTHOR_TESTING: 1
+    steps:
+      - checkout
+      - run: echo 'export PATH="$PWD/local/bin:$PATH"' >> $BASH_ENV
+      - run: perl -Mlib=$PWD/local/lib/perl5 -E 'say "export PERL5LIB=", join ":", grep /^\E$ENV{PWD}/, @INC' >> $BASH_ENV
+      - restore_cache:
+         keys:
+           - perl-modules-{{ checksum "cpanfile" }}
+      - run: cpanm -Llocal --quiet --notest --skip-satisfied Devel::Cover Devel::Cover::Report::Codecov
+      - run: cpanm -Llocal --quiet --notest --skip-satisfied --installdeps --with-recommend .
+      - save_cache:
+          key: perl-modules-{{ checksum "cpanfile" }}
+          paths:
+            - "local"
+      - run: perl Build.PL
+      - run: ./Build build
+      - run: cover -test
+      - run: cover -report codecov

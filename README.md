@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/karupanerura/Aniki.svg?branch=master)](https://travis-ci.org/karupanerura/Aniki) [![Coverage Status](http://codecov.io/github/karupanerura/Aniki/coverage.svg?branch=master)](https://codecov.io/github/karupanerura/Aniki?branch=master) [![MetaCPAN Release](https://badge.fury.io/pl/Aniki.svg)](https://metacpan.org/release/Aniki)
+[![Build Status](https://circleci.com/gh/karupanerura/Aniki.svg)](https://circleci.com/gh/karupanerura/Aniki) [![Coverage Status](http://codecov.io/github/karupanerura/Aniki/coverage.svg?branch=master)](https://codecov.io/github/karupanerura/Aniki?branch=master) [![MetaCPAN Release](https://badge.fury.io/pl/Aniki.svg)](https://metacpan.org/release/Aniki)
 # NAME
 
 Aniki - The ORM as our great brother.
