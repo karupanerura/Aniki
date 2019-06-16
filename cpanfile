@@ -46,7 +46,7 @@ on test => sub {
     recommends 'DBD::mysql';
     recommends 'Test::mysqld';
     recommends 'DBD::Pg';
-    recommends 'Test::postgresql';
+    recommends 'Test::PostgreSQL';
 };
 
 on develop => sub {

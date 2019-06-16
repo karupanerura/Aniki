@@ -96,13 +96,13 @@ sub prepare_testing {
     elsif ($schema_class->context->db eq 'PostgreSQL') {
         eval {
             require DBD::Pg;
-            require Test::postgresql;
+            require Test::PostgreSQL;
         };
         t::DB::Exception->throw(message => $@) if $@;
 
         Test::Builder->new->note('launch postgresql ...');
-        my $pgsql = Test::postgresql->new();
-        t::DB::Exception->throw(message => $Test::postgresql::errstr) unless $pgsql;
+        my $pgsql = Test::PostgreSQL->new();
+        t::DB::Exception->throw(message => $Test::PostgreSQL::errstr) unless $pgsql;
 
         my $dbh = DBI->connect($pgsql->dsn, '', '', {
             AutoCommit => 1,

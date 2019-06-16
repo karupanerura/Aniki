@@ -85,8 +85,8 @@
          "recommends" : {
             "DBD::Pg" : "0",
             "DBD::mysql" : "0",
-            "Test::mysqld" : "0",
-            "Test::postgresql" : "0"
+            "Test::PostgreSQL" : "0",
+            "Test::mysqld" : "0"
          },
          "requires" : {
             "DBD::SQLite" : "0",
