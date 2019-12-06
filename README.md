@@ -408,7 +408,7 @@ my $row = $db->insert_and_fetch_row(foo => { bar => 1 });
 Execute `INSERT INTO` query, and returns row object created by `$row` and schema definition.
 
 ```perl
-my $row = $db->insert_and_fetch_row(foo => { bar => 1 });
+my $row = $db->insert_and_emulate_row(foo => { bar => 1 });
 # stmt: INSERT INTO foo (bar) VALUES (?)
 # bind: [1]
 ```
