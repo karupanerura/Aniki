@@ -1154,7 +1154,7 @@ Execute C<INSERT INTO> query, and C<SELECT> it, and returns row object.
 
 Execute C<INSERT INTO> query, and returns row object created by C<$row> and schema definition.
 
-    my $row = $db->insert_and_fetch_row(foo => { bar => 1 });
+    my $row = $db->insert_and_emulate_row(foo => { bar => 1 });
     # stmt: INSERT INTO foo (bar) VALUES (?)
     # bind: [1]
 
