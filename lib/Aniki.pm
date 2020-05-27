@@ -940,6 +940,12 @@ And you can pre-fetch related rows.
     my @modules = $db->select(module => {}, { prefetch => [qw/author/] });
     say $_->name, "'s author is ", $_->author->name for @modules;
 
+NOTE: If you use `prefetch` with `for_update`, related rows ARE NOT locked.
+
+    my $module = $db->select(module => { name => 'Aniki' }, { for_update => 1, prefetch => [qw/author/] })->first;
+    # $module will be locked with "FOR UPDATE" statement
+    # $module->author will NOT be locked
+
 =head1 SETUP
 
 Install Aniki from CPAN:
