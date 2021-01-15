@@ -10,7 +10,7 @@ has relationship => (
     required => 1,
 );
 
-use List::MoreUtils qw/pairwise notall/;
+use List::MoreUtils qw/pairwise notall uniq/;
 use List::UtilsBy qw/partition_by/;
 use Scalar::Util qw/weaken/;
 use SQL::QueryMaker;
@@ -45,7 +45,7 @@ sub execute {
         my $src_column  = $src_columns[0];
         my $dest_column = $dest_columns[0];
 
-        my @src_values = grep defined, map { $_->get_column($src_column) } @$rows;
+        my @src_values = uniq grep defined, map { $_->get_column($src_column) } @$rows;
         unless (@src_values) {
             # set empty value
             for my $row (@$rows) {
